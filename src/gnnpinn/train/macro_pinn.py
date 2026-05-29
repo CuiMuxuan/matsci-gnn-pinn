@@ -11,7 +11,7 @@ from typing import Any
 from gnnpinn.data.loaders import load_field_table
 from gnnpinn.data.splits import load_split_manifest, split_indices
 from gnnpinn.eval.metrics import mae, relative_l2, rmse
-from gnnpinn.eval.regions import region_metric_tables
+from gnnpinn.eval.regions import _spatial_gradient_scores, region_metric_tables
 from gnnpinn.models.closure import (
     SparseLibrary,
     SparseLibraryConfig,
@@ -181,16 +181,59 @@ def _closure_payload(
 
 def _residual_sample_indices(
     train_indices: list[int],
+    candidate_indices: list[int],
     step: int,
     sample_size: int | None,
     seed: int,
 ) -> list[int]:
-    if sample_size is None or sample_size >= len(train_indices):
-        return train_indices
+    population = candidate_indices or train_indices
+    if sample_size is None:
+        return population
+    if sample_size >= len(population):
+        return population
     if sample_size <= 0:
         raise ValueError("residual_sample_size must be positive when provided")
     rng = __import__("random").Random(seed + step)
-    return sorted(rng.sample(train_indices, sample_size))
+    return sorted(rng.sample(population, sample_size))
+
+
+def _quantile_threshold(values: list[float], quantile: float) -> float:
+    if not 0.0 <= quantile <= 1.0:
+        raise ValueError(f"quantile must be in [0, 1], got {quantile}")
+    if not values:
+        raise ValueError("cannot compute quantile of empty values")
+    ordered = sorted(float(value) for value in values)
+    if len(ordered) == 1:
+        return ordered[0]
+    position = quantile * (len(ordered) - 1)
+    lower = int(position)
+    upper = min(lower + 1, len(ordered) - 1)
+    fraction = position - lower
+    return ordered[lower] * (1.0 - fraction) + ordered[upper] * fraction
+
+
+def _residual_candidate_indices(
+    sample: Any,
+    target: str,
+    train_indices: list[int],
+    mode: str,
+    hot_quantile: float,
+    gradient_quantile: float,
+) -> list[int]:
+    if mode == "random":
+        return train_indices
+    if mode not in {"hot", "gradient", "hot_gradient"}:
+        raise ValueError(f"Unsupported residual sampling mode: {mode}")
+    target_values = sample.require_observation(target)
+    selected: set[int] = set()
+    if mode in {"hot", "hot_gradient"}:
+        threshold = _quantile_threshold([target_values[index] for index in train_indices], hot_quantile)
+        selected.update(index for index in train_indices if float(target_values[index]) >= threshold)
+    if mode in {"gradient", "hot_gradient"}:
+        gradient_scores = _spatial_gradient_scores(sample, target_values)
+        threshold = _quantile_threshold([gradient_scores[index] for index in train_indices], gradient_quantile)
+        selected.update(index for index in train_indices if float(gradient_scores[index]) >= threshold)
+    return sorted(selected) or train_indices
 
 
 def train(args: argparse.Namespace) -> dict[str, Any]:
@@ -205,6 +248,14 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         split_indices(split_manifest, args.train_split)
         if split_manifest
         else list(range(sample.n_points))
+    )
+    residual_candidate_indices = _residual_candidate_indices(
+        sample=sample,
+        target=args.target,
+        train_indices=train_indices,
+        mode=args.residual_sampling_mode,
+        hot_quantile=args.residual_hot_quantile,
+        gradient_quantile=args.residual_gradient_quantile,
     )
     train_index = _index_tensor(train_indices, args.device)
     coords, coord_normalization = _normalize_feature_tensor(coords, train_index, args.input_normalization)
@@ -251,6 +302,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         needs_residual = args.pde_weight > 0
         residual_indices = _residual_sample_indices(
             train_indices=train_indices,
+            candidate_indices=residual_candidate_indices,
             step=step,
             sample_size=args.residual_sample_size if needs_residual else None,
             seed=args.residual_sampling_seed,
@@ -310,6 +362,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                     "pde_loss": float(pde_loss.detach().cpu()),
                     "closure_loss": float(closure_loss.detach().cpu()),
                     "residual_points": float(len(residual_indices) if needs_residual else 0),
+                    "residual_candidates": float(len(residual_candidate_indices) if needs_residual else 0),
                 }
             )
 
@@ -381,7 +434,11 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "conductivity": args.conductivity,
             "source": args.source,
             "residual_sample_size": args.residual_sample_size,
+            "residual_sampling_mode": args.residual_sampling_mode,
             "residual_sampling_seed": args.residual_sampling_seed,
+            "residual_hot_quantile": args.residual_hot_quantile,
+            "residual_gradient_quantile": args.residual_gradient_quantile,
+            "residual_candidate_points": len(residual_candidate_indices),
         },
         "closure": _closure_payload(
             closure_mode=args.closure_mode,
@@ -460,6 +517,24 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=1337,
         help="Base seed for deterministic per-step residual point sampling.",
+    )
+    parser.add_argument(
+        "--residual-sampling-mode",
+        choices=["random", "hot", "gradient", "hot_gradient"],
+        default="random",
+        help="Candidate pool for residual point sampling.",
+    )
+    parser.add_argument(
+        "--residual-hot-quantile",
+        type=float,
+        default=0.9,
+        help="Train-split target quantile used by hot residual sampling modes.",
+    )
+    parser.add_argument(
+        "--residual-gradient-quantile",
+        type=float,
+        default=0.9,
+        help="Train-split gradient-score quantile used by gradient residual sampling modes.",
     )
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--seed", type=int, default=7)
