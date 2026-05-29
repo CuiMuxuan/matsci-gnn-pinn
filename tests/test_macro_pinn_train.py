@@ -123,3 +123,105 @@ def test_macro_pinn_training_cli_with_split_manifest(tmp_path: Path):
     assert payload["input_normalization"]["time"]["applied"] is True
     assert "hot_q50" in payload["split_metrics"]["train"]["region_metrics"]
     assert "gradient_q50" in payload["split_metrics"]["train"]["region_metrics"]
+
+
+def test_macro_pinn_training_cli_with_sparse_closure_writes_expression(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_temperature.csv"
+    table.write_text(
+        "x,y,t,T\n"
+        "0,0,0,0\n"
+        "1,0,0,1\n"
+        "0,1,0,1\n"
+        "1,1,1,3\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "closure_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "3",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--pde-weight",
+            "1e-4",
+            "--pde-field",
+            "normalized",
+            "--closure-mode",
+            "sparse_linear",
+            "--closure-feature",
+            "T",
+            "--closure-feature",
+            "x",
+            "--closure-feature",
+            "t",
+            "--closure-polynomial-order",
+            "1",
+            "--closure-l1-weight",
+            "1e-5",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    checkpoint = __import__("torch").load(output_dir / "checkpoint.pt", map_location="cpu")
+
+    assert status == 0
+    assert payload["pde"]["field"] == "normalized"
+    assert payload["closure"]["enabled"] is True
+    assert payload["closure"]["term_names"] == ["1", "T", "x", "t"]
+    assert "coefficients" in payload["closure"]
+    assert "expression" in payload["closure"]
+    assert checkpoint["metadata"]["closure"]["mode"] == "sparse_linear"
+
+
+def test_macro_pinn_sparse_closure_uses_default_features(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_temperature.csv"
+    table.write_text(
+        "x,y,t,T\n"
+        "0,0,0,0\n"
+        "1,0,0,1\n"
+        "0,1,0,1\n"
+        "1,1,1,3\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "default_closure_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "1",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--pde-weight",
+            "1e-4",
+            "--pde-field",
+            "normalized",
+            "--closure-mode",
+            "sparse_linear",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+
+    assert status == 0
+    assert payload["closure"]["term_names"] == ["1", "T", "x", "y", "t"]
