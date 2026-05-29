@@ -168,3 +168,30 @@ bash scripts/server/run_sparse_closure_optimizer_ablation_a100.sh \
 
 - 若低 `closure_lr` 或冻结 backbone 能把 hot q90 拉回接近 data-only，则继续做 3 seed 和 closure 稳定性分析。
 - 若仍然大幅弱于 data-only，则保留 C1 作为可复现负结果，转入 GNN-conditioned closure 接口与 synthetic/toy graph 耦合，以服务方向三主线。
+
+## Optimizer Ablation 结论
+
+已完成 A100 四组 optimizer ablation。最佳组合为：
+
+```text
+closure_lr=1e-5
+freeze_backbone_after_closure_start=false
+closure_start_step=1500
+residual_sample_size=4096
+```
+
+关键指标：
+
+| Method | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE |
+| --- | ---: | ---: | ---: |
+| staged closure, start 1500, 4096 | 71.341922 | 56.310533 | 73.296876 |
+| optimizer ablation best | 70.494433 | 31.542155 | 64.558069 |
+| active data-only 3 seed mean | 60.143582 | 17.033393 | 63.622568 |
+
+解释：
+
+- 低 closure lr 明显缓解了 closure coefficients 过快增长的问题。
+- 冻结 backbone 不如继续共同微调，说明当前 closure 仍需要场网络小幅适应。
+- C1 已经从“不可用”推进到“可解释但未胜出”的技术基线。
+
+下一步不扩大 polynomial order，先进入 GNN-conditioned closure 接口，检验方向三是否能在同一真实数据基线上提供额外收益。

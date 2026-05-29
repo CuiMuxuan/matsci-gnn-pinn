@@ -325,6 +325,9 @@ Separate closure optimizer behavior:
 - 已实现 `--freeze-backbone-after-closure-start`，在 PDE/closure residual 真正启用后冻结 Macro PINN backbone，只微调 closure coefficients。
 - metrics/checkpoint 会保存 optimizer 配置；history 会保存 `backbone_frozen` 标记。
 - 本地测试：`tests/test_macro_pinn_train.py` 已覆盖 closure lr 与冻结逻辑。
+- 已完成 A100 optimizer ablation。
+- 结果文档：`docs/results/ambench_sparse_closure_optimizer_ablation_v1.md`。
+- 结论：`closure_lr=1e-5` 且 backbone 继续训练是当前最佳 C1 设置，test RMSE `70.494433`、hot q90 RMSE `31.542155`、gradient q90 RMSE `64.558069`；冻结 backbone 没有带来收益。该路线比 staged baseline 明显更稳，但仍未超过 active data-only 的 hot q90。
 
 下一轮服务器命令：
 
@@ -370,12 +373,16 @@ bash scripts/server/run_sparse_closure_optimizer_ablation_a100.sh \
 - 使用现有 `MicroGNNEncoder` 跑 toy graph。
 - 增加 graph batch schema。
 - 将 micro embedding 拼接到 closure features。
+- 在 `MacroPINN` closure 训练入口中加入可选 graph embedding provider，先支持 toy/static embedding。
+- 复用 C1 最佳设置：`closure_lr=1e-5`、`closure_start_step=1500`、`residual_sample_size=4096`。
+- 与 sparse closure baseline 在 active AM-Bench 表上做同 split 对照。
 - 先做 synthetic micro embedding 消融，确认训练接口可用。
 
 验收：
 
 - GNN-conditioned closure forward/backward 可跑。
 - artifact 中保存 graph schema、embedding dim、coarse parameters。
+- 至少有一个 toy/static graph-conditioned run 能生成完整 metrics/checkpoint/expression 或明确负结果。
 
 ### D2. 接入真实/半真实微观数据
 
