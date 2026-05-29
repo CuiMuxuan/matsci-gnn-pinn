@@ -239,3 +239,13 @@ bash scripts/server/run_graph_conditioned_closure_coordinate_rbf_a100.sh \
 ```
 
 该设计仍是“半 synthetic graph conditioning”，但它比 static global embedding 更接近局部耦合：每个 residual point 都得到不同的 graph-conditioned closure 特征。
+
+服务器结果：
+
+| Method | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE |
+| --- | ---: | ---: | ---: |
+| sparse closure best | 70.494433 | 31.542155 | 64.558069 |
+| coordinate RBF `g4_ls0_35` | 109.067742 | 150.254087 | 153.408553 |
+| coordinate RBF `g6_ls0_25` | 68.237717 | 50.900600 | 71.879264 |
+
+结论：per-point graph features 比 static global embedding 更有效，但仍会损害 hot/gradient 区域。下一步应做 graph contribution gating，让 graph-conditioned source 作为受控小修正，而不是直接进入同一个 sparse source。

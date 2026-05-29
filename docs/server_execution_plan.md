@@ -416,12 +416,25 @@ Region-aware graph conditioning:
 - `MacroPINN` training CLI 支持 `--closure-graph-mode coordinate_rbf`。
 - `g0/g1/...` 现在可以是每个 residual point 的 anchor/RBF graph features，而不是全局常量。
 - 已新增服务器脚本：`scripts/server/run_graph_conditioned_closure_coordinate_rbf_a100.sh`。
+- 已完成 coordinate RBF 服务器实验。
+- 结果文档：`docs/results/ambench_graph_conditioned_closure_coordinate_rbf_v1.md`。
+- 结论：`g6_ls0_25` 比 static toy graph 更好，test RMSE `68.237717`，但 hot q90 `50.900600` 与 gradient q90 `71.879264` 仍弱于 sparse closure best；下一步应做 graph contribution gating，而不是继续扩大 graph feature library。
 
 下一轮服务器命令：
 
 ```bash
 bash scripts/server/run_graph_conditioned_closure_coordinate_rbf_a100.sh \
   > logs/ambench_graph_conditioned_closure_coordinate_rbf_a100_v1.log 2>&1
+```
+
+下一步 D1c：
+
+```text
+Gated graph-conditioned closure:
+- q = q_sparse + alpha * q_graph
+- small/fixed or bounded learnable alpha
+- separate graph coefficient penalty
+- acceptance criterion: no hot q90 degradation relative to sparse closure best
 ```
 
 ### D2. 接入真实/半真实微观数据
