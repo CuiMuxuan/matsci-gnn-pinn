@@ -225,3 +225,57 @@ def test_macro_pinn_sparse_closure_uses_default_features(tmp_path: Path):
 
     assert status == 0
     assert payload["closure"]["term_names"] == ["1", "T", "x", "y", "t"]
+
+
+def test_macro_pinn_sparse_closure_supports_residual_sampling(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_temperature.csv"
+    table.write_text(
+        "x,y,t,T\n"
+        "0,0,0,0\n"
+        "1,0,0,1\n"
+        "0,1,0,1\n"
+        "1,1,1,3\n"
+        "2,1,1,4\n"
+        "1,2,1,4\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "sampled_residual_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--pde-weight",
+            "1e-4",
+            "--pde-field",
+            "normalized",
+            "--closure-mode",
+            "sparse_linear",
+            "--residual-sample-size",
+            "2",
+            "--residual-sampling-seed",
+            "11",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+
+    assert status == 0
+    assert payload["pde"]["residual_sample_size"] == 2
+    assert payload["pde"]["residual_sampling_seed"] == 11
+    assert payload["history"][0]["residual_points"] == 2.0
+    assert payload["history"][-1]["residual_points"] == 2.0

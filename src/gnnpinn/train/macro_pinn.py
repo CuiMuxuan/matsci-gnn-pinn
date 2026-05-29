@@ -179,6 +179,20 @@ def _closure_payload(
     return payload
 
 
+def _residual_sample_indices(
+    train_indices: list[int],
+    step: int,
+    sample_size: int | None,
+    seed: int,
+) -> list[int]:
+    if sample_size is None or sample_size >= len(train_indices):
+        return train_indices
+    if sample_size <= 0:
+        raise ValueError("residual_sample_size must be positive when provided")
+    rng = __import__("random").Random(seed + step)
+    return sorted(rng.sample(train_indices, sample_size))
+
+
 def train(args: argparse.Namespace) -> dict[str, Any]:
     torch = _torch()
     torch.manual_seed(args.seed)
@@ -235,9 +249,16 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     for step in range(args.steps):
         optimizer.zero_grad(set_to_none=True)
         needs_residual = args.pde_weight > 0
-        coords_step = coords[train_index].detach().clone().requires_grad_(needs_residual)
-        time_step = time[train_index].detach().clone().requires_grad_(needs_residual)
-        pred = model(coords_step, time_step)
+        residual_indices = _residual_sample_indices(
+            train_indices=train_indices,
+            step=step,
+            sample_size=args.residual_sample_size if needs_residual else None,
+            seed=args.residual_sampling_seed,
+        )
+        residual_index = _index_tensor(residual_indices, args.device)
+        coords_data = coords[train_index].detach().clone()
+        time_data = time[train_index].detach().clone()
+        pred = model(coords_data, time_data)
         pred_for_loss = pred
         if args.normalize_target:
             pred_physical = pred * target_std + target_mean
@@ -248,13 +269,20 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         closure_loss = torch.zeros((), dtype=target.dtype, device=target.device)
         closure_source = None
         if args.pde_weight > 0:
-            residual_field = pred_physical[:, 0] if args.pde_field == "physical" else pred[:, 0]
+            coords_residual = coords[residual_index].detach().clone().requires_grad_(True)
+            time_residual = time[residual_index].detach().clone().requires_grad_(True)
+            pred_residual = model(coords_residual, time_residual)
+            if args.normalize_target:
+                pred_residual_physical = pred_residual * target_std + target_mean
+            else:
+                pred_residual_physical = pred_residual
+            residual_field = pred_residual_physical[:, 0] if args.pde_field == "physical" else pred_residual[:, 0]
             if closure_library is not None and closure_coefficients is not None:
                 closure_features = _closure_feature_tensor(
                     feature_names=args.closure_features,
                     pred_field=residual_field,
-                    coords=coords_step,
-                    time=time_step,
+                    coords=coords_residual,
+                    time=time_residual,
                 )
                 closure_matrix = closure_library.transform(closure_features)
                 closure_source = closure_matrix @ closure_coefficients
@@ -264,8 +292,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 closure_source = args.source
             residual = transient_heat_residual(
                 residual_field,
-                coords_step,
-                time_step,
+                coords_residual,
+                time_residual,
                 params=HeatEquationParams(rho_cp=args.rho_cp, conductivity=args.conductivity),
                 source=closure_source,
             )
@@ -281,6 +309,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                     "data_loss": float(data_loss.detach().cpu()),
                     "pde_loss": float(pde_loss.detach().cpu()),
                     "closure_loss": float(closure_loss.detach().cpu()),
+                    "residual_points": float(len(residual_indices) if needs_residual else 0),
                 }
             )
 
@@ -351,6 +380,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "rho_cp": args.rho_cp,
             "conductivity": args.conductivity,
             "source": args.source,
+            "residual_sample_size": args.residual_sample_size,
+            "residual_sampling_seed": args.residual_sampling_seed,
         },
         "closure": _closure_payload(
             closure_mode=args.closure_mode,
@@ -419,6 +450,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--rho-cp", type=float, default=1.0)
     parser.add_argument("--conductivity", type=float, default=1.0)
     parser.add_argument("--source", type=float, default=0.0)
+    parser.add_argument(
+        "--residual-sample-size",
+        type=int,
+        help="Optional number of train points sampled per step for PDE/closure residual loss.",
+    )
+    parser.add_argument(
+        "--residual-sampling-seed",
+        type=int,
+        default=1337,
+        help="Base seed for deterministic per-step residual point sampling.",
+    )
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--log-every", type=int, default=50)
