@@ -48,6 +48,7 @@ tracking = [
 gnnpinn-data-audit = "gnnpinn.data.audit:main"
 gnnpinn-convert-ambench = "gnnpinn.data.loaders.ambench:main"
 gnnpinn-convert-ambench-hdf5 = "gnnpinn.data.loaders.ambench_hdf5:main"
+gnnpinn-inspect-ambench-microstructure = "gnnpinn.data.loaders.ambench_microstructure:main"
 gnnpinn-check-ambench-download = "gnnpinn.data.ambench_downloads:main"
 gnnpinn-field-baseline = "gnnpinn.eval.field_baseline:main"
 gnnpinn-inspect-table = "gnnpinn.data.inspect_table:main"

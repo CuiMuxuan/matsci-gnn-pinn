@@ -227,11 +227,71 @@ expected_size_bytes: 549979044
 conda run -n gnnpinn python -m gnnpinn.data.ambench_downloads --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2716 --download --verify-sha256
 ```
 
+## Phase 17 optical microscopy 下载入口
+
+方向三真实/半真实微观组织阶段优先使用 AMB2022-03 optical microscopy：
+
+- DOI: https://doi.org/10.18434/mds2-2718
+- NIST PDR 记录页: https://data.nist.gov/od/id/mds2-2718
+- 仓库内固定清单: `configs/data/ambench_mds2_2718_sources.yaml`
+- 推荐本地目录：
+
+```text
+data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718/
+```
+
+该 PDR 记录全量包含 102 个 TIFF 图像，合计约 10.6 GB。项目第一版只固定一个低风险子集：README、melt-pool measurement XLSX、一个 representative single-track cross-section TIFF 及其 `.sha256`。
+
+查看计划下载内容：
+
+```powershell
+conda run -n gnnpinn-cu130 python -m gnnpinn.data.ambench_downloads `
+  --dataset-id mds2-2718 `
+  --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 `
+  --download `
+  --dry-run `
+  --output outputs/data_audits/ambench_mds2_2718_download_dry_run.json
+```
+
+下载并校验第一显微子集：
+
+```powershell
+conda run -n gnnpinn-cu130 python -m gnnpinn.data.ambench_downloads `
+  --dataset-id mds2-2718 `
+  --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 `
+  --download `
+  --verify-sha256 `
+  --output outputs/data_audits/ambench_mds2_2718_download_report.json
+```
+
+Linux/云服务器命令：
+
+```bash
+PYTHONUTF8=1 PYTHONIOENCODING=utf-8 conda run -n gnnpinn python -m gnnpinn.data.ambench_downloads \
+  --dataset-id mds2-2718 \
+  --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 \
+  --download \
+  --verify-sha256 \
+  --output outputs/data_audits/ambench_mds2_2718_download_report.json
+```
+
+下载后生成第一版显微图像 inspection / coarse micro graph：
+
+```powershell
+conda run -n gnnpinn-cu130 python -m gnnpinn.data.loaders.ambench_microstructure `
+  --image data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3_m.tif `
+  --sample-id AMB2022-718-SH1-BP1-P2-L2.1-3_m `
+  --threshold-quantile 0.9 `
+  --grid-rows 8 `
+  --grid-cols 8 `
+  --graph-k 4 `
+  --output outputs/data_audits/ambench_mds2_2718_micrograph_inspection.json
+```
+
 ## 稍后可下载
 
-方向三和 GNN 微观组织阶段再下载：
+第二阶段再下载：
 
-- Optical Microscopy, AMB2022-03: https://doi.org/10.18434/mds2-2718
 - Cross-sectional microstructure, AMB2022-03: https://doi.org/10.18434/mds2-2775
 
-当前阶段不需要手动下载电池、多孔介质、PFHub 或 ExaCA。它们是备选路线或仿真增强资源。
+当前阶段不需要手动下载电池、多孔介质、PFHub 或 ExaCA。它们是备选路线或仿真增强资源；只有当 AM-Bench optical microscopy 路线无法形成可用 micro graph 或可解释对齐时，再切换到 `mds2-2775`、ExaCA 或 PFHub。

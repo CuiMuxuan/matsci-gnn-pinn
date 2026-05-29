@@ -13,7 +13,9 @@
 - 已支持 frame-based split manifest，避免随机点划分带来的时序泄漏。
 - 已实现 mean baseline、Macro PINN 数据拟合入口和初步 PDE residual 训练开关。
 - 已实现 hot/gradient active sampling、region-aware metrics 与服务器端复现实验脚本。
-- 已预留 closure discovery、micro GNN、weak GNN-PINN coupling 模块。
+- 已实现 sparse closure 与 synthetic graph-conditioned closure 消融，当前转入真实/半真实 microstructure conditioning。
+- 已新增 AM-Bench `mds2-2718` optical microscopy 下载/校验入口和 TIFF-to-coarse-micro-graph inspection 原型。
+- 已预留 weak GNN-PINN coupling 模块。
 - 本地 smoke/probe 与第一批 A100 dense calibrated temperature 实验已完成，当前正在推进 Macro PINN 稳健化和闭合项实验前置工作。
 
 ## Repository Layout
@@ -105,6 +107,30 @@ python -m gnnpinn.data.ambench_downloads \
 
 更完整的下载说明见 [docs/ambench_downloads.md](docs/ambench_downloads.md)。
 
+Phase 17 真实微观组织入口使用 AMB2022-03 / `mds2-2718` optical microscopy：
+
+```bash
+python -m gnnpinn.data.ambench_downloads \
+  --dataset-id mds2-2718 \
+  --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 \
+  --download \
+  --verify-sha256 \
+  --output outputs/data_audits/ambench_mds2_2718_download_report.json
+```
+
+下载后可先生成 coarse micro graph inspection：
+
+```bash
+python -m gnnpinn.data.loaders.ambench_microstructure \
+  --image data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3_m.tif \
+  --sample-id AMB2022-718-SH1-BP1-P2-L2.1-3_m \
+  --threshold-quantile 0.9 \
+  --grid-rows 8 \
+  --grid-cols 8 \
+  --graph-k 4 \
+  --output outputs/data_audits/ambench_mds2_2718_micrograph_inspection.json
+```
+
 ## Quick Start
 
 运行数据审计：
@@ -175,7 +201,7 @@ $env:CONDA_NO_PLUGINS="true"
 conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 ```
 
-最近一次本地验证状态：`43 passed, 1 skipped`。
+最近一次本地验证状态：`53 passed, 2 skipped`。
 
 ## Server Stage
 
@@ -215,6 +241,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/experiment_plan.md](docs/experiment_plan.md): 实验矩阵、指标和配置命名。
 - [docs/environment.md](docs/environment.md): 本地与远程环境迁移。
 - [docs/ambench_downloads.md](docs/ambench_downloads.md): AM-Bench 下载、断点处理和校验。
+- [docs/data_cards/ambench_2022_optical_microscopy_mds2_2718.md](docs/data_cards/ambench_2022_optical_microscopy_mds2_2718.md): AM-Bench optical microscopy 数据卡。
 - [docs/server_runbook.md](docs/server_runbook.md): 云 GPU 阶段运行手册。
 - [docs/server_execution_plan.md](docs/server_execution_plan.md): 后续服务器研发推进总方案。
 - [docs/closure_mvp_execution_plan.md](docs/closure_mvp_execution_plan.md): sparse closure MVP 与后续 residual sampling 方案。

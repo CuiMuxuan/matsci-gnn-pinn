@@ -501,6 +501,50 @@ D1 阶段决策：
 - 至少一个真实或半真实 micro graph dataset 可复现生成。
 - GNN-conditioned closure 相比手工统计特征有提升或给出明确失败原因。
 
+当前 D2 实现状态：
+
+- 已完成 AM-Bench microstructure 数据源评估。
+- Phase 17 第一优先数据源确定为 `mds2-2718` optical microscopy，而不是直接进入更大的 `mds2-2775`。
+- 原因：`mds2-2718` 与 AMB2022-03 同源，包含 single-track/pad optical microscopy、melt-pool cross-section measurement XLSX 和 TIFF checksum；全量约 10.6 GB，可先用一个代表性 TIFF 做低风险入口。
+- 已新增 manifest：`configs/data/ambench_mds2_2718_sources.yaml`。
+- 已将 `gnnpinn.data.ambench_downloads` 泛化为 `--dataset-id mds2-2716|mds2-2718`。
+- 已新增显微图像 inspection / coarse graph 入口：`gnnpinn.data.loaders.ambench_microstructure`，并解析 `BP/P/L/replicate/view/masked` 等文件名元数据。
+- 已新增 data card：`docs/data_cards/ambench_2022_optical_microscopy_mds2_2718.md`。
+
+下一轮服务器命令：
+
+```bash
+cd /root/matsci-gnn-pinn
+git pull --ff-only
+
+PYTHONUTF8=1 PYTHONIOENCODING=utf-8 \
+/home/vipuser/miniconda3/bin/conda run -n gnnpinn python -m gnnpinn.data.ambench_downloads \
+  --dataset-id mds2-2718 \
+  --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 \
+  --download \
+  --verify-sha256 \
+  --output outputs/data_audits/ambench_mds2_2718_download_report.json
+
+PYTHONUTF8=1 PYTHONIOENCODING=utf-8 \
+/home/vipuser/miniconda3/bin/conda run -n gnnpinn python -m gnnpinn.data.loaders.ambench_microstructure \
+  --image data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3_m.tif \
+  --sample-id AMB2022-718-SH1-BP1-P2-L2.1-3_m \
+  --threshold-quantile 0.9 \
+  --grid-rows 8 \
+  --grid-cols 8 \
+  --graph-k 4 \
+  --output outputs/data_audits/ambench_mds2_2718_micrograph_inspection.json
+```
+
+D2 下一步研发：
+
+```text
+1. Convert one or more TIFF inspections into sample-level graph feature JSONL.
+2. Add a graph-conditioning provider that reads real micro graph JSON rather than synthetic RBF anchors.
+3. Compare real micro graph conditioning against scalar hand-crafted microscopy statistics.
+4. If `mds2-2718` sample-level alignment is too weak, move to `mds2-2775` or ExaCA-generated microstructures as the second route.
+```
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

@@ -1,0 +1,66 @@
+dataset_id: mds2-2718
+dataset_name: AMB2022-03 optical microscopy
+title: "AM Bench 2022 Measurement Results Data: Optical Microscopy of Laser-scanned Single Tracks and Pads (AMB2022-03)"
+material_system: "bare In718, AMB2022-03 laser-scanned single tracks and pads"
+local_root: data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718
+record:
+  doi: https://doi.org/10.18434/mds2-2718
+  pdr_landing_page: https://data.nist.gov/od/id/mds2-2718
+  pdr_metadata_json: https://data.nist.gov/od/id/mds2-2718
+  pdr_status_checked: "2026-05-30"
+  pdr_metadata_version: "1.0.3"
+  pdr_metadata_modified: "2022-09-13"
+notes:
+  - "Phase 17 starts with this optical microscopy dataset because it is smaller and simpler than mds2-2775, while sharing the AMB2022-03 process context."
+  - "The full PDR record contains 102 TIFF images, 104 checksum files, one README, and one measurement-results XLSX file."
+  - "This manifest pins a small first subset: README, melt-pool measurement XLSX, one representative measured single-track cross-section TIFF, and its checksum sidecar."
+  - "Additional TIFF files should be added deliberately after the first inspection and graph-feature pipeline is validated."
+required_files:
+  - id: readme
+    relative_path: 2718_README.txt
+    media_type: text/plain
+    size_bytes: 7956
+    sha256: 8fa24c82e087a43ea453f9dbab7e56acfccb421a4b5afa620992142967a45274
+    download_url: https://data.nist.gov/od/ds/mds2-2718/2718_README.txt
+    purpose: "Dataset description and image metadata notes."
+  - id: melt_pool_measurements_xlsx
+    relative_path: AMB2022-718-SH1-MeltPool_Cross-Section_Measurement_Results.xlsx
+    media_type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    size_bytes: 25811
+    sha256: 2cfaac96aaca3dabb77b7029f842cdcc7e75c5a2cf3577d0734823246364a931
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/AMB2022-718-SH1-MeltPool_Cross-Section_Measurement_Results.xlsx
+    purpose: "Tabulated melt-pool cross-section measurement results for aligning image-derived features to benchmark geometry targets."
+  - id: single_track_cross_section_representative_tif
+    relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3_m.tif
+    media_type: image/tiff
+    size_bytes: 36962776
+    sha256: b32e19c64d790ddaec7902b1ca35ca538ccf2c509ddf8f975dd80211229aaa81
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3_m.tif
+    purpose: "First real optical microstructure TIFF for inspection, threshold features, and sample-level graph construction."
+  - id: single_track_cross_section_representative_tif_sha256
+    relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3_m.tif.sha256
+    media_type: text/plain
+    size_bytes: 64
+    sha256: 7365105894f7b1648816c624815a85e666597c5b7d35376c925d10a5a72d9c3b
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3_m.tif.sha256
+    purpose: "NIST checksum sidecar for the representative TIFF."
+optional_files:
+  - id: single_track_small_unmasked_tif
+    relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-2.tif
+    media_type: image/tiff
+    size_bytes: 20553076
+    sha256: e22eab832ad9e9780d63319d4e9c3670b07c2dc38b23a1c2bbc7af7f4e99d70b
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-2.tif
+    purpose: "Optional smaller unmasked TIFF for contrast with the representative masked image."
+  - id: single_track_small_unmasked_tif_sha256
+    relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-2.tif.sha256
+    media_type: text/plain
+    size_bytes: 64
+    sha256: fc3f5882bca3a74c65352b9a0a820ad24731c3854644dde6adce400bc4157c3d
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-2.tif.sha256
+    purpose: "NIST checksum sidecar for the optional smaller TIFF."
+download_examples:
+  validate:
+    - "conda run -n gnnpinn-cu130 python -m gnnpinn.data.ambench_downloads --dataset-id mds2-2718 --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 --verify-sha256"
+  download_first_subset:
+    - "conda run -n gnnpinn-cu130 python -m gnnpinn.data.ambench_downloads --dataset-id mds2-2718 --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 --download --verify-sha256"

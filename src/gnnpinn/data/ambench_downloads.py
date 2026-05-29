@@ -1,4 +1,4 @@
-"""Validate manually downloaded AM-Bench dataset subsets."""
+"""Validate and download pinned AM-Bench dataset subsets."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ import urllib.request
 import yaml
 
 DEFAULT_SOURCE_MANIFEST = Path("configs/data/ambench_mds2_2716_sources.yaml")
+DEFAULT_MDS2_2718_SOURCE_MANIFEST = Path("configs/data/ambench_mds2_2718_sources.yaml")
 
 FALLBACK_MDS2_2716_SOURCES: dict[str, Any] = {
     "dataset_id": "mds2-2716",
@@ -55,15 +56,29 @@ FALLBACK_MDS2_2716_SOURCES: dict[str, Any] = {
 def load_mds2_2716_sources(source_manifest: str | Path | None = None) -> dict[str, Any]:
     """Load known NIST PDR file sources for AMB2022-03 / mds2-2716."""
 
-    manifest_path = Path(source_manifest) if source_manifest else DEFAULT_SOURCE_MANIFEST
+    return load_source_manifest(source_manifest or DEFAULT_SOURCE_MANIFEST, fallback=FALLBACK_MDS2_2716_SOURCES)
+
+
+def load_mds2_2718_sources(source_manifest: str | Path | None = None) -> dict[str, Any]:
+    """Load known NIST PDR file sources for AMB2022-03 optical microscopy / mds2-2718."""
+
+    return load_source_manifest(source_manifest or DEFAULT_MDS2_2718_SOURCE_MANIFEST)
+
+
+def load_source_manifest(source_manifest: str | Path, fallback: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Load a pinned source manifest and annotate it with its path."""
+
+    manifest_path = Path(source_manifest)
     if manifest_path.exists():
         with manifest_path.open("r", encoding="utf-8") as handle:
             data = yaml.safe_load(handle) or {}
         data["_source_manifest"] = str(manifest_path)
         return data
-    fallback = dict(FALLBACK_MDS2_2716_SOURCES)
-    fallback["_source_manifest"] = None
-    return fallback
+    if fallback is not None:
+        fallback_copy = dict(fallback)
+        fallback_copy["_source_manifest"] = None
+        return fallback_copy
+    raise FileNotFoundError(f"Source manifest not found: {manifest_path}")
 
 
 def _sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
@@ -175,8 +190,51 @@ def download_mds2_2716(
 ) -> dict[str, Any]:
     """Download required AMB2022-03 / mds2-2716 files from the source manifest."""
 
-    root = Path(root)
     sources = load_mds2_2716_sources(source_manifest)
+    return download_source_manifest(
+        root,
+        sources,
+        file_ids=file_ids,
+        overwrite=overwrite,
+        dry_run=dry_run,
+        verify_hashes=verify_hashes,
+    )
+
+
+def download_mds2_2718(
+    root: str | Path,
+    source_manifest: str | Path | None = None,
+    *,
+    file_ids: list[str] | None = None,
+    overwrite: bool = False,
+    dry_run: bool = False,
+    verify_hashes: bool = True,
+) -> dict[str, Any]:
+    """Download selected AMB2022-03 optical microscopy files from the source manifest."""
+
+    sources = load_mds2_2718_sources(source_manifest)
+    return download_source_manifest(
+        root,
+        sources,
+        file_ids=file_ids,
+        overwrite=overwrite,
+        dry_run=dry_run,
+        verify_hashes=verify_hashes,
+    )
+
+
+def download_source_manifest(
+    root: str | Path,
+    sources: dict[str, Any],
+    *,
+    file_ids: list[str] | None = None,
+    overwrite: bool = False,
+    dry_run: bool = False,
+    verify_hashes: bool = True,
+) -> dict[str, Any]:
+    """Download files listed in a loaded AM-Bench source manifest."""
+
+    root = Path(root)
     selected_ids = set(file_ids or [])
     required_sources = [
         source
@@ -221,10 +279,12 @@ def download_mds2_2716(
             }
         )
 
-    final_report = validate_mds2_2716(root, source_manifest=source_manifest, verify_hashes=verify_hashes)
-    validation_failed = not final_report["ready_for_hdf5_adapter"]
+    final_report = validate_source_manifest(root, sources, verify_hashes=verify_hashes)
+    _add_dataset_ready_aliases(final_report, sources.get("dataset_id"))
+    validation_failed = not final_report["ready"]
     return {
-        "dataset_id": sources.get("dataset_id", "mds2-2716"),
+        "dataset_id": sources.get("dataset_id"),
+        "dataset_name": sources.get("dataset_name"),
         "root": str(root),
         "source_manifest": sources.get("_source_manifest"),
         "dry_run": dry_run,
@@ -236,23 +296,67 @@ def download_mds2_2716(
     }
 
 
+def _add_dataset_ready_aliases(report: dict[str, Any], dataset_id: str | None) -> None:
+    if dataset_id == "mds2-2716":
+        report["ready_for_hdf5_adapter"] = report["ready"]
+        report["next_step"] = (
+            "Run HDF5 adapter development against Thermography and ScanStrategy files."
+            if report["ready"]
+            else "Download missing AM-Bench files from suggested_downloads, then rerun this command."
+        )
+    elif dataset_id == "mds2-2718":
+        report["ready_for_microstructure_adapter"] = report["ready"]
+        report["next_step"] = (
+            "Run microstructure TIFF inspection/preprocessing on selected optical microscopy files."
+            if report["ready"]
+            else "Download missing AM-Bench optical microscopy files from suggested_downloads, then rerun this command."
+        )
+
+
 def validate_mds2_2716(
     root: str | Path,
     source_manifest: str | Path | None = None,
     verify_hashes: bool = False,
 ) -> dict[str, Any]:
-    root = Path(root)
     sources = load_mds2_2716_sources(source_manifest)
+    report = validate_source_manifest(root, sources, verify_hashes=verify_hashes)
+    _add_dataset_ready_aliases(report, sources.get("dataset_id"))
+    return report
+
+
+def validate_mds2_2718(
+    root: str | Path,
+    source_manifest: str | Path | None = None,
+    verify_hashes: bool = False,
+) -> dict[str, Any]:
+    sources = load_mds2_2718_sources(source_manifest)
+    report = validate_source_manifest(root, sources, verify_hashes=verify_hashes)
+    _add_dataset_ready_aliases(report, sources.get("dataset_id"))
+    return report
+
+
+def validate_source_manifest(
+    root: str | Path,
+    sources: dict[str, Any],
+    verify_hashes: bool = False,
+) -> dict[str, Any]:
+    root = Path(root)
     required_sources = sources.get("required_files", [])
     checks = {
         source["id"]: _check_expected_file(root, source, verify_hashes)
         for source in required_sources
     }
     hdf5_files = sorted([*root.rglob("*.h5"), *root.rglob("*.hdf5"), *root.rglob("*.hdf")])
+    tiff_files = sorted([*root.rglob("*.tif"), *root.rglob("*.tiff")])
     hdf5_check = {
         "present": bool(hdf5_files),
         "count": len(hdf5_files),
         "examples": [str(path) for path in hdf5_files[:10]],
+    }
+    tiff_check = {
+        "present": bool(tiff_files),
+        "count": len(tiff_files),
+        "examples": [str(path) for path in tiff_files[:10]],
     }
     missing = [name for name, check in checks.items() if not check["present"]]
     mismatched = [
@@ -278,26 +382,27 @@ def validate_mds2_2716(
         "root_exists": root.exists(),
         "source_manifest": sources.get("_source_manifest"),
         "record": sources.get("record", {}),
-        "ready_for_hdf5_adapter": ready,
+        "ready": ready,
         "missing_required": missing,
         "mismatched_required": mismatched,
-        "checks": {**checks, "hdf5_files": hdf5_check},
+        "checks": {**checks, "hdf5_files": hdf5_check, "tiff_files": tiff_check},
         "suggested_downloads": suggested_downloads,
-        "next_step": (
-            "Run HDF5 adapter development against Thermography and ScanStrategy files."
-            if ready
-            else "Download missing AM-Bench files from suggested_downloads, then rerun this command."
-        ),
     }
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", required=True, type=Path, help="Root directory for extracted mds2-2716 files.")
+    parser.add_argument("--root", required=True, type=Path, help="Root directory for selected AM-Bench files.")
+    parser.add_argument(
+        "--dataset-id",
+        default="mds2-2716",
+        choices=["mds2-2716", "mds2-2718"],
+        help="Pinned AM-Bench source manifest to use when --source-manifest is not overridden.",
+    )
     parser.add_argument(
         "--source-manifest",
         type=Path,
-        default=DEFAULT_SOURCE_MANIFEST,
+        default=None,
         help="YAML manifest containing known NIST PDR file URLs and checksums.",
     )
     parser.add_argument(
@@ -332,21 +437,29 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    source_manifest = args.source_manifest or (
+        DEFAULT_MDS2_2718_SOURCE_MANIFEST if args.dataset_id == "mds2-2718" else DEFAULT_SOURCE_MANIFEST
+    )
     if args.download:
-        report = download_mds2_2716(
+        sources = load_source_manifest(
+            source_manifest,
+            fallback=FALLBACK_MDS2_2716_SOURCES if args.dataset_id == "mds2-2716" else None,
+        )
+        report = download_source_manifest(
             args.root,
-            source_manifest=args.source_manifest,
+            sources,
             file_ids=args.file_ids,
             overwrite=args.overwrite,
             dry_run=args.dry_run,
             verify_hashes=args.verify_sha256,
         )
     else:
-        report = validate_mds2_2716(
-            args.root,
-            source_manifest=args.source_manifest,
-            verify_hashes=args.verify_sha256,
+        sources = load_source_manifest(
+            source_manifest,
+            fallback=FALLBACK_MDS2_2716_SOURCES if args.dataset_id == "mds2-2716" else None,
         )
+        report = validate_source_manifest(args.root, sources, verify_hashes=args.verify_sha256)
+        _add_dataset_ready_aliases(report, sources.get("dataset_id"))
     text = json.dumps(report, indent=2, ensure_ascii=False)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
