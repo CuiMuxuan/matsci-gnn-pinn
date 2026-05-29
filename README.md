@@ -175,7 +175,7 @@ $env:CONDA_NO_PLUGINS="true"
 conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 ```
 
-最近一次本地验证状态：`36 passed, 1 skipped`。
+最近一次本地验证状态：`43 passed, 1 skipped`。
 
 ## Server Stage
 
@@ -202,6 +202,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - sparse closure MVP 已跑通但未超过 data-only；下一步转向 residual/collocation sampling 与尺度化热源。
 - random residual sampling 改善了 active closure，但仍弱于 data-only；下一步实现 hot/gradient residual sampling。
 - hot/gradient residual sampling 比 random 更差；下一步转向 staged/warm-start closure fine-tuning。
+- staged closure 起步有效但仍未超过 data-only；已实现 closure optimizer separation，下一步在服务器运行低 closure lr 与冻结 backbone 消融。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -224,6 +225,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_sparse_closure_mvp_v1.md](docs/results/ambench_sparse_closure_mvp_v1.md): sparse source closure MVP 诊断结果。
 - [docs/results/ambench_sparse_closure_residual_sampling_v1.md](docs/results/ambench_sparse_closure_residual_sampling_v1.md): random residual sampling closure 结果。
 - [docs/results/ambench_sparse_closure_region_residual_sampling_v1.md](docs/results/ambench_sparse_closure_region_residual_sampling_v1.md): hot/gradient residual sampling 诊断结果。
+- [docs/results/ambench_sparse_closure_staged_v1.md](docs/results/ambench_sparse_closure_staged_v1.md): staged sparse closure 诊断结果。
 
 ## Public Resources
 

@@ -146,3 +146,25 @@ gradient_quantile=0.9
 1. 写负结果分析。
 2. 优先实现 residual/collocation sampling 与尺度化热源。
 3. 暂缓方向三弱双向耦合。
+
+## 当前推进：Optimizer Separation
+
+staged closure 的最新结果显示，`closure_start_step=1500` 能显著缓解过早 residual 约束带来的退化，但 closure 仍然没有超过 data-only。当前判断是：问题不主要来自 sparse library 表达能力不足，而来自 closure coefficients 与 Macro PINN backbone 同步优化时相互牵扯。
+
+因此下一步已经落地为 C1e：
+
+- `--closure-lr`：closure coefficients 使用独立学习率。
+- `--freeze-backbone-after-closure-start`：warmup 后冻结 Macro PINN backbone，只让 closure coefficients 解释 residual。
+- `scripts/server/run_sparse_closure_optimizer_ablation_a100.sh`：A100 上固定 active 表、`closure_start_step=1500`、`residual_sample_size=4096`、`pde_weight=1e-6` 的四组消融。
+
+推荐服务器执行：
+
+```bash
+bash scripts/server/run_sparse_closure_optimizer_ablation_a100.sh \
+  > logs/ambench_sparse_closure_optimizer_ablation_a100_v1.log 2>&1
+```
+
+判据：
+
+- 若低 `closure_lr` 或冻结 backbone 能把 hot q90 拉回接近 data-only，则继续做 3 seed 和 closure 稳定性分析。
+- 若仍然大幅弱于 data-only，则保留 C1 作为可复现负结果，转入 GNN-conditioned closure 接口与 synthetic/toy graph 耦合，以服务方向三主线。

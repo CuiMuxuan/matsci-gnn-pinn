@@ -302,6 +302,48 @@ Staged closure training:
 
 验收：closure 在后期作为小修正项打开时，不显著损害 data-only hot q90 与 gradient q90，并保存可解释表达式。
 
+当前 C1d 状态：
+
+- 已实现 `--closure-start-step`。
+- 已完成 active 表 staged closure 训练。
+- 结果文档：`docs/results/ambench_sparse_closure_staged_v1.md`。
+- 结论：`closure_start_step=1500` 明显优于过早打开 closure，但仍未超过 data-only；下一步需要把 closure coefficients 与 Macro PINN backbone 的优化分离。
+
+推荐下一步 C1e：
+
+```text
+Separate closure optimizer behavior:
+- --closure-lr
+- --freeze-backbone-after-closure-start
+```
+
+验收：在冻结或低学习率 closure fine-tuning 下，closure 不显著损害 active data-only hot q90，并能输出稳定的稀疏表达式。
+
+当前 C1e 本地实现状态：
+
+- 已实现 `--closure-lr`，closure coefficients 可以使用独立学习率；未指定时默认等于 `--lr`。
+- 已实现 `--freeze-backbone-after-closure-start`，在 PDE/closure residual 真正启用后冻结 Macro PINN backbone，只微调 closure coefficients。
+- metrics/checkpoint 会保存 optimizer 配置；history 会保存 `backbone_frozen` 标记。
+- 本地测试：`tests/test_macro_pinn_train.py` 已覆盖 closure lr 与冻结逻辑。
+
+下一轮服务器命令：
+
+```bash
+bash scripts/server/run_sparse_closure_optimizer_ablation_a100.sh \
+  > logs/ambench_sparse_closure_optimizer_ablation_a100_v1.log 2>&1
+```
+
+实验矩阵固定 active 表、`closure_start_step=1500`、`residual_sample_size=4096`、`pde_weight=1e-6`，只比较：
+
+| closure lr | Backbone | 目的 |
+| ---: | --- | --- |
+| `1e-4` | trainable | 比主网络慢一档学习 closure |
+| `1e-5` | trainable | 极低 closure lr，测试 source 小扰动 |
+| `1e-4` | frozen after warmup | 数据拟合先收敛，后续只学习 closure |
+| `1e-5` | frozen after warmup | 最保守 closure fine-tuning |
+
+若冻结方案仍明显弱于 data-only，则 C1 路线应转入“closure 负结果 + GNN-conditioned/toy interface”并推进阶段 D，而不是继续堆叠 sparse polynomial order。
+
 ### C2. Closure 消融
 
 必跑对照：

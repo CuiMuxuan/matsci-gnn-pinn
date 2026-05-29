@@ -100,6 +100,16 @@ def _jsonable_config(args: argparse.Namespace) -> dict[str, Any]:
     return config
 
 
+def _optimizer_payload(args: argparse.Namespace, closure_coefficients: Any | None) -> dict[str, Any]:
+    closure_lr = args.closure_lr if args.closure_lr is not None else args.lr
+    return {
+        "backbone_lr": args.lr,
+        "closure_lr": closure_lr if closure_coefficients is not None else None,
+        "closure_lr_overridden": args.closure_lr is not None,
+        "freeze_backbone_after_closure_start": args.freeze_backbone_after_closure_start,
+    }
+
+
 def _closure_feature_tensor(
     feature_names: list[str],
     pred_field: Any,
@@ -290,17 +300,28 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     elif args.closure_mode != "none":
         raise ValueError(f"Unsupported closure mode: {args.closure_mode}")
 
-    parameters = list(model.parameters())
+    closure_lr = args.closure_lr if args.closure_lr is not None else args.lr
+    parameter_groups: list[dict[str, Any]] = [{"params": list(model.parameters()), "lr": args.lr}]
     if closure_coefficients is not None:
-        parameters.append(closure_coefficients)
-    optimizer = torch.optim.Adam(parameters, lr=args.lr)
+        parameter_groups.append({"params": [closure_coefficients], "lr": closure_lr})
+    optimizer = torch.optim.Adam(parameter_groups)
 
     history: list[dict[str, float]] = []
     last_train_source = None
+    backbone_frozen = False
     for step in range(args.steps):
         optimizer.zero_grad(set_to_none=True)
         closure_stage_active = step >= args.closure_start_step
         needs_residual = args.pde_weight > 0 and closure_stage_active
+        if (
+            args.freeze_backbone_after_closure_start
+            and closure_coefficients is not None
+            and needs_residual
+            and not backbone_frozen
+        ):
+            for parameter in model.parameters():
+                parameter.requires_grad_(False)
+            backbone_frozen = True
         residual_indices = _residual_sample_indices(
             train_indices=train_indices,
             candidate_indices=residual_candidate_indices,
@@ -365,6 +386,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                     "residual_points": float(len(residual_indices) if needs_residual else 0),
                     "residual_candidates": float(len(residual_candidate_indices) if needs_residual else 0),
                     "closure_stage_active": bool(closure_stage_active),
+                    "backbone_frozen": bool(backbone_frozen),
                 }
             )
 
@@ -443,6 +465,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "residual_gradient_quantile": args.residual_gradient_quantile,
             "residual_candidate_points": len(residual_candidate_indices),
         },
+        "optimizer": _optimizer_payload(args, closure_coefficients),
         "closure": _closure_payload(
             closure_mode=args.closure_mode,
             closure_library=closure_library,
@@ -463,6 +486,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 "target": args.target,
                 "sample_id": sample.sample_id,
                 "closure": metrics_payload["closure"],
+                "optimizer": metrics_payload["optimizer"],
             },
         },
         checkpoint_path,
@@ -497,6 +521,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-dir", required=True, type=Path, help="Run output directory.")
     parser.add_argument("--steps", type=int, default=200)
     parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument(
+        "--closure-lr",
+        type=float,
+        help="Optional learning rate for sparse closure coefficients; defaults to --lr.",
+    )
     parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--layers", type=int, default=3)
     parser.add_argument("--activation", default="tanh")
@@ -592,6 +621,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--closure-polynomial-order", type=int, default=1)
     parser.add_argument("--closure-l1-weight", type=float, default=0.0)
     parser.add_argument("--closure-threshold", type=float, default=0.0)
+    parser.add_argument(
+        "--freeze-backbone-after-closure-start",
+        action="store_true",
+        help="Freeze Macro PINN parameters once closure/PDE residual training starts.",
+    )
     parser.add_argument(
         "--no-closure-bias",
         action="store_false",
