@@ -271,11 +271,18 @@ T, x, y, t, grad_T_norm, laplacian_T, laser_power_W, scan_speed_mm_s, spot_size_
 ```text
 Add residual sampling:
 - --residual-sample-size
-- --residual-sampling-mode train_random|hot|gradient|hot_gradient
+- --residual-sampling-mode random|hot|gradient|hot_gradient
 - --residual-sampling-seed
 ```
 
 验收：在 `pde_weight=1e-6` 附近，closure run 至少不显著恶化 data-only hot q90 与 gradient q90 指标。
+
+当前 C1b 状态：
+
+- 已实现 random residual sampling：`--residual-sample-size` 与 `--residual-sampling-seed`。
+- 已完成 `2048/4096` random residual sampled closure 实验。
+- 结果文档：`docs/results/ambench_sparse_closure_residual_sampling_v1.md`。
+- 结论：random residual sampling 明显改善 active closure 的全局与梯度指标，但仍不超过 data-only；下一步应实现 hot/gradient residual sampling modes。
 
 ### C2. Closure 消融
 
