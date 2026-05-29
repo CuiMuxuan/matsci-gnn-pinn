@@ -198,6 +198,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - uniform dense minmax Macro PINN test RMSE: `51.655371`
 - active hot/gradient Macro PINN test RMSE: `65.892559`
 - active hot/gradient Macro PINN hot q90 RMSE: `30.868055`
+- 3-seed active hot-zone candidate hot q90 RMSE: `17.033393 +/- 2.084327`
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -215,6 +216,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_dense_stage_a_normalization_baselines.md](docs/results/ambench_dense_stage_a_normalization_baselines.md): 归一化与强 baseline 结果。
 - [docs/results/ambench_dense_region_metrics_q90.md](docs/results/ambench_dense_region_metrics_q90.md): q90 区域指标结果。
 - [docs/results/ambench_dense_active_sampling_v1.md](docs/results/ambench_dense_active_sampling_v1.md): hot/gradient active sampling 结果。
+- [docs/results/ambench_macro_pinn_screen_matrix_v1.md](docs/results/ambench_macro_pinn_screen_matrix_v1.md): Macro PINN 小矩阵与 3 seed 稳健性结果。
 
 ## Public Resources
 
