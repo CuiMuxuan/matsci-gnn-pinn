@@ -299,7 +299,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     last_train_source = None
     for step in range(args.steps):
         optimizer.zero_grad(set_to_none=True)
-        needs_residual = args.pde_weight > 0
+        closure_stage_active = step >= args.closure_start_step
+        needs_residual = args.pde_weight > 0 and closure_stage_active
         residual_indices = _residual_sample_indices(
             train_indices=train_indices,
             candidate_indices=residual_candidate_indices,
@@ -363,6 +364,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                     "closure_loss": float(closure_loss.detach().cpu()),
                     "residual_points": float(len(residual_indices) if needs_residual else 0),
                     "residual_candidates": float(len(residual_candidate_indices) if needs_residual else 0),
+                    "closure_stage_active": bool(closure_stage_active),
                 }
             )
 
@@ -433,6 +435,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "rho_cp": args.rho_cp,
             "conductivity": args.conductivity,
             "source": args.source,
+            "closure_start_step": args.closure_start_step,
             "residual_sample_size": args.residual_sample_size,
             "residual_sampling_mode": args.residual_sampling_mode,
             "residual_sampling_seed": args.residual_sampling_seed,
@@ -511,6 +514,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--residual-sample-size",
         type=int,
         help="Optional number of train points sampled per step for PDE/closure residual loss.",
+    )
+    parser.add_argument(
+        "--closure-start-step",
+        type=int,
+        default=0,
+        help="Training step at which PDE/closure residual loss becomes active.",
     )
     parser.add_argument(
         "--residual-sampling-seed",
