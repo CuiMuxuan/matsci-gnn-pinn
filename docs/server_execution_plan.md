@@ -258,6 +258,25 @@ T, x, y, t, grad_T_norm, laplacian_T, laser_power_W, scan_speed_mm_s, spot_size_
 - active terms 稳定，3 seeds 下主项一致。
 - 导出表达式可写入论文附录。
 
+当前执行状态：
+
+- 已实现 `--closure-mode sparse_linear`、`--pde-field normalized`、closure feature/library/threshold/L1 参数。
+- 已完成首轮 sparse source closure MVP 与低权重修正扫描。
+- 结果文档：`docs/results/ambench_sparse_closure_mvp_v1.md`。
+- 结论：功能链路可复现，但当前 all-point residual formulation 未超过 data-only；`pde_weight=1e-3/1e-4` 明显过强，`1e-6` 可稳定但 hot/gradient 指标仍弱。
+- 下一步应先实现 residual/collocation sampling，而不是扩大 sparse library 或跑 3 seed。
+
+推荐下一步 C1b：
+
+```text
+Add residual sampling:
+- --residual-sample-size
+- --residual-sampling-mode train_random|hot|gradient|hot_gradient
+- --residual-sampling-seed
+```
+
+验收：在 `pde_weight=1e-6` 附近，closure run 至少不显著恶化 data-only hot q90 与 gradient q90 指标。
+
 ### C2. Closure 消融
 
 必跑对照：

@@ -199,6 +199,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - active hot/gradient Macro PINN test RMSE: `65.892559`
 - active hot/gradient Macro PINN hot q90 RMSE: `30.868055`
 - 3-seed active hot-zone candidate hot q90 RMSE: `17.033393 +/- 2.084327`
+- sparse closure MVP 已跑通但未超过 data-only；下一步转向 residual/collocation sampling 与尺度化热源。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -212,11 +213,13 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/ambench_downloads.md](docs/ambench_downloads.md): AM-Bench 下载、断点处理和校验。
 - [docs/server_runbook.md](docs/server_runbook.md): 云 GPU 阶段运行手册。
 - [docs/server_execution_plan.md](docs/server_execution_plan.md): 后续服务器研发推进总方案。
+- [docs/closure_mvp_execution_plan.md](docs/closure_mvp_execution_plan.md): sparse closure MVP 与后续 residual sampling 方案。
 - [docs/results/ambench_dense_temperature_server_v1.md](docs/results/ambench_dense_temperature_server_v1.md): 第一轮 A100 dense temperature 结果。
 - [docs/results/ambench_dense_stage_a_normalization_baselines.md](docs/results/ambench_dense_stage_a_normalization_baselines.md): 归一化与强 baseline 结果。
 - [docs/results/ambench_dense_region_metrics_q90.md](docs/results/ambench_dense_region_metrics_q90.md): q90 区域指标结果。
 - [docs/results/ambench_dense_active_sampling_v1.md](docs/results/ambench_dense_active_sampling_v1.md): hot/gradient active sampling 结果。
 - [docs/results/ambench_macro_pinn_screen_matrix_v1.md](docs/results/ambench_macro_pinn_screen_matrix_v1.md): Macro PINN 小矩阵与 3 seed 稳健性结果。
+- [docs/results/ambench_sparse_closure_mvp_v1.md](docs/results/ambench_sparse_closure_mvp_v1.md): sparse source closure MVP 诊断结果。
 
 ## Public Resources
 
