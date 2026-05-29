@@ -186,6 +186,15 @@ bash scripts/server/run_dense_active_sampling_a100.sh > logs/ambench_dense_activ
 2. 固定最佳 data-only 配置，扫描 PDE weight。
 3. 固定最佳 PDE weight，跑 3 seeds。
 
+当前筛选脚本：
+
+```bash
+cd /root/matsci-gnn-pinn
+bash scripts/server/run_macro_pinn_screen_matrix_a100.sh > logs/ambench_macro_pinn_screen_matrix_a100_v1.log 2>&1
+```
+
+首轮脚本固定 `--input-normalization minmax`、`pde_weight=0`、q90 区域指标，在 uniform dense 与 balanced hot/gradient active 两张表上分别跑 4 个配置：`h64/l3/lr1e-3`、`h128/l4/lr1e-3`、`h128/l4/lr3e-4`、`h256/l4/lr1e-3`。如果该筛选显示一个配置稳定领先，再补 3 seed 与 PDE/closure 分支。
+
 验收：
 
 - data-only Macro PINN 至少接近强 baseline。
