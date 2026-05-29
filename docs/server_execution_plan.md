@@ -462,6 +462,17 @@ Graph L1 sensitivity:
 - require graph terms survive thresholding without hot q90 regression
 ```
 
+当前 D1d 本地实现状态：
+
+- 已新增服务器脚本：`scripts/server/run_graph_conditioned_closure_graph_l1_sensitivity_a100.sh`。
+
+下一轮服务器命令：
+
+```bash
+bash scripts/server/run_graph_conditioned_closure_graph_l1_sensitivity_a100.sh \
+  > logs/ambench_graph_conditioned_closure_graph_l1_sensitivity_a100_v1.log 2>&1
+```
+
 ### D2. 接入真实/半真实微观数据
 
 数据优先级：

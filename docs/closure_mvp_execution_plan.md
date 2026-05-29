@@ -277,3 +277,18 @@ bash scripts/server/run_graph_conditioned_closure_gated_a100.sh \
 | gated graph, gate 0.25, graph L1 `1e-4` | 72.840576 | 31.919197 | 61.623894 |
 
 结论：gate 0.25 保住了 hot q90 并改善了 gradient q90，但 graph terms 基本被 `graph_l1_weight=1e-4` 压没。下一步只做最小 graph-L1 sensitivity，检验 graph terms 是否能在不损害 hot q90 的前提下保留。
+
+## D1d Graph L1 Sensitivity
+
+固定 `gate=0.25`、`embedding_dim=6`、`length_scale=0.25`，只扫描更弱 graph L1：
+
+```bash
+bash scripts/server/run_graph_conditioned_closure_graph_l1_sensitivity_a100.sh \
+  > logs/ambench_graph_conditioned_closure_graph_l1_sensitivity_a100_v1.log 2>&1
+```
+
+验收标准：
+
+- hot q90 不明显劣于 sparse closure best。
+- gradient q90 保持或优于 gated graph `1e-4`。
+- 至少一个 graph term 在 `closure_threshold=1e-6` 下保留。
