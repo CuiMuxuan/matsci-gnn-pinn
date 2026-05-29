@@ -12,8 +12,9 @@
 - 已支持 raw `signal` 与校准 `temperature_C` 两种字段目标。
 - 已支持 frame-based split manifest，避免随机点划分带来的时序泄漏。
 - 已实现 mean baseline、Macro PINN 数据拟合入口和初步 PDE residual 训练开关。
+- 已实现 hot/gradient active sampling、region-aware metrics 与服务器端复现实验脚本。
 - 已预留 closure discovery、micro GNN、weak GNN-PINN coupling 模块。
-- 本地 smoke/probe 阶段已完成，下一批 dense calibrated temperature 实验建议在 A800/A100 云 GPU 上运行。
+- 本地 smoke/probe 与第一批 A100 dense calibrated temperature 实验已完成，当前正在推进 Macro PINN 稳健化和闭合项实验前置工作。
 
 ## Repository Layout
 
@@ -174,11 +175,11 @@ $env:CONDA_NO_PLUGINS="true"
 conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 ```
 
-最近一次本地验证状态：`33 passed`。
+最近一次本地验证状态：`36 passed, 1 skipped`。
 
 ## Server Stage
 
-本机阶段已经完成 AM-Bench 真实数据下载、HDF5 转换、calibrated temperature probe、baseline 和 Macro PINN smoke。下一步论文主实验建议租用云 GPU：
+本机阶段已经完成 AM-Bench 真实数据下载、HDF5 转换、calibrated temperature probe、baseline 和 Macro PINN smoke。A100 服务器阶段已完成 uniform dense 与 balanced hot/gradient active sampling 的第一轮真实实验。
 
 - 推荐起步：`A800-SXM4-40GB`
 - 更稳选择：`A100 80GB` 或 `A100-SXM4-80GB`
@@ -189,10 +190,16 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - dense mean baseline
 - Macro PINN data-only run
 - Macro PINN + PDE residual run
-- 多 seed / 多 split 消融
+- 多 seed / 多 split / 多采样策略消融
 - 环境冻结与结果文档归档
 
-详细命令见 [docs/server_runbook.md](docs/server_runbook.md)。
+当前关键结果：
+
+- uniform dense minmax Macro PINN test RMSE: `51.655371`
+- active hot/gradient Macro PINN test RMSE: `65.892559`
+- active hot/gradient Macro PINN hot q90 RMSE: `30.868055`
+
+详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
 ## Documentation
 
@@ -204,6 +211,10 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/ambench_downloads.md](docs/ambench_downloads.md): AM-Bench 下载、断点处理和校验。
 - [docs/server_runbook.md](docs/server_runbook.md): 云 GPU 阶段运行手册。
 - [docs/server_execution_plan.md](docs/server_execution_plan.md): 后续服务器研发推进总方案。
+- [docs/results/ambench_dense_temperature_server_v1.md](docs/results/ambench_dense_temperature_server_v1.md): 第一轮 A100 dense temperature 结果。
+- [docs/results/ambench_dense_stage_a_normalization_baselines.md](docs/results/ambench_dense_stage_a_normalization_baselines.md): 归一化与强 baseline 结果。
+- [docs/results/ambench_dense_region_metrics_q90.md](docs/results/ambench_dense_region_metrics_q90.md): q90 区域指标结果。
+- [docs/results/ambench_dense_active_sampling_v1.md](docs/results/ambench_dense_active_sampling_v1.md): hot/gradient active sampling 结果。
 
 ## Public Resources
 
