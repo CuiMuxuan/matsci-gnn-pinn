@@ -212,3 +212,12 @@ bash scripts/server/run_graph_conditioned_closure_toy_a100.sh \
 ```
 
 这一轮的目标不是立即声称真实组织耦合有效，而是验证方向三的训练接口、artifact、对照指标和论文实验骨架已经可运行。
+
+服务器结果：
+
+| Method | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE |
+| --- | ---: | ---: | ---: |
+| sparse closure best | 70.494433 | 31.542155 | 64.558069 |
+| toy/static graph-conditioned closure | 70.057147 | 76.367170 | 87.591751 |
+
+结论：方向三接口已跑通，但 static global embedding 基本等价于额外常量项，无法改善局部热区和梯度带。下一步应做 per-point / region-aware graph conditioning，例如基于归一化 `x,y,t` 的 anchor/RBF graph features。
