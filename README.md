@@ -203,7 +203,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - random residual sampling 改善了 active closure，但仍弱于 data-only；下一步实现 hot/gradient residual sampling。
 - hot/gradient residual sampling 比 random 更差；下一步转向 staged/warm-start closure fine-tuning。
 - staged closure 起步有效但仍未超过 data-only；closure optimizer ablation 表明 `closure_lr=1e-5` 明显改善 hot/gradient 指标，但仍未超过 active data-only，下一步进入 GNN-conditioned closure 接口。
-- 已验证 gated graph-conditioned closure；gate 0.25 保住 hot q90 并改善 gradient q90，但 graph terms 仍被强 L1 压没，下一步做最小 graph-L1 sensitivity。
+- 已完成 graph-L1 sensitivity；synthetic coordinate/RBF graph terms 一旦保留就会损害 hot/gradient 指标，下一步转向真实/半真实 microstructure conditioning。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -231,6 +231,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_graph_conditioned_closure_toy_v1.md](docs/results/ambench_graph_conditioned_closure_toy_v1.md): toy/static graph-conditioned closure 接口验证结果。
 - [docs/results/ambench_graph_conditioned_closure_coordinate_rbf_v1.md](docs/results/ambench_graph_conditioned_closure_coordinate_rbf_v1.md): coordinate RBF per-point graph-conditioned closure 诊断结果。
 - [docs/results/ambench_graph_conditioned_closure_gated_v1.md](docs/results/ambench_graph_conditioned_closure_gated_v1.md): gated graph-conditioned closure 诊断结果。
+- [docs/results/ambench_graph_closure_l1_sensitivity_v1.md](docs/results/ambench_graph_closure_l1_sensitivity_v1.md): graph-conditioned closure L1 sensitivity 与分支决策。
 
 ## Public Resources
 

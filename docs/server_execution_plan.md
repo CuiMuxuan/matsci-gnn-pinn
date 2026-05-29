@@ -465,6 +465,9 @@ Graph L1 sensitivity:
 当前 D1d 本地实现状态：
 
 - 已新增服务器脚本：`scripts/server/run_graph_conditioned_closure_graph_l1_sensitivity_a100.sh`。
+- 已完成 graph L1 sensitivity 服务器实验。
+- 结果文档：`docs/results/ambench_graph_closure_l1_sensitivity_v1.md`。
+- 结论：弱化 graph L1 后 graph terms 能保留，但 hot q90 和 gradient q90 急剧退化；当前 synthetic coordinate/RBF graph conditioning 不应继续扩大。
 
 下一轮服务器命令：
 
@@ -472,6 +475,12 @@ Graph L1 sensitivity:
 bash scripts/server/run_graph_conditioned_closure_graph_l1_sensitivity_a100.sh \
   > logs/ambench_graph_conditioned_closure_graph_l1_sensitivity_a100_v1.log 2>&1
 ```
+
+D1 阶段决策：
+
+- C1 sparse closure 是当前最可信的可解释闭包基线。
+- synthetic graph-conditioned closure 已跑通接口，但没有形成正结果。
+- 下一步进入 D2：真实/半真实微观组织数据对齐，或用 ExaCA/PFHub 生成受控 micro graph 作为半真实条件。
 
 ### D2. 接入真实/半真实微观数据
 

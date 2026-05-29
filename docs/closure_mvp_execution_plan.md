@@ -292,3 +292,13 @@ bash scripts/server/run_graph_conditioned_closure_graph_l1_sensitivity_a100.sh \
 - hot q90 不明显劣于 sparse closure best。
 - gradient q90 保持或优于 gated graph `1e-4`。
 - 至少一个 graph term 在 `closure_threshold=1e-6` 下保留。
+
+服务器结果：
+
+| Graph L1 | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | Graph terms |
+| ---: | ---: | ---: | ---: | --- |
+| `1e-4` | 72.840576 | 31.919197 | 61.623894 | suppressed |
+| `1e-5` | 83.349281 | 96.364302 | 106.171976 | retained |
+| `1e-6` | 89.998395 | 126.042897 | 129.963512 | retained |
+
+结论：当前 synthetic coordinate/RBF graph features 不构成正结果。graph terms 一旦真正进入表达式，就会显著损害 hot/gradient 区域。保留该分支作为方向三接口验证和负控制，下一步转向真实/半真实 microstructure conditioning。
