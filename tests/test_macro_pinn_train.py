@@ -616,3 +616,66 @@ def test_macro_pinn_sparse_closure_supports_coordinate_rbf_graph_features(tmp_pa
     assert payload["closure"]["graph_conditioning"]["metadata"]["length_scale"] == 0.5
     assert payload["closure"]["term_names"] == ["1", "T", "x", "y", "t", "g0", "g1", "g2"]
     assert payload["config"]["closure_features"] == ["T", "x", "y", "t", "g0", "g1", "g2"]
+
+
+def test_macro_pinn_graph_conditioned_closure_records_gate_and_graph_l1(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_temperature.csv"
+    table.write_text(
+        "x,y,t,T\n"
+        "0,0,0,0\n"
+        "1,0,0,1\n"
+        "0,1,0,1\n"
+        "1,1,1,3\n"
+        "2,1,1,10\n"
+        "1,2,1,11\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "gated_graph_closure_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--pde-weight",
+            "1e-4",
+            "--pde-field",
+            "normalized",
+            "--closure-mode",
+            "sparse_linear",
+            "--closure-l1-weight",
+            "1e-5",
+            "--closure-graph-mode",
+            "coordinate_rbf",
+            "--closure-graph-embedding-dim",
+            "2",
+            "--closure-graph-gate",
+            "0.1",
+            "--closure-graph-l1-weight",
+            "1e-4",
+            "--residual-sample-size",
+            "2",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+
+    assert status == 0
+    assert payload["closure"]["graph_gate"] == 0.1
+    assert payload["closure"]["graph_l1_weight"] == 1e-4
+    assert payload["config"]["closure_graph_gate"] == 0.1
+    assert payload["config"]["closure_graph_l1_weight"] == 1e-4
+    assert any(name.startswith("g") for name in payload["closure"]["term_names"])

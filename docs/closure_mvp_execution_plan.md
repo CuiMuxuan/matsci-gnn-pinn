@@ -249,3 +249,20 @@ bash scripts/server/run_graph_conditioned_closure_coordinate_rbf_a100.sh \
 | coordinate RBF `g6_ls0_25` | 68.237717 | 50.900600 | 71.879264 |
 
 结论：per-point graph features 比 static global embedding 更有效，但仍会损害 hot/gradient 区域。下一步应做 graph contribution gating，让 graph-conditioned source 作为受控小修正，而不是直接进入同一个 sparse source。
+
+## D1c Gated Graph-Conditioned Closure
+
+已新增 gated graph source 控制：
+
+- `--closure-graph-gate`：graph terms 的 source 贡献乘以固定 gate。
+- `--closure-graph-l1-weight`：graph coefficients 使用独立 L1 penalty。
+- base sparse coefficients 保持原 `--closure-l1-weight`。
+
+首轮服务器脚本：
+
+```bash
+bash scripts/server/run_graph_conditioned_closure_gated_a100.sh \
+  > logs/ambench_graph_conditioned_closure_gated_a100_v1.log 2>&1
+```
+
+当前目标不是让 graph terms 变大，而是验证小幅 graph 修正是否能保留 sparse closure 的 hot/gradient 指标，同时给方向三留下可解释接口。

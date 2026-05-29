@@ -184,10 +184,14 @@ def _closure_payload(
     source_values: Any | None,
     threshold: float,
     graph_conditioning: dict[str, Any] | None = None,
+    graph_gate: float | None = None,
+    graph_l1_weight: float = 0.0,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {"mode": closure_mode}
     if graph_conditioning is not None:
         payload["graph_conditioning"] = graph_conditioning
+        payload["graph_gate"] = graph_gate
+        payload["graph_l1_weight"] = graph_l1_weight
     if closure_library is None or closure_coefficients is None:
         payload["enabled"] = False
         return payload
@@ -215,6 +219,28 @@ def _closure_payload(
             "max": float(values.max()),
         }
     return payload
+
+
+def _split_closure_source(
+    closure_matrix: Any,
+    coefficients: Any,
+    term_names: list[str],
+) -> tuple[Any, Any, Any, Any]:
+    torch = _torch()
+    graph_mask_values = [name.lower().startswith("g") for name in term_names]
+    graph_mask = torch.tensor(graph_mask_values, dtype=torch.bool, device=closure_matrix.device)
+    base_mask = ~graph_mask
+    base_source = closure_matrix[:, base_mask] @ coefficients[base_mask] if bool(base_mask.any()) else torch.zeros(
+        closure_matrix.shape[0],
+        dtype=closure_matrix.dtype,
+        device=closure_matrix.device,
+    )
+    graph_source = closure_matrix[:, graph_mask] @ coefficients[graph_mask] if bool(graph_mask.any()) else torch.zeros(
+        closure_matrix.shape[0],
+        dtype=closure_matrix.dtype,
+        device=closure_matrix.device,
+    )
+    return base_source, graph_source, base_mask, graph_mask
 
 
 def _residual_sample_indices(
@@ -458,9 +484,19 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                     graph_features=graph_features,
                 )
                 closure_matrix = closure_library.transform(closure_features)
-                closure_source = closure_matrix @ closure_coefficients
+                base_source, graph_source, base_mask, graph_mask = _split_closure_source(
+                    closure_matrix=closure_matrix,
+                    coefficients=closure_coefficients,
+                    term_names=closure_library.term_names,
+                )
+                closure_source = base_source + args.closure_graph_gate * graph_source
                 last_train_source = closure_source
-                closure_loss = l1_sparsity(closure_coefficients, weight=args.closure_l1_weight)
+                closure_loss = l1_sparsity(closure_coefficients[base_mask], weight=args.closure_l1_weight)
+                if bool(graph_mask.any()):
+                    closure_loss = closure_loss + l1_sparsity(
+                        closure_coefficients[graph_mask],
+                        weight=args.closure_graph_l1_weight,
+                    )
             else:
                 closure_source = args.source
             residual = transient_heat_residual(
@@ -572,6 +608,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             source_values=last_train_source,
             threshold=args.closure_threshold,
             graph_conditioning=graph_conditioning,
+            graph_gate=args.closure_graph_gate if graph_conditioning is not None else None,
+            graph_l1_weight=args.closure_graph_l1_weight,
         ),
     }
     metrics_path = args.output_dir / "metrics.json"
@@ -721,6 +759,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--closure-polynomial-order", type=int, default=1)
     parser.add_argument("--closure-l1-weight", type=float, default=0.0)
     parser.add_argument("--closure-threshold", type=float, default=0.0)
+    parser.add_argument(
+        "--closure-graph-gate",
+        type=float,
+        default=1.0,
+        help="Multiplier for graph-conditioned closure terms; values below 1 make graph source a small correction.",
+    )
+    parser.add_argument(
+        "--closure-graph-l1-weight",
+        type=float,
+        default=0.0,
+        help="Optional separate L1 penalty for graph-conditioned closure coefficients.",
+    )
     parser.add_argument(
         "--closure-graph-mode",
         choices=["none", "toy_static", "coordinate_rbf"],

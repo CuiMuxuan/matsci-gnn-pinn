@@ -437,6 +437,19 @@ Gated graph-conditioned closure:
 - acceptance criterion: no hot q90 degradation relative to sparse closure best
 ```
 
+当前 D1c 本地实现状态：
+
+- 已新增 `--closure-graph-gate`，graph terms 对 source 的贡献按 gate 缩放。
+- 已新增 `--closure-graph-l1-weight`，graph coefficients 与 base sparse coefficients 分开惩罚。
+- 已新增服务器脚本：`scripts/server/run_graph_conditioned_closure_gated_a100.sh`。
+
+下一轮服务器命令：
+
+```bash
+bash scripts/server/run_graph_conditioned_closure_gated_a100.sh \
+  > logs/ambench_graph_conditioned_closure_gated_a100_v1.log 2>&1
+```
+
 ### D2. 接入真实/半真实微观数据
 
 数据优先级：
