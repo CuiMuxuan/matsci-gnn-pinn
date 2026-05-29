@@ -15,8 +15,11 @@ from gnnpinn.eval.regions import _spatial_gradient_scores, region_metric_tables
 from gnnpinn.models.closure import (
     SparseLibrary,
     SparseLibraryConfig,
+    ToyStaticGraphConfig,
+    ToyStaticGraphEmbeddingProvider,
     export_linear_library_expression,
     expression_to_string,
+    graph_feature_names,
     l1_sparsity,
 )
 from gnnpinn.models.pinn import MacroPINN
@@ -107,6 +110,7 @@ def _optimizer_payload(args: argparse.Namespace, closure_coefficients: Any | Non
         "closure_lr": closure_lr if closure_coefficients is not None else None,
         "closure_lr_overridden": args.closure_lr is not None,
         "freeze_backbone_after_closure_start": args.freeze_backbone_after_closure_start,
+        "closure_graph_lr": args.closure_graph_lr,
     }
 
 
@@ -115,6 +119,7 @@ def _closure_feature_tensor(
     pred_field: Any,
     coords: Any,
     time: Any,
+    graph_embedding: Any | None = None,
 ) -> Any:
     torch = _torch()
     columns: list[Any] = []
@@ -136,6 +141,16 @@ def _closure_feature_tensor(
             columns.append(pred_field)
         elif name == "T":
             columns.append(pred_field)
+        elif normalized_name.startswith("g") and normalized_name[1:].isdigit():
+            if graph_embedding is None:
+                raise ValueError(f"Closure feature '{name}' requires graph conditioning")
+            graph_index = int(normalized_name[1:])
+            flattened_graph = graph_embedding.reshape(-1)
+            if graph_index >= flattened_graph.numel():
+                raise ValueError(
+                    f"Closure feature '{name}' requires graph embedding dimension > {graph_index}"
+                )
+            columns.append(torch.ones_like(pred_field) * flattened_graph[graph_index])
         else:
             raise ValueError(f"Unsupported closure feature: {name}")
     if not columns:
@@ -158,8 +173,11 @@ def _closure_payload(
     closure_coefficients: Any | None,
     source_values: Any | None,
     threshold: float,
+    graph_conditioning: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {"mode": closure_mode}
+    if graph_conditioning is not None:
+        payload["graph_conditioning"] = graph_conditioning
     if closure_library is None or closure_coefficients is None:
         payload["enabled"] = False
         return payload
@@ -246,11 +264,41 @@ def _residual_candidate_indices(
     return sorted(selected) or train_indices
 
 
+def _build_graph_conditioning(args: argparse.Namespace, device: str) -> tuple[Any | None, dict[str, Any] | None]:
+    if args.closure_graph_mode == "none":
+        return None, None
+    if args.closure_graph_mode != "toy_static":
+        raise ValueError(f"Unsupported closure graph mode: {args.closure_graph_mode}")
+    provider = ToyStaticGraphEmbeddingProvider(
+        ToyStaticGraphConfig(
+            node_feature_dim=args.closure_graph_node_dim,
+            hidden_dim=args.closure_graph_hidden_dim,
+            embedding_dim=args.closure_graph_embedding_dim,
+            steps=args.closure_graph_steps,
+            seed=args.closure_graph_seed,
+        )
+    ).to(device)
+    if not args.closure_graph_trainable:
+        for parameter in provider.parameters():
+            parameter.requires_grad_(False)
+    payload = {
+        "enabled": True,
+        "mode": args.closure_graph_mode,
+        "trainable": args.closure_graph_trainable,
+        "metadata": provider.metadata(),
+    }
+    return provider, payload
+
+
 def train(args: argparse.Namespace) -> dict[str, Any]:
     torch = _torch()
     torch.manual_seed(args.seed)
     if args.closure_mode == "sparse_linear" and not args.closure_features:
         args.closure_features = ["T", "x", "y", "t"]
+    if args.closure_mode == "sparse_linear" and args.closure_graph_mode != "none":
+        for feature_name in graph_feature_names(args.closure_graph_embedding_dim):
+            if feature_name not in args.closure_features:
+                args.closure_features.append(feature_name)
     sample = load_field_table(args.table, observation_columns=[args.target])
     coords, time, target = sample_to_tensors(sample, args.target, args.device)
     split_manifest = load_split_manifest(args.split_manifest) if args.split_manifest else None
@@ -285,6 +333,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     ).to(args.device)
     closure_library = None
     closure_coefficients = None
+    graph_provider, graph_conditioning = _build_graph_conditioning(args, args.device)
     if args.closure_mode == "sparse_linear":
         closure_library = SparseLibrary(
             SparseLibraryConfig(
@@ -301,7 +350,15 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         raise ValueError(f"Unsupported closure mode: {args.closure_mode}")
 
     closure_lr = args.closure_lr if args.closure_lr is not None else args.lr
-    parameter_groups: list[dict[str, Any]] = [{"params": list(model.parameters()), "lr": args.lr}]
+    model_parameters = list(model.parameters())
+    parameter_groups: list[dict[str, Any]] = [{"params": model_parameters, "lr": args.lr}]
+    graph_parameters = (
+        [parameter for parameter in graph_provider.parameters() if parameter.requires_grad]
+        if graph_provider is not None
+        else []
+    )
+    if graph_parameters:
+        parameter_groups.append({"params": graph_parameters, "lr": args.closure_graph_lr or args.lr})
     if closure_coefficients is not None:
         parameter_groups.append({"params": [closure_coefficients], "lr": closure_lr})
     optimizer = torch.optim.Adam(parameter_groups)
@@ -319,7 +376,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             and needs_residual
             and not backbone_frozen
         ):
-            for parameter in model.parameters():
+            for parameter in model_parameters:
                 parameter.requires_grad_(False)
             backbone_frozen = True
         residual_indices = _residual_sample_indices(
@@ -352,11 +409,13 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 pred_residual_physical = pred_residual
             residual_field = pred_residual_physical[:, 0] if args.pde_field == "physical" else pred_residual[:, 0]
             if closure_library is not None and closure_coefficients is not None:
+                graph_embedding = graph_provider() if graph_provider is not None else None
                 closure_features = _closure_feature_tensor(
                     feature_names=args.closure_features,
                     pred_field=residual_field,
                     coords=coords_residual,
                     time=time_residual,
+                    graph_embedding=graph_embedding,
                 )
                 closure_matrix = closure_library.transform(closure_features)
                 closure_source = closure_matrix @ closure_coefficients
@@ -472,6 +531,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             closure_coefficients=closure_coefficients,
             source_values=last_train_source,
             threshold=args.closure_threshold,
+            graph_conditioning=graph_conditioning,
         ),
     }
     metrics_path = args.output_dir / "metrics.json"
@@ -622,6 +682,28 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--closure-l1-weight", type=float, default=0.0)
     parser.add_argument("--closure-threshold", type=float, default=0.0)
     parser.add_argument(
+        "--closure-graph-mode",
+        choices=["none", "toy_static"],
+        default="none",
+        help="Optional graph-conditioned closure features. toy_static encodes a deterministic toy graph.",
+    )
+    parser.add_argument("--closure-graph-embedding-dim", type=int, default=2)
+    parser.add_argument("--closure-graph-node-dim", type=int, default=2)
+    parser.add_argument("--closure-graph-hidden-dim", type=int, default=16)
+    parser.add_argument("--closure-graph-steps", type=int, default=1)
+    parser.add_argument("--closure-graph-seed", type=int, default=2026)
+    parser.add_argument(
+        "--closure-graph-lr",
+        type=float,
+        help="Optional learning rate for trainable graph-conditioned closure modules.",
+    )
+    parser.add_argument(
+        "--train-closure-graph",
+        action="store_true",
+        dest="closure_graph_trainable",
+        help="Train graph-conditioned closure provider parameters when supported.",
+    )
+    parser.add_argument(
         "--freeze-backbone-after-closure-start",
         action="store_true",
         help="Freeze Macro PINN parameters once closure/PDE residual training starts.",
@@ -634,6 +716,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.set_defaults(normalize_target=True)
     parser.set_defaults(closure_include_bias=True)
+    parser.set_defaults(closure_graph_trainable=False)
     return parser
 
 

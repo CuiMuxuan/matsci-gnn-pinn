@@ -53,6 +53,24 @@ def test_micro_gnn_encoder_forward_shape():
 
 
 @torchmark
+def test_toy_static_graph_embedding_provider_metadata():
+    from gnnpinn.models.closure import ToyStaticGraphConfig, ToyStaticGraphEmbeddingProvider
+
+    provider = ToyStaticGraphEmbeddingProvider(
+        ToyStaticGraphConfig(node_feature_dim=3, hidden_dim=8, embedding_dim=3, steps=1, seed=13)
+    )
+
+    embedding = provider()
+    metadata = provider.metadata()
+
+    assert tuple(embedding.shape) == (3,)
+    assert provider.feature_names == ["g0", "g1", "g2"]
+    assert metadata["embedding_dim"] == 3
+    assert metadata["node_feature_dim"] == 3
+    assert len(metadata["node_features"]) == 4
+
+
+@torchmark
 def test_weak_coupler_runs_two_macro_passes():
     import torch
 
@@ -81,4 +99,3 @@ def test_weak_coupler_runs_two_macro_passes():
 
     assert calls["macro"] == 2
     assert float(state.updated_fields.item()) > float(state.macro_fields.item())
-

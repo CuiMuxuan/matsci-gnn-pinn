@@ -195,3 +195,20 @@ residual_sample_size=4096
 - C1 已经从“不可用”推进到“可解释但未胜出”的技术基线。
 
 下一步不扩大 polynomial order，先进入 GNN-conditioned closure 接口，检验方向三是否能在同一真实数据基线上提供额外收益。
+
+## D1 接口落地
+
+已将方向三的最小接口接入 closure 训练链路：
+
+- `ToyStaticGraphEmbeddingProvider`：使用现有 `MicroGNNEncoder` 编码 deterministic toy graph。
+- `--closure-graph-mode toy_static`：在 sparse closure 中自动加入 `g0/g1/...` 特征。
+- metrics/checkpoint 保存 graph conditioning metadata，便于论文实验复现和后续替换真实微观组织 graph。
+
+首轮服务器对照仍固定 C1 最佳设置：
+
+```bash
+bash scripts/server/run_graph_conditioned_closure_toy_a100.sh \
+  > logs/ambench_graph_conditioned_closure_toy_a100_v1.log 2>&1
+```
+
+这一轮的目标不是立即声称真实组织耦合有效，而是验证方向三的训练接口、artifact、对照指标和论文实验骨架已经可运行。

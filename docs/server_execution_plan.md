@@ -384,6 +384,20 @@ bash scripts/server/run_sparse_closure_optimizer_ablation_a100.sh \
 - artifact 中保存 graph schema、embedding dim、coarse parameters。
 - 至少有一个 toy/static graph-conditioned run 能生成完整 metrics/checkpoint/expression 或明确负结果。
 
+当前 D1 本地实现状态：
+
+- 已新增 `ToyStaticGraphEmbeddingProvider`，用 `MicroGNNEncoder` 编码 deterministic toy graph。
+- `MacroPINN` training CLI 已支持 `--closure-graph-mode toy_static`。
+- closure features 会自动加入 `g0/g1/...`，并在 metrics/checkpoint 中保存 graph conditioning metadata。
+- 已新增服务器脚本：`scripts/server/run_graph_conditioned_closure_toy_a100.sh`。
+
+下一轮服务器命令：
+
+```bash
+bash scripts/server/run_graph_conditioned_closure_toy_a100.sh \
+  > logs/ambench_graph_conditioned_closure_toy_a100_v1.log 2>&1
+```
+
 ### D2. 接入真实/半真实微观数据
 
 数据优先级：

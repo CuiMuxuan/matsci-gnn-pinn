@@ -497,3 +497,62 @@ def test_macro_pinn_sparse_closure_can_freeze_backbone_after_warmup(tmp_path: Pa
     assert payload["history"][0]["backbone_frozen"] is False
     assert payload["history"][-1]["closure_stage_active"] is True
     assert payload["history"][-1]["backbone_frozen"] is True
+
+
+def test_macro_pinn_sparse_closure_supports_toy_graph_conditioning(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_temperature.csv"
+    table.write_text(
+        "x,y,t,T\n"
+        "0,0,0,0\n"
+        "1,0,0,1\n"
+        "0,1,0,1\n"
+        "1,1,1,3\n"
+        "2,1,1,10\n"
+        "1,2,1,11\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "graph_closure_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--pde-weight",
+            "1e-4",
+            "--pde-field",
+            "normalized",
+            "--closure-mode",
+            "sparse_linear",
+            "--closure-graph-mode",
+            "toy_static",
+            "--closure-graph-embedding-dim",
+            "2",
+            "--closure-graph-hidden-dim",
+            "8",
+            "--residual-sample-size",
+            "2",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+
+    assert status == 0
+    assert payload["closure"]["graph_conditioning"]["enabled"] is True
+    assert payload["closure"]["graph_conditioning"]["mode"] == "toy_static"
+    assert payload["closure"]["graph_conditioning"]["metadata"]["feature_names"] == ["g0", "g1"]
+    assert payload["closure"]["term_names"] == ["1", "T", "x", "y", "t", "g0", "g1"]
+    assert payload["config"]["closure_features"] == ["T", "x", "y", "t", "g0", "g1"]
