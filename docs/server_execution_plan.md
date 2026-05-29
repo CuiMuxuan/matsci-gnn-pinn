@@ -141,6 +141,8 @@ ambench_dense_a100_norm_standard_data_only_v1
 - 基于 `signal` 或 `temperature_C` 的空间梯度采样。
 - 每个 frame 保留背景点、边界点、高温点的固定比例。
 - 在 manifest 记录采样策略。
+- 已实现 HDF5 转换器参数：`--sampling-mode uniform|hot|gradient|hot_gradient|balanced_hot_gradient`、`--hot-quantile`、`--gradient-quantile`、`--background-fraction`、`--max-points-per-frame`。
+- 服务器一键脚本：`scripts/server/run_dense_active_sampling_a100.sh`，会生成 balanced hot/gradient 数据集，并运行 mean/kNN/RandomForest/ExtraTrees baseline 与 minmax Macro PINN。
 
 建议样本集：
 
@@ -155,6 +157,13 @@ dense_balanced_hot_bg_v1
 
 - 采样后 test split 仍有足够点数。
 - melt-pool/hot-zone 指标单独报告，而不是只看全局 RMSE。
+
+推荐首轮服务器命令：
+
+```bash
+cd /root/matsci-gnn-pinn
+bash scripts/server/run_dense_active_sampling_a100.sh > logs/ambench_dense_active_sampling_a100_v1.log 2>&1
+```
 
 ## 阶段 B：把 Macro PINN 做成可靠基线
 

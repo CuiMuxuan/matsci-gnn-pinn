@@ -100,7 +100,7 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
                 raise ValueError("Calibration/ThermalCal group is missing; cannot calibrate temperature")
             fieldnames.insert(5, "temperature_C")
             target = "temperature_C"
-        n_written, rows_by_frame = _write_sampled_signal_csv(
+        n_written, rows_by_frame, sampling_frames = _write_sampled_signal_csv(
             output=output,
             dataset=dataset,
             fieldnames=fieldnames,
@@ -111,6 +111,11 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
             process=process,
             calibration=calibration if args.calibrate_temperature else None,
             min_signal=args.min_signal,
+            sampling_mode=args.sampling_mode,
+            hot_quantile=args.hot_quantile,
+            gradient_quantile=args.gradient_quantile,
+            background_fraction=args.background_fraction,
+            max_points_per_frame=args.max_points_per_frame,
         )
         manifest = {
             "dataset_id": "mds2-2716",
@@ -142,6 +147,15 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
                     "col_step": args.col_step,
                     "max_cols": args.max_cols,
                     "min_signal": args.min_signal,
+                    "selection": {
+                        "mode": args.sampling_mode,
+                        "active_target": target,
+                        "hot_quantile": args.hot_quantile,
+                        "gradient_quantile": args.gradient_quantile,
+                        "background_fraction": args.background_fraction,
+                        "max_points_per_frame": args.max_points_per_frame,
+                        "frames": sampling_frames,
+                    },
                 },
             },
         }
@@ -184,45 +198,233 @@ def _write_sampled_signal_csv(
     process: dict[str, float | None],
     calibration: dict[str, Any] | None = None,
     min_signal: float | None = None,
-) -> tuple[int, dict[int, list[int]]]:
+    sampling_mode: str = "uniform",
+    hot_quantile: float = 0.9,
+    gradient_quantile: float = 0.9,
+    background_fraction: float = 0.1,
+    max_points_per_frame: int | None = None,
+) -> tuple[int, dict[int, list[int]], list[dict[str, Any]]]:
+    import numpy as np
+
+    _validate_sampling_config(
+        sampling_mode=sampling_mode,
+        hot_quantile=hot_quantile,
+        gradient_quantile=gradient_quantile,
+        background_fraction=background_fraction,
+        max_points_per_frame=max_points_per_frame,
+    )
     n_written = 0
     rows_by_frame: dict[int, list[int]] = {frame_index: [] for frame_index in frame_indices}
+    sampling_frames: list[dict[str, Any]] = []
     with output.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         for frame_index in frame_indices:
             frame = dataset[frame_index, :, :]
             t = frame_index / frame_rate_hz if frame_rate_hz else float(frame_index)
-            for row_index in row_indices:
-                values = frame[row_index, col_indices]
-                temperatures = None
-                if calibration is not None:
-                    temperatures = calibrate_signal_to_temperature_c(
-                        values,
-                        coeff_a=float(calibration["coeff_a"]),
-                        coeff_b=float(calibration["coeff_b"]),
-                        coeff_c=float(calibration["coeff_c"]),
-                    )
-                for value_index, (col_index, signal) in enumerate(zip(col_indices, values, strict=True)):
-                    if min_signal is not None and float(signal) < min_signal:
-                        continue
-                    row = {
-                        "x": float(col_index),
-                        "y": float(row_index),
-                        "z": 0.0,
-                        "t": t,
-                        "signal": float(signal),
-                        "frame_index": frame_index,
-                        "row_index": row_index,
-                        "col_index": col_index,
-                        **process,
-                    }
-                    if temperatures is not None:
-                        row["temperature_C"] = float(temperatures[value_index])
-                    writer.writerow(row)
-                    rows_by_frame[frame_index].append(n_written)
-                    n_written += 1
-    return n_written, rows_by_frame
+            signal_grid = np.asarray(frame[row_indices, :][:, col_indices], dtype=float)
+            temperature_grid = None
+            if calibration is not None:
+                temperature_grid = calibrate_signal_to_temperature_c(
+                    signal_grid,
+                    coeff_a=float(calibration["coeff_a"]),
+                    coeff_b=float(calibration["coeff_b"]),
+                    coeff_c=float(calibration["coeff_c"]),
+                )
+            target_grid = temperature_grid if temperature_grid is not None else signal_grid
+            selected_points, frame_sampling = _select_sampled_grid_points(
+                signal_grid=signal_grid,
+                target_grid=target_grid,
+                row_indices=row_indices,
+                col_indices=col_indices,
+                min_signal=min_signal,
+                sampling_mode=sampling_mode,
+                hot_quantile=hot_quantile,
+                gradient_quantile=gradient_quantile,
+                background_fraction=background_fraction,
+                max_points_per_frame=max_points_per_frame,
+            )
+            frame_sampling["frame_index"] = frame_index
+            sampling_frames.append(frame_sampling)
+            for row_position, col_position in selected_points:
+                row_index = row_indices[row_position]
+                col_index = col_indices[col_position]
+                signal = signal_grid[row_position, col_position]
+                if min_signal is not None and float(signal) < min_signal:
+                    continue
+                row = {
+                    "x": float(col_index),
+                    "y": float(row_index),
+                    "z": 0.0,
+                    "t": t,
+                    "signal": float(signal),
+                    "frame_index": frame_index,
+                    "row_index": row_index,
+                    "col_index": col_index,
+                    **process,
+                }
+                if temperature_grid is not None:
+                    row["temperature_C"] = float(temperature_grid[row_position, col_position])
+                writer.writerow(row)
+                rows_by_frame[frame_index].append(n_written)
+                n_written += 1
+    return n_written, rows_by_frame, sampling_frames
+
+
+def _validate_sampling_config(
+    sampling_mode: str,
+    hot_quantile: float,
+    gradient_quantile: float,
+    background_fraction: float,
+    max_points_per_frame: int | None,
+) -> None:
+    if sampling_mode not in {"uniform", "hot", "gradient", "hot_gradient", "balanced_hot_gradient"}:
+        raise ValueError(f"Unsupported sampling mode: {sampling_mode}")
+    for name, value in {"hot_quantile": hot_quantile, "gradient_quantile": gradient_quantile}.items():
+        if not 0.0 <= value <= 1.0:
+            raise ValueError(f"{name} must be in [0, 1], got {value}")
+    if not 0.0 <= background_fraction <= 1.0:
+        raise ValueError(f"background_fraction must be in [0, 1], got {background_fraction}")
+    if max_points_per_frame is not None and max_points_per_frame <= 0:
+        raise ValueError("max_points_per_frame must be positive when provided")
+
+
+def _select_sampled_grid_points(
+    signal_grid: Any,
+    target_grid: Any,
+    row_indices: list[int],
+    col_indices: list[int],
+    min_signal: float | None,
+    sampling_mode: str,
+    hot_quantile: float,
+    gradient_quantile: float,
+    background_fraction: float,
+    max_points_per_frame: int | None,
+) -> tuple[list[tuple[int, int]], dict[str, Any]]:
+    import numpy as np
+
+    signals = np.asarray(signal_grid, dtype=float)
+    targets = np.asarray(target_grid, dtype=float)
+    signal_mask = np.ones(signals.shape, dtype=bool)
+    if min_signal is not None:
+        signal_mask &= signals >= float(min_signal)
+
+    if sampling_mode == "uniform":
+        valid_mask = signal_mask
+        selected_mask = valid_mask.copy()
+        hot_mask = np.zeros(signals.shape, dtype=bool)
+        gradient_mask = np.zeros(signals.shape, dtype=bool)
+        background_mask = np.zeros(signals.shape, dtype=bool)
+        hot_threshold = None
+        gradient_threshold = None
+    else:
+        valid_mask = signal_mask & np.isfinite(signals) & np.isfinite(targets)
+        hot_mask = np.zeros(signals.shape, dtype=bool)
+        gradient_mask = np.zeros(signals.shape, dtype=bool)
+        hot_threshold = None
+        gradient_threshold = None
+        if np.any(valid_mask) and sampling_mode in {"hot", "hot_gradient", "balanced_hot_gradient"}:
+            hot_threshold = float(np.quantile(targets[valid_mask], hot_quantile))
+            hot_mask = valid_mask & (targets >= hot_threshold)
+        if np.any(valid_mask) and sampling_mode in {"gradient", "hot_gradient", "balanced_hot_gradient"}:
+            gradient_scores = _sampled_grid_gradient_scores(
+                targets=targets,
+                row_indices=row_indices,
+                col_indices=col_indices,
+            )
+            gradient_threshold = float(np.quantile(gradient_scores[valid_mask], gradient_quantile))
+            gradient_mask = valid_mask & (gradient_scores >= gradient_threshold)
+        selected_mask = hot_mask | gradient_mask
+        background_mask = _background_anchor_mask(
+            valid_mask=valid_mask,
+            selected_mask=selected_mask,
+            background_fraction=background_fraction,
+        )
+        selected_mask |= background_mask
+
+    if max_points_per_frame is not None and int(np.count_nonzero(selected_mask)) > max_points_per_frame:
+        selected_mask = _cap_selected_mask(selected_mask, max_points_per_frame)
+
+    selected_flat = np.flatnonzero(selected_mask.ravel())
+    selected_points = [
+        (int(row_position), int(col_position))
+        for row_position, col_position in zip(*np.unravel_index(selected_flat, signals.shape), strict=True)
+    ]
+    frame_sampling = {
+        "mode": sampling_mode,
+        "grid_points": int(signals.size),
+        "valid_points": int(np.count_nonzero(valid_mask)),
+        "written_points": len(selected_points),
+        "hot_points": int(np.count_nonzero(hot_mask)),
+        "gradient_points": int(np.count_nonzero(gradient_mask)),
+        "background_points": int(np.count_nonzero(background_mask)),
+        "hot_threshold": hot_threshold,
+        "gradient_threshold": gradient_threshold,
+    }
+    return selected_points, frame_sampling
+
+
+def _sampled_grid_gradient_scores(targets: Any, row_indices: list[int], col_indices: list[int]) -> Any:
+    import numpy as np
+
+    values = np.asarray(targets, dtype=float)
+    scores = np.zeros(values.shape, dtype=float)
+    for row_position in range(values.shape[0]):
+        for neighbor_position in (row_position - 1, row_position + 1):
+            if neighbor_position < 0 or neighbor_position >= values.shape[0]:
+                continue
+            distance = abs(row_indices[row_position] - row_indices[neighbor_position]) or 1
+            scores[row_position, :] = np.maximum(
+                scores[row_position, :],
+                np.abs(values[row_position, :] - values[neighbor_position, :]) / distance,
+            )
+    for col_position in range(values.shape[1]):
+        for neighbor_position in (col_position - 1, col_position + 1):
+            if neighbor_position < 0 or neighbor_position >= values.shape[1]:
+                continue
+            distance = abs(col_indices[col_position] - col_indices[neighbor_position]) or 1
+            scores[:, col_position] = np.maximum(
+                scores[:, col_position],
+                np.abs(values[:, col_position] - values[:, neighbor_position]) / distance,
+            )
+    return scores
+
+
+def _background_anchor_mask(valid_mask: Any, selected_mask: Any, background_fraction: float) -> Any:
+    import math
+    import numpy as np
+
+    background_mask = np.zeros(valid_mask.shape, dtype=bool)
+    if background_fraction <= 0.0:
+        return background_mask
+    candidates = np.flatnonzero((valid_mask & ~selected_mask).ravel())
+    if len(candidates) == 0:
+        return background_mask
+    n_background = min(len(candidates), int(math.ceil(background_fraction * int(np.count_nonzero(valid_mask)))))
+    if n_background <= 0:
+        return background_mask
+    chosen = _spread_flat_indices(candidates, n_background)
+    background_mask.ravel()[chosen] = True
+    return background_mask
+
+
+def _cap_selected_mask(selected_mask: Any, max_points: int) -> Any:
+    import numpy as np
+
+    capped = np.zeros(selected_mask.shape, dtype=bool)
+    selected = np.flatnonzero(selected_mask.ravel())
+    chosen = _spread_flat_indices(selected, max_points)
+    capped.ravel()[chosen] = True
+    return capped
+
+
+def _spread_flat_indices(candidates: Any, count: int) -> list[int]:
+    import numpy as np
+
+    if count >= len(candidates):
+        return [int(item) for item in candidates]
+    positions = np.linspace(0, len(candidates) - 1, count)
+    return [int(candidates[int(round(position))]) for position in positions]
 
 
 def build_frame_split_manifest(
@@ -356,6 +558,35 @@ def build_parser() -> argparse.ArgumentParser:
         "--min-signal",
         type=float,
         help="Drop sampled points with raw signal below this threshold before writing rows.",
+    )
+    parser.add_argument(
+        "--sampling-mode",
+        choices=["uniform", "hot", "gradient", "hot_gradient", "balanced_hot_gradient"],
+        default="uniform",
+        help="Select points from the sampled frame grid. uniform preserves the legacy behavior.",
+    )
+    parser.add_argument(
+        "--hot-quantile",
+        type=float,
+        default=0.9,
+        help="Within-frame target quantile used by hot and hot_gradient sampling modes.",
+    )
+    parser.add_argument(
+        "--gradient-quantile",
+        type=float,
+        default=0.9,
+        help="Within-frame spatial-gradient quantile used by gradient and hot_gradient sampling modes.",
+    )
+    parser.add_argument(
+        "--background-fraction",
+        type=float,
+        default=0.1,
+        help="Fraction of valid non-active grid points retained as background anchors in active modes.",
+    )
+    parser.add_argument(
+        "--max-points-per-frame",
+        type=int,
+        help="Optional deterministic cap after active/background selection.",
     )
     parser.add_argument(
         "--split-strategy",
