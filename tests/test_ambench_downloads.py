@@ -7,6 +7,7 @@ from gnnpinn.data.ambench_downloads import (
     download_mds2_2718,
     load_mds2_2716_sources,
     load_mds2_2718_sources,
+    main,
     validate_mds2_2716,
     validate_mds2_2718,
 )
@@ -265,3 +266,38 @@ def test_download_mds2_2718_from_manifest_file_urls(tmp_path: Path):
     assert (root / "Single_Track_Cross_Sections" / "toy.tif").read_text(encoding="utf-8") == "data"
     assert report["validation"]["ready"] is True
     assert report["validation"]["checks"]["tiff_files"]["count"] == 1
+
+
+def test_download_cli_dry_run_returns_zero_when_files_missing(tmp_path: Path):
+    manifest = tmp_path / "sources.yaml"
+    manifest.write_text(
+        yaml.safe_dump(
+            {
+                "dataset_id": "mds2-2718",
+                "required_files": [
+                    {
+                        "id": "missing_tif",
+                        "relative_path": "Single_Track_Cross_Sections/missing.tif",
+                        "size_bytes": 4,
+                        "download_url": "file:///missing.tif",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "--dataset-id",
+            "mds2-2718",
+            "--root",
+            str(tmp_path / "downloaded"),
+            "--source-manifest",
+            str(manifest),
+            "--download",
+            "--dry-run",
+        ]
+    )
+
+    assert exit_code == 0

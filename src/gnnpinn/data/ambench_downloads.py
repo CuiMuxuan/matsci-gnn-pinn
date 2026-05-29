@@ -466,7 +466,7 @@ def main(argv: list[str] | None = None) -> int:
         args.output.write_text(text, encoding="utf-8")
         print(f"Wrote: {args.output}")
     print(text)
-    if args.download and report.get("validation_failed"):
+    if args.download and report.get("validation_failed") and not args.dry_run:
         return 2
     return 0
 

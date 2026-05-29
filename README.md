@@ -201,7 +201,7 @@ $env:CONDA_NO_PLUGINS="true"
 conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 ```
 
-最近一次本地验证状态：`53 passed, 2 skipped`。
+最近一次本地验证状态：`54 passed, 2 skipped`。
 
 ## Server Stage
 
