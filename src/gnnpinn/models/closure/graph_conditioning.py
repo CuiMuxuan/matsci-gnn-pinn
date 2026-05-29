@@ -23,6 +23,14 @@ class ToyStaticGraphConfig:
     seed: int = 2026
 
 
+@dataclass(frozen=True)
+class CoordinateRBFGraphConfig:
+    state_dim: int = 3
+    embedding_dim: int = 4
+    length_scale: float = 0.35
+    normalize: bool = True
+
+
 def graph_feature_names(embedding_dim: int, prefix: str = "g") -> list[str]:
     if embedding_dim <= 0:
         raise ValueError("embedding_dim must be positive")
@@ -107,3 +115,61 @@ def _toy_edge_index() -> Any:
         ],
         dtype=torch.long,
     )
+
+
+class CoordinateRBFGraphFeatureProvider(_torch().nn.Module):
+    """Deterministic per-point graph features from coordinate/time anchors."""
+
+    def __init__(self, config: CoordinateRBFGraphConfig):
+        super().__init__()
+        if config.state_dim <= 0:
+            raise ValueError("state_dim must be positive")
+        if config.embedding_dim <= 0:
+            raise ValueError("embedding_dim must be positive")
+        if config.length_scale <= 0:
+            raise ValueError("length_scale must be positive")
+        self.config = config
+        self.register_buffer("anchors", _coordinate_rbf_anchors(config.state_dim, config.embedding_dim))
+
+    def forward(self, coords: Any, time: Any) -> Any:
+        torch = _torch()
+        state = torch.cat([coords, time.reshape(time.shape[0], -1)], dim=-1)
+        if state.shape[-1] != self.config.state_dim:
+            raise ValueError(f"Expected state_dim={self.config.state_dim}, got {state.shape[-1]}")
+        anchors = self.anchors.to(device=state.device, dtype=state.dtype)
+        distances = torch.sum((state[:, None, :] - anchors[None, :, :]) ** 2, dim=-1)
+        features = torch.exp(-distances / (2.0 * self.config.length_scale**2))
+        if self.config.normalize:
+            denominator = features.sum(dim=-1, keepdim=True).clamp_min(torch.finfo(features.dtype).eps)
+            features = features / denominator
+        return features
+
+    @property
+    def feature_names(self) -> list[str]:
+        return graph_feature_names(self.config.embedding_dim)
+
+    def metadata(self) -> dict[str, Any]:
+        return {
+            "state_dim": self.config.state_dim,
+            "embedding_dim": self.config.embedding_dim,
+            "length_scale": self.config.length_scale,
+            "normalize": self.config.normalize,
+            "feature_names": self.feature_names,
+            "anchors": self.anchors.detach().cpu().tolist(),
+        }
+
+
+def _coordinate_rbf_anchors(state_dim: int, embedding_dim: int) -> Any:
+    torch = _torch()
+    if embedding_dim == 1:
+        return torch.full((1, state_dim), 0.5, dtype=torch.float32)
+    anchors = []
+    for index in range(embedding_dim):
+        fraction = index / (embedding_dim - 1)
+        anchors.append(
+            [
+                ((fraction * (dimension + 1) * 0.6180339887498949) + 0.5 / (dimension + 2)) % 1.0
+                for dimension in range(state_dim)
+            ]
+        )
+    return torch.tensor(anchors, dtype=torch.float32)

@@ -71,6 +71,27 @@ def test_toy_static_graph_embedding_provider_metadata():
 
 
 @torchmark
+def test_coordinate_rbf_graph_feature_provider_is_per_point():
+    import torch
+
+    from gnnpinn.models.closure import CoordinateRBFGraphConfig, CoordinateRBFGraphFeatureProvider
+
+    provider = CoordinateRBFGraphFeatureProvider(
+        CoordinateRBFGraphConfig(state_dim=3, embedding_dim=4, length_scale=0.4)
+    )
+    coords = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.float32)
+    time = torch.tensor([[0.0], [1.0]], dtype=torch.float32)
+
+    features = provider(coords, time)
+    metadata = provider.metadata()
+
+    assert tuple(features.shape) == (2, 4)
+    assert torch.allclose(features.sum(dim=1), torch.ones(2))
+    assert not torch.allclose(features[0], features[1])
+    assert metadata["feature_names"] == ["g0", "g1", "g2", "g3"]
+
+
+@torchmark
 def test_weak_coupler_runs_two_macro_passes():
     import torch
 

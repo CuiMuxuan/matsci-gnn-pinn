@@ -221,3 +221,21 @@ bash scripts/server/run_graph_conditioned_closure_toy_a100.sh \
 | toy/static graph-conditioned closure | 70.057147 | 76.367170 | 87.591751 |
 
 结论：方向三接口已跑通，但 static global embedding 基本等价于额外常量项，无法改善局部热区和梯度带。下一步应做 per-point / region-aware graph conditioning，例如基于归一化 `x,y,t` 的 anchor/RBF graph features。
+
+## D1b Region-Aware Graph Conditioning
+
+已新增 `coordinate_rbf` 模式：
+
+- 输入为 normalized `x,y,t` state。
+- 通过 deterministic anchors 生成 per-point RBF graph features。
+- sparse closure 自动加入 `g0/g1/...`。
+- metadata 记录 anchors、length scale、embedding dim 和 feature names。
+
+首轮服务器扫描：
+
+```bash
+bash scripts/server/run_graph_conditioned_closure_coordinate_rbf_a100.sh \
+  > logs/ambench_graph_conditioned_closure_coordinate_rbf_a100_v1.log 2>&1
+```
+
+该设计仍是“半 synthetic graph conditioning”，但它比 static global embedding 更接近局部耦合：每个 residual point 都得到不同的 graph-conditioned closure 特征。

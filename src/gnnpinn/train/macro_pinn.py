@@ -13,6 +13,8 @@ from gnnpinn.data.splits import load_split_manifest, split_indices
 from gnnpinn.eval.metrics import mae, relative_l2, rmse
 from gnnpinn.eval.regions import _spatial_gradient_scores, region_metric_tables
 from gnnpinn.models.closure import (
+    CoordinateRBFGraphConfig,
+    CoordinateRBFGraphFeatureProvider,
     SparseLibrary,
     SparseLibraryConfig,
     ToyStaticGraphConfig,
@@ -120,6 +122,7 @@ def _closure_feature_tensor(
     coords: Any,
     time: Any,
     graph_embedding: Any | None = None,
+    graph_features: Any | None = None,
 ) -> Any:
     torch = _torch()
     columns: list[Any] = []
@@ -142,9 +145,16 @@ def _closure_feature_tensor(
         elif name == "T":
             columns.append(pred_field)
         elif normalized_name.startswith("g") and normalized_name[1:].isdigit():
-            if graph_embedding is None:
+            if graph_embedding is None and graph_features is None:
                 raise ValueError(f"Closure feature '{name}' requires graph conditioning")
             graph_index = int(normalized_name[1:])
+            if graph_features is not None:
+                if graph_index >= graph_features.shape[-1]:
+                    raise ValueError(
+                        f"Closure feature '{name}' requires graph feature dimension > {graph_index}"
+                    )
+                columns.append(graph_features[:, graph_index])
+                continue
             flattened_graph = graph_embedding.reshape(-1)
             if graph_index >= flattened_graph.numel():
                 raise ValueError(
@@ -267,6 +277,22 @@ def _residual_candidate_indices(
 def _build_graph_conditioning(args: argparse.Namespace, device: str) -> tuple[Any | None, dict[str, Any] | None]:
     if args.closure_graph_mode == "none":
         return None, None
+    if args.closure_graph_mode == "coordinate_rbf":
+        provider = CoordinateRBFGraphFeatureProvider(
+            CoordinateRBFGraphConfig(
+                state_dim=args.closure_graph_state_dim,
+                embedding_dim=args.closure_graph_embedding_dim,
+                length_scale=args.closure_graph_length_scale,
+                normalize=not args.no_closure_graph_normalize,
+            )
+        ).to(device)
+        payload = {
+            "enabled": True,
+            "mode": args.closure_graph_mode,
+            "trainable": False,
+            "metadata": provider.metadata(),
+        }
+        return provider, payload
     if args.closure_graph_mode != "toy_static":
         raise ValueError(f"Unsupported closure graph mode: {args.closure_graph_mode}")
     provider = ToyStaticGraphEmbeddingProvider(
@@ -409,13 +435,19 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 pred_residual_physical = pred_residual
             residual_field = pred_residual_physical[:, 0] if args.pde_field == "physical" else pred_residual[:, 0]
             if closure_library is not None and closure_coefficients is not None:
-                graph_embedding = graph_provider() if graph_provider is not None else None
+                graph_embedding = None
+                graph_features = None
+                if graph_provider is not None and args.closure_graph_mode == "toy_static":
+                    graph_embedding = graph_provider()
+                elif graph_provider is not None and args.closure_graph_mode == "coordinate_rbf":
+                    graph_features = graph_provider(coords_residual, time_residual)
                 closure_features = _closure_feature_tensor(
                     feature_names=args.closure_features,
                     pred_field=residual_field,
                     coords=coords_residual,
                     time=time_residual,
                     graph_embedding=graph_embedding,
+                    graph_features=graph_features,
                 )
                 closure_matrix = closure_library.transform(closure_features)
                 closure_source = closure_matrix @ closure_coefficients
@@ -683,15 +715,22 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--closure-threshold", type=float, default=0.0)
     parser.add_argument(
         "--closure-graph-mode",
-        choices=["none", "toy_static"],
+        choices=["none", "toy_static", "coordinate_rbf"],
         default="none",
-        help="Optional graph-conditioned closure features. toy_static encodes a deterministic toy graph.",
+        help="Optional graph-conditioned closure features. coordinate_rbf creates per-point anchor features.",
     )
     parser.add_argument("--closure-graph-embedding-dim", type=int, default=2)
+    parser.add_argument("--closure-graph-state-dim", type=int, default=3)
+    parser.add_argument("--closure-graph-length-scale", type=float, default=0.35)
     parser.add_argument("--closure-graph-node-dim", type=int, default=2)
     parser.add_argument("--closure-graph-hidden-dim", type=int, default=16)
     parser.add_argument("--closure-graph-steps", type=int, default=1)
     parser.add_argument("--closure-graph-seed", type=int, default=2026)
+    parser.add_argument(
+        "--no-closure-graph-normalize",
+        action="store_true",
+        help="Disable normalization of coordinate_rbf graph features across anchors.",
+    )
     parser.add_argument(
         "--closure-graph-lr",
         type=float,

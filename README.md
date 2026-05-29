@@ -203,7 +203,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - random residual sampling 改善了 active closure，但仍弱于 data-only；下一步实现 hot/gradient residual sampling。
 - hot/gradient residual sampling 比 random 更差；下一步转向 staged/warm-start closure fine-tuning。
 - staged closure 起步有效但仍未超过 data-only；closure optimizer ablation 表明 `closure_lr=1e-5` 明显改善 hot/gradient 指标，但仍未超过 active data-only，下一步进入 GNN-conditioned closure 接口。
-- 已接入并验证 toy/static graph-conditioned closure 接口；方向三训练链路跑通，但 static global embedding 会退化 hot/gradient 指标，下一步转向 region-aware graph conditioning。
+- 已接入并验证 toy/static graph-conditioned closure 接口；方向三训练链路跑通，但 static global embedding 会退化 hot/gradient 指标，当前已实现 `coordinate_rbf` per-point graph conditioning，下一步上 A100 对照。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 

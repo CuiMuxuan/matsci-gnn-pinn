@@ -410,6 +410,20 @@ Region-aware graph conditioning:
 - same active AM-Bench split and C1 best optimizer settings
 ```
 
+当前 D1b 本地实现状态：
+
+- 已新增 `CoordinateRBFGraphFeatureProvider`。
+- `MacroPINN` training CLI 支持 `--closure-graph-mode coordinate_rbf`。
+- `g0/g1/...` 现在可以是每个 residual point 的 anchor/RBF graph features，而不是全局常量。
+- 已新增服务器脚本：`scripts/server/run_graph_conditioned_closure_coordinate_rbf_a100.sh`。
+
+下一轮服务器命令：
+
+```bash
+bash scripts/server/run_graph_conditioned_closure_coordinate_rbf_a100.sh \
+  > logs/ambench_graph_conditioned_closure_coordinate_rbf_a100_v1.log 2>&1
+```
+
 ### D2. 接入真实/半真实微观数据
 
 数据优先级：
