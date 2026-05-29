@@ -106,6 +106,8 @@ def test_field_baseline_cli_with_split_manifest(tmp_path: Path):
             "mean",
             "--split-manifest",
             str(split),
+            "--hot-quantile",
+            "0.5",
             "--output",
             str(output),
         ]
@@ -115,6 +117,7 @@ def test_field_baseline_cli_with_split_manifest(tmp_path: Path):
     assert status == 0
     assert '"split_metrics"' in payload
     assert '"baseline": "constant:mean:fit=train"' in payload
+    assert '"hot_q50"' in payload
 
 
 def test_field_baseline_cli_with_knn_model_baseline(tmp_path: Path):

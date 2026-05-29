@@ -106,6 +106,10 @@ def test_macro_pinn_training_cli_with_split_manifest(tmp_path: Path):
             str(split),
             "--input-normalization",
             "standard",
+            "--hot-quantile",
+            "0.5",
+            "--gradient-quantile",
+            "0.5",
         ]
     )
 
@@ -117,3 +121,5 @@ def test_macro_pinn_training_cli_with_split_manifest(tmp_path: Path):
     assert payload["input_normalization"]["mode"] == "standard"
     assert payload["input_normalization"]["coordinates"]["applied"] is True
     assert payload["input_normalization"]["time"]["applied"] is True
+    assert "hot_q50" in payload["split_metrics"]["train"]["region_metrics"]
+    assert "gradient_q50" in payload["split_metrics"]["train"]["region_metrics"]

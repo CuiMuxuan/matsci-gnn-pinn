@@ -11,6 +11,7 @@ from gnnpinn.data.loaders import load_field_table
 from gnnpinn.data.manifest import candidate_files_from_audit, load_audit_report
 from gnnpinn.data.splits import load_split_manifest, split_indices, subset_sequence
 from gnnpinn.eval.baselines import constant_predictions, regression_metric_table
+from gnnpinn.eval.regions import region_metric_tables
 
 
 MODEL_BASELINES = {"knn", "random_forest", "extra_trees"}
@@ -27,6 +28,8 @@ def evaluate_table(
     n_neighbors: int = 8,
     n_estimators: int = 200,
     random_state: int = 7,
+    hot_quantiles: list[float] | None = None,
+    gradient_quantiles: list[float] | None = None,
 ) -> dict[str, Any]:
     sample = load_field_table(table_path)
     y_true = sample.require_observation(target)
@@ -72,6 +75,16 @@ def evaluate_table(
                 "n_points": len(indices),
                 "metrics": regression_metric_table(y_split, y_pred),
             }
+            regions = region_metric_tables(
+                sample,
+                target=target,
+                y_pred=model_predictions if model_predictions is not None else pred_values if prediction_column else _constant_predictions_from_fit(y_true, fit_values, strategy),
+                indices=indices,
+                hot_quantiles=hot_quantiles,
+                gradient_quantiles=gradient_quantiles,
+            )
+            if regions:
+                split_metrics[split_name]["region_metrics"] = regions
         return {
             "sample_id": sample.sample_id,
             "source_path": str(table_path),
@@ -112,6 +125,13 @@ def evaluate_table(
             n_neighbors=n_neighbors,
             n_estimators=n_estimators,
             random_state=random_state,
+        ),
+        "region_metrics": region_metric_tables(
+            sample,
+            target=target,
+            y_pred=y_pred,
+            hot_quantiles=hot_quantiles,
+            gradient_quantiles=gradient_quantiles,
         ),
         "metadata": sample.metadata,
     }
@@ -246,6 +266,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             n_neighbors=args.n_neighbors,
             n_estimators=args.n_estimators,
             random_state=args.random_state,
+            hot_quantiles=args.hot_quantiles,
+            gradient_quantiles=args.gradient_quantiles,
         )
         for path in discover_tables(args)
     ]
@@ -286,6 +308,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--n-neighbors", type=int, default=8, help="k for knn baseline.")
     parser.add_argument("--n-estimators", type=int, default=200, help="Number of trees for tree baselines.")
     parser.add_argument("--random-state", type=int, default=7, help="Random state for model baselines.")
+    parser.add_argument(
+        "--hot-quantile",
+        action="append",
+        type=float,
+        dest="hot_quantiles",
+        help="Report metrics on target values above this split-local quantile, e.g. 0.9.",
+    )
+    parser.add_argument(
+        "--gradient-quantile",
+        action="append",
+        type=float,
+        dest="gradient_quantiles",
+        help="Report metrics on spatial-gradient scores above this split-local quantile, e.g. 0.9.",
+    )
     parser.add_argument("--output", type=Path, help="Optional JSON output path.")
     return parser
 

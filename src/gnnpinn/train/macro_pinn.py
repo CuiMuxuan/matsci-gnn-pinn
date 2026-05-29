@@ -11,6 +11,7 @@ from typing import Any
 from gnnpinn.data.loaders import load_field_table
 from gnnpinn.data.splits import load_split_manifest, split_indices
 from gnnpinn.eval.metrics import mae, relative_l2, rmse
+from gnnpinn.eval.regions import region_metric_tables
 from gnnpinn.models.pinn import MacroPINN
 from gnnpinn.physics.heat import HeatEquationParams, transient_heat_residual
 
@@ -175,6 +176,16 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                     [pred[index] for index in indices],
                 ),
             }
+            regions = region_metric_tables(
+                sample,
+                target=args.target,
+                y_pred=pred,
+                indices=indices,
+                hot_quantiles=args.hot_quantiles,
+                gradient_quantiles=args.gradient_quantiles,
+            )
+            if regions:
+                split_metrics[split_name]["region_metrics"] = regions
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     metrics_payload = {
@@ -183,6 +194,13 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         "n_points": sample.n_points,
         "train_points": len(train_indices),
         "metrics": metrics,
+        "region_metrics": region_metric_tables(
+            sample,
+            target=args.target,
+            y_pred=pred,
+            hot_quantiles=args.hot_quantiles,
+            gradient_quantiles=args.gradient_quantiles,
+        ),
         "split_metrics": split_metrics,
         "history": history,
         "config": _jsonable_config(args),
@@ -263,6 +281,20 @@ def build_parser() -> argparse.ArgumentParser:
         default="none",
         choices=["none", "minmax", "standard"],
         help="Normalize coordinate and time inputs using statistics fitted on the train split.",
+    )
+    parser.add_argument(
+        "--hot-quantile",
+        action="append",
+        type=float,
+        dest="hot_quantiles",
+        help="Report metrics on target values above this split-local quantile, e.g. 0.9.",
+    )
+    parser.add_argument(
+        "--gradient-quantile",
+        action="append",
+        type=float,
+        dest="gradient_quantiles",
+        help="Report metrics on spatial-gradient scores above this split-local quantile, e.g. 0.9.",
     )
     parser.add_argument(
         "--no-normalize-target",
