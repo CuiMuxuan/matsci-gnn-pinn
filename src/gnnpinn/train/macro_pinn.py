@@ -274,13 +274,20 @@ def _residual_candidate_indices(
     return sorted(selected) or train_indices
 
 
-def _build_graph_conditioning(args: argparse.Namespace, device: str) -> tuple[Any | None, dict[str, Any] | None]:
+def _build_graph_conditioning(
+    args: argparse.Namespace,
+    device: str,
+    state_dim: int | None = None,
+) -> tuple[Any | None, dict[str, Any] | None]:
     if args.closure_graph_mode == "none":
         return None, None
     if args.closure_graph_mode == "coordinate_rbf":
+        graph_state_dim = args.closure_graph_state_dim or state_dim
+        if graph_state_dim is None:
+            raise ValueError("closure_graph_state_dim could not be inferred")
         provider = CoordinateRBFGraphFeatureProvider(
             CoordinateRBFGraphConfig(
-                state_dim=args.closure_graph_state_dim,
+                state_dim=graph_state_dim,
                 embedding_dim=args.closure_graph_embedding_dim,
                 length_scale=args.closure_graph_length_scale,
                 normalize=not args.no_closure_graph_normalize,
@@ -359,7 +366,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     ).to(args.device)
     closure_library = None
     closure_coefficients = None
-    graph_provider, graph_conditioning = _build_graph_conditioning(args, args.device)
+    graph_state_dim = coords.shape[-1] + time.reshape(time.shape[0], -1).shape[-1]
+    graph_provider, graph_conditioning = _build_graph_conditioning(args, args.device, state_dim=graph_state_dim)
     if args.closure_mode == "sparse_linear":
         closure_library = SparseLibrary(
             SparseLibraryConfig(
@@ -720,7 +728,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional graph-conditioned closure features. coordinate_rbf creates per-point anchor features.",
     )
     parser.add_argument("--closure-graph-embedding-dim", type=int, default=2)
-    parser.add_argument("--closure-graph-state-dim", type=int, default=3)
+    parser.add_argument(
+        "--closure-graph-state-dim",
+        type=int,
+        default=0,
+        help="State dimension for coordinate_rbf; default 0 infers coordinate dimension plus time dimension.",
+    )
     parser.add_argument("--closure-graph-length-scale", type=float, default=0.35)
     parser.add_argument("--closure-graph-node-dim", type=int, default=2)
     parser.add_argument("--closure-graph-hidden-dim", type=int, default=16)

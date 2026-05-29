@@ -612,6 +612,7 @@ def test_macro_pinn_sparse_closure_supports_coordinate_rbf_graph_features(tmp_pa
     assert status == 0
     assert payload["closure"]["graph_conditioning"]["mode"] == "coordinate_rbf"
     assert payload["closure"]["graph_conditioning"]["metadata"]["feature_names"] == ["g0", "g1", "g2"]
+    assert payload["closure"]["graph_conditioning"]["metadata"]["state_dim"] == 3
     assert payload["closure"]["graph_conditioning"]["metadata"]["length_scale"] == 0.5
     assert payload["closure"]["term_names"] == ["1", "T", "x", "y", "t", "g0", "g1", "g2"]
     assert payload["config"]["closure_features"] == ["T", "x", "y", "t", "g0", "g1", "g2"]

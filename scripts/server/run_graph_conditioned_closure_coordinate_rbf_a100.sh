@@ -53,7 +53,6 @@ run_one() {
     --closure-threshold 1e-6 \
     --closure-graph-mode coordinate_rbf \
     --closure-graph-embedding-dim "$embedding_dim" \
-    --closure-graph-state-dim 3 \
     --closure-graph-length-scale "$length_scale" \
     --hot-quantile 0.9 \
     --gradient-quantile 0.9 \
