@@ -201,6 +201,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - 3-seed active hot-zone candidate hot q90 RMSE: `17.033393 +/- 2.084327`
 - sparse closure MVP 已跑通但未超过 data-only；下一步转向 residual/collocation sampling 与尺度化热源。
 - random residual sampling 改善了 active closure，但仍弱于 data-only；下一步实现 hot/gradient residual sampling。
+- hot/gradient residual sampling 比 random 更差；下一步转向 staged/warm-start closure fine-tuning。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -222,6 +223,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_macro_pinn_screen_matrix_v1.md](docs/results/ambench_macro_pinn_screen_matrix_v1.md): Macro PINN 小矩阵与 3 seed 稳健性结果。
 - [docs/results/ambench_sparse_closure_mvp_v1.md](docs/results/ambench_sparse_closure_mvp_v1.md): sparse source closure MVP 诊断结果。
 - [docs/results/ambench_sparse_closure_residual_sampling_v1.md](docs/results/ambench_sparse_closure_residual_sampling_v1.md): random residual sampling closure 结果。
+- [docs/results/ambench_sparse_closure_region_residual_sampling_v1.md](docs/results/ambench_sparse_closure_region_residual_sampling_v1.md): hot/gradient residual sampling 诊断结果。
 
 ## Public Resources
 

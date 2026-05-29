@@ -284,6 +284,24 @@ Add residual sampling:
 - 结果文档：`docs/results/ambench_sparse_closure_residual_sampling_v1.md`。
 - 结论：random residual sampling 明显改善 active closure 的全局与梯度指标，但仍不超过 data-only；下一步应实现 hot/gradient residual sampling modes。
 
+当前 C1c 状态：
+
+- 已实现 `--residual-sampling-mode random|hot|gradient|hot_gradient`。
+- 已完成 active 表上的 hot/gradient/hot_gradient residual sampling。
+- 结果文档：`docs/results/ambench_sparse_closure_region_residual_sampling_v1.md`。
+- 结论：region-aware residual sampling 比 random 更差，说明当前 residual/closure 形式本身仍过强；下一步应做 staged training 或 warm-started closure fine-tuning。
+
+推荐下一步 C1d：
+
+```text
+Staged closure training:
+- --closure-start-step
+- optionally --freeze-backbone-after-closure-start
+- optionally --closure-lr
+```
+
+验收：closure 在后期作为小修正项打开时，不显著损害 data-only hot q90 与 gradient q90，并保存可解释表达式。
+
 ### C2. Closure 消融
 
 必跑对照：
