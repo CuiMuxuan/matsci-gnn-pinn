@@ -67,6 +67,11 @@ python -m pip install -r requirements/torch-cu126.txt
 python -m pip install -r requirements/pyg-torch27-cu126.txt
 ```
 
+
+## 后续推进总方案
+
+第一批 A100 dense 实验完成后，后续服务器研发不再只按本手册的初始 smoke 流程推进，而应按 [服务器推进完整执行方案](server_execution_plan.md) 执行。该方案包含当前结果基线、三端同步规则、归一化与强 baseline、采样改进、Macro PINN 调参、sparse closure、GNN 条件化闭合、弱双向耦合和论文资产生成的阶段门槛。
+
 ## 下载 AM-Bench 数据
 
 ```bash
@@ -190,3 +195,4 @@ nvidia-smi > outputs/runs/<run_id>/nvidia_smi.txt
 - dense Macro PINN PDE 指标。
 - 每个 run 的环境冻结文件。
 - 一份新的 `docs/results/ambench_dense_temperature_server_v1.md`。
+

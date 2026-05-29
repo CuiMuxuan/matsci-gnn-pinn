@@ -203,6 +203,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/environment.md](docs/environment.md): 本地与远程环境迁移。
 - [docs/ambench_downloads.md](docs/ambench_downloads.md): AM-Bench 下载、断点处理和校验。
 - [docs/server_runbook.md](docs/server_runbook.md): 云 GPU 阶段运行手册。
+- [docs/server_execution_plan.md](docs/server_execution_plan.md): 后续服务器研发推进总方案。
 
 ## Public Resources
 
@@ -215,3 +216,4 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 ## License and Data Notes
 
 代码许可证待正式补充。AM-Bench 数据不直接提交到本仓库；请通过 NIST PDR 或项目内 manifest 下载，并在使用时遵守原始数据源的引用与许可要求。
+
