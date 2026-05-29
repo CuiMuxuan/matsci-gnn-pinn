@@ -442,12 +442,24 @@ Gated graph-conditioned closure:
 - 已新增 `--closure-graph-gate`，graph terms 对 source 的贡献按 gate 缩放。
 - 已新增 `--closure-graph-l1-weight`，graph coefficients 与 base sparse coefficients 分开惩罚。
 - 已新增服务器脚本：`scripts/server/run_graph_conditioned_closure_gated_a100.sh`。
+- 已完成 gated graph closure 服务器实验。
+- 结果文档：`docs/results/ambench_graph_conditioned_closure_gated_v1.md`。
+- 结论：gate `0.25` 将 gradient q90 推到 `61.623894`，但 graph terms 被 `graph_l1_weight=1e-4` 几乎完全压没；下一步只做最小 graph-L1 sensitivity，不再扩大矩阵。
 
 下一轮服务器命令：
 
 ```bash
 bash scripts/server/run_graph_conditioned_closure_gated_a100.sh \
   > logs/ambench_graph_conditioned_closure_gated_a100_v1.log 2>&1
+```
+
+下一步 D1d：
+
+```text
+Graph L1 sensitivity:
+- fixed gate=0.25
+- graph_l1_weight=1e-5 and 1e-6
+- require graph terms survive thresholding without hot q90 regression
 ```
 
 ### D2. 接入真实/半真实微观数据

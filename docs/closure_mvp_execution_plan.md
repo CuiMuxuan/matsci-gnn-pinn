@@ -266,3 +266,14 @@ bash scripts/server/run_graph_conditioned_closure_gated_a100.sh \
 ```
 
 当前目标不是让 graph terms 变大，而是验证小幅 graph 修正是否能保留 sparse closure 的 hot/gradient 指标，同时给方向三留下可解释接口。
+
+服务器结果：
+
+| Method | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE |
+| --- | ---: | ---: | ---: |
+| sparse closure best | 70.494433 | 31.542155 | 64.558069 |
+| coordinate RBF `g6_ls0_25` | 68.237717 | 50.900600 | 71.879264 |
+| gated graph, gate 0.10, graph L1 `1e-4` | 71.359550 | 52.698404 | 71.601495 |
+| gated graph, gate 0.25, graph L1 `1e-4` | 72.840576 | 31.919197 | 61.623894 |
+
+结论：gate 0.25 保住了 hot q90 并改善了 gradient q90，但 graph terms 基本被 `graph_l1_weight=1e-4` 压没。下一步只做最小 graph-L1 sensitivity，检验 graph terms 是否能在不损害 hot q90 的前提下保留。
