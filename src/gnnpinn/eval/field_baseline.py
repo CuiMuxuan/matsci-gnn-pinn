@@ -13,6 +13,9 @@ from gnnpinn.data.splits import load_split_manifest, split_indices, subset_seque
 from gnnpinn.eval.baselines import constant_predictions, regression_metric_table
 
 
+MODEL_BASELINES = {"knn", "random_forest", "extra_trees"}
+
+
 def evaluate_table(
     table_path: Path,
     target: str,
@@ -20,10 +23,34 @@ def evaluate_table(
     prediction_column: str | None = None,
     split_manifest_path: Path | None = None,
     fit_split: str = "train",
+    feature_columns: list[str] | None = None,
+    n_neighbors: int = 8,
+    n_estimators: int = 200,
+    random_state: int = 7,
 ) -> dict[str, Any]:
     sample = load_field_table(table_path)
     y_true = sample.require_observation(target)
     split_manifest = load_split_manifest(split_manifest_path) if split_manifest_path else None
+    feature_matrix: list[list[float]] | None = None
+    model_predictions: list[float] | None = None
+    if strategy in MODEL_BASELINES:
+        if prediction_column:
+            raise ValueError("prediction_column cannot be combined with model baselines")
+        feature_matrix, feature_columns = _feature_matrix(sample, feature_columns)
+        fit_indices = (
+            split_indices(split_manifest, fit_split)
+            if split_manifest
+            else list(range(sample.n_points))
+        )
+        model_predictions = _fit_predict_model_baseline(
+            strategy=strategy,
+            features=feature_matrix,
+            target=y_true,
+            fit_indices=fit_indices,
+            n_neighbors=n_neighbors,
+            n_estimators=n_estimators,
+            random_state=random_state,
+        )
     if split_manifest:
         fit_indices = split_indices(split_manifest, fit_split)
         fit_values = subset_sequence(y_true, fit_indices)
@@ -35,6 +62,9 @@ def evaluate_table(
                 pred_values = sample.require_observation(prediction_column)
                 y_pred = subset_sequence(pred_values, indices)
                 baseline_name = f"column:{prediction_column}"
+            elif model_predictions is not None:
+                y_pred = subset_sequence(model_predictions, indices)
+                baseline_name = f"model:{strategy}:fit={fit_split}"
             else:
                 y_pred = _constant_predictions_from_fit(y_split, fit_values, strategy)
                 baseline_name = f"constant:{strategy}:fit={fit_split}"
@@ -51,11 +81,21 @@ def evaluate_table(
             "split_manifest": str(split_manifest_path),
             "fit_split": fit_split,
             "split_metrics": split_metrics,
+            "baseline_parameters": _baseline_parameters(
+                strategy=strategy,
+                feature_columns=feature_columns,
+                n_neighbors=n_neighbors,
+                n_estimators=n_estimators,
+                random_state=random_state,
+            ),
             "metadata": sample.metadata,
         }
     if prediction_column:
         y_pred = sample.require_observation(prediction_column)
         baseline_name = f"column:{prediction_column}"
+    elif model_predictions is not None:
+        y_pred = model_predictions
+        baseline_name = f"model:{strategy}:fit=all"
     else:
         y_pred = constant_predictions(y_true, strategy=strategy)
         baseline_name = f"constant:{strategy}"
@@ -66,6 +106,13 @@ def evaluate_table(
         "baseline": baseline_name,
         "n_points": sample.n_points,
         "metrics": regression_metric_table(y_true, y_pred),
+        "baseline_parameters": _baseline_parameters(
+            strategy=strategy,
+            feature_columns=feature_columns,
+            n_neighbors=n_neighbors,
+            n_estimators=n_estimators,
+            random_state=random_state,
+        ),
         "metadata": sample.metadata,
     }
 
@@ -80,6 +127,93 @@ def _constant_predictions_from_fit(values: list[float], fit_values: list[float],
     else:
         raise ValueError(f"Unsupported baseline strategy: {strategy}")
     return [value for _ in values]
+
+
+def _feature_matrix(sample: Any, feature_columns: list[str] | None) -> tuple[list[list[float]], list[str]]:
+    default_columns = list(sample.metadata.get("coordinate_columns") or [])
+    time_column = sample.metadata.get("time_column")
+    if time_column:
+        default_columns.append(time_column)
+    columns = feature_columns or default_columns
+    if not columns:
+        raise ValueError("Model baselines require at least one feature column")
+
+    rows: list[list[float]] = []
+    coord_columns = list(sample.metadata.get("coordinate_columns") or [])
+    time_column = sample.metadata.get("time_column")
+    for row_idx in range(sample.n_points):
+        row: list[float] = []
+        for column in columns:
+            if column in coord_columns:
+                row.append(float(sample.coordinates[row_idx][coord_columns.index(column)]))
+            elif time_column and column == time_column:
+                row.append(float(sample.time[row_idx]))
+            elif column in sample.observations:
+                row.append(float(sample.observations[column][row_idx]))
+            else:
+                raise ValueError(f"Feature column not found: {column}")
+        rows.append(row)
+    return rows, columns
+
+
+def _fit_predict_model_baseline(
+    strategy: str,
+    features: list[list[float]],
+    target: list[float],
+    fit_indices: list[int],
+    n_neighbors: int,
+    n_estimators: int,
+    random_state: int,
+) -> list[float]:
+    if strategy == "knn":
+        from sklearn.neighbors import KNeighborsRegressor
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+
+        model = make_pipeline(
+            StandardScaler(),
+            KNeighborsRegressor(n_neighbors=max(1, min(n_neighbors, len(fit_indices)))),
+        )
+    elif strategy == "random_forest":
+        from sklearn.ensemble import RandomForestRegressor
+
+        model = RandomForestRegressor(
+            n_estimators=n_estimators,
+            random_state=random_state,
+            n_jobs=-1,
+        )
+    elif strategy == "extra_trees":
+        from sklearn.ensemble import ExtraTreesRegressor
+
+        model = ExtraTreesRegressor(
+            n_estimators=n_estimators,
+            random_state=random_state,
+            n_jobs=-1,
+        )
+    else:
+        raise ValueError(f"Unsupported model baseline: {strategy}")
+
+    x_fit = [features[index] for index in fit_indices]
+    y_fit = [target[index] for index in fit_indices]
+    model.fit(x_fit, y_fit)
+    return [float(item) for item in model.predict(features)]
+
+
+def _baseline_parameters(
+    strategy: str,
+    feature_columns: list[str] | None,
+    n_neighbors: int,
+    n_estimators: int,
+    random_state: int,
+) -> dict[str, Any]:
+    if strategy not in MODEL_BASELINES:
+        return {}
+    return {
+        "feature_columns": feature_columns,
+        "n_neighbors": n_neighbors if strategy == "knn" else None,
+        "n_estimators": n_estimators if strategy in {"random_forest", "extra_trees"} else None,
+        "random_state": random_state,
+    }
 
 
 def discover_tables(args: argparse.Namespace) -> list[Path]:
@@ -108,6 +242,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             prediction_column=args.prediction_column,
             split_manifest_path=args.split_manifest,
             fit_split=args.fit_split,
+            feature_columns=args.feature_columns,
+            n_neighbors=args.n_neighbors,
+            n_estimators=args.n_estimators,
+            random_state=args.random_state,
         )
         for path in discover_tables(args)
     ]
@@ -134,9 +272,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--strategy",
         default="mean",
-        choices=["mean", "first", "zero"],
-        help="Constant baseline strategy when no prediction column is provided.",
+        # Keep choices close to the legacy constant baselines and the first
+        # stronger model baselines needed for server-stage AM-Bench runs.
+        choices=["mean", "first", "zero", "knn", "random_forest", "extra_trees"],
+        help="Baseline strategy when no prediction column is provided.",
     )
+    parser.add_argument(
+        "--feature-column",
+        action="append",
+        dest="feature_columns",
+        help="Feature column for model baselines. Defaults to coordinate columns plus time.",
+    )
+    parser.add_argument("--n-neighbors", type=int, default=8, help="k for knn baseline.")
+    parser.add_argument("--n-estimators", type=int, default=200, help="Number of trees for tree baselines.")
+    parser.add_argument("--random-state", type=int, default=7, help="Random state for model baselines.")
     parser.add_argument("--output", type=Path, help="Optional JSON output path.")
     return parser
 

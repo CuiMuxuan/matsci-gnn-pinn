@@ -1,4 +1,5 @@
 from pathlib import Path
+import importlib.util
 
 import pytest
 
@@ -114,3 +115,51 @@ def test_field_baseline_cli_with_split_manifest(tmp_path: Path):
     assert status == 0
     assert '"split_metrics"' in payload
     assert '"baseline": "constant:mean:fit=train"' in payload
+
+
+def test_field_baseline_cli_with_knn_model_baseline(tmp_path: Path):
+    if importlib.util.find_spec("sklearn") is None:
+        pytest.skip("scikit-learn is not installed in this environment")
+
+    table = tmp_path / "thermal.csv"
+    table.write_text(
+        "x,y,t,T,laser_power_W\n"
+        "0,0,0,0,285\n"
+        "1,0,0,1,285\n"
+        "2,0,0,2,285\n"
+        "3,0,0,3,285\n",
+        encoding="utf-8",
+    )
+    split = tmp_path / "split.json"
+    split.write_text(
+        '{"splits":{"train":[0,1],"val":[2],"test":[3]}}',
+        encoding="utf-8",
+    )
+    output = tmp_path / "baseline.json"
+
+    status = field_baseline_main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--strategy",
+            "knn",
+            "--split-manifest",
+            str(split),
+            "--feature-column",
+            "x",
+            "--feature-column",
+            "t",
+            "--n-neighbors",
+            "1",
+            "--output",
+            str(output),
+        ]
+    )
+
+    payload = output.read_text(encoding="utf-8")
+    assert status == 0
+    assert '"baseline": "model:knn:fit=train"' in payload
+    assert '"feature_columns": [' in payload
+    assert '"n_neighbors": 1' in payload

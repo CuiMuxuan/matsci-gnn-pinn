@@ -104,6 +104,8 @@ def test_macro_pinn_training_cli_with_split_manifest(tmp_path: Path):
             "1",
             "--split-manifest",
             str(split),
+            "--input-normalization",
+            "standard",
         ]
     )
 
@@ -112,3 +114,6 @@ def test_macro_pinn_training_cli_with_split_manifest(tmp_path: Path):
     assert payload["train_points"] == 2
     assert payload["split_metrics"]["train"]["n_points"] == 2
     assert payload["split_metrics"]["val"]["n_points"] == 1
+    assert payload["input_normalization"]["mode"] == "standard"
+    assert payload["input_normalization"]["coordinates"]["applied"] is True
+    assert payload["input_normalization"]["time"]["applied"] is True

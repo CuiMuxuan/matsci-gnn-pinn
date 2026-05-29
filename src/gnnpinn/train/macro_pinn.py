@@ -34,6 +34,44 @@ def _index_tensor(indices: list[int], device: str) -> Any:
     return torch.tensor(indices, dtype=torch.long, device=device)
 
 
+def _normalize_feature_tensor(tensor: Any, train_index: Any, mode: str) -> tuple[Any, dict[str, Any]]:
+    torch = _torch()
+    train_values = tensor[train_index]
+    stats: dict[str, Any] = {"mode": mode}
+    if mode == "none":
+        stats["applied"] = False
+        return tensor, stats
+    if mode == "standard":
+        center = train_values.mean(dim=0, keepdim=True)
+        scale = train_values.std(dim=0, unbiased=False, keepdim=True)
+        scale = torch.where(scale == 0, torch.ones_like(scale), scale)
+        normalized = (tensor - center) / scale
+        stats.update(
+            {
+                "applied": True,
+                "center": center.detach().cpu().reshape(-1).tolist(),
+                "scale": scale.detach().cpu().reshape(-1).tolist(),
+            }
+        )
+        return normalized, stats
+    if mode == "minmax":
+        minimum = train_values.min(dim=0, keepdim=True).values
+        maximum = train_values.max(dim=0, keepdim=True).values
+        scale = maximum - minimum
+        scale = torch.where(scale == 0, torch.ones_like(scale), scale)
+        normalized = (tensor - minimum) / scale
+        stats.update(
+            {
+                "applied": True,
+                "minimum": minimum.detach().cpu().reshape(-1).tolist(),
+                "maximum": maximum.detach().cpu().reshape(-1).tolist(),
+                "scale": scale.detach().cpu().reshape(-1).tolist(),
+            }
+        )
+        return normalized, stats
+    raise ValueError(f"Unsupported input normalization mode: {mode}")
+
+
 def _metric_payload(y_true: list[float], y_pred: list[float]) -> dict[str, float]:
     metrics: dict[str, float] = {
         "rmse": rmse(y_true, y_pred),
@@ -66,6 +104,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         else list(range(sample.n_points))
     )
     train_index = _index_tensor(train_indices, args.device)
+    coords, coord_normalization = _normalize_feature_tensor(coords, train_index, args.input_normalization)
+    time, time_normalization = _normalize_feature_tensor(time, train_index, args.input_normalization)
     target_mean = target[train_index].mean()
     target_std = target[train_index].std(unbiased=False)
     if float(target_std.detach().cpu()) == 0.0:
@@ -153,6 +193,13 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "mean": float(target_mean.detach().cpu()),
             "std": float(target_std.detach().cpu()),
         },
+        "input_normalization": {
+            "mode": args.input_normalization,
+            "coordinate_columns": sample.metadata.get("coordinate_columns"),
+            "time_column": sample.metadata.get("time_column"),
+            "coordinates": coord_normalization,
+            "time": time_normalization,
+        },
     }
     metrics_path = args.output_dir / "metrics.json"
     checkpoint_path = args.output_dir / "checkpoint.pt"
@@ -211,6 +258,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--log-every", type=int, default=50)
     parser.add_argument("--split-manifest", type=Path, help="Optional JSON split manifest.")
     parser.add_argument("--train-split", default="train", help="Split used for optimization when split manifest is provided.")
+    parser.add_argument(
+        "--input-normalization",
+        default="none",
+        choices=["none", "minmax", "standard"],
+        help="Normalize coordinate and time inputs using statistics fitted on the train split.",
+    )
     parser.add_argument(
         "--no-normalize-target",
         action="store_false",
