@@ -1,0 +1,36 @@
+dataset_id: mds2-2716
+sample_id: amb2022_03_line_0_1_temperature_dense_a800_v1
+description: "Server-scale calibrated temperature subset for AMB2022-03 Line_0_1."
+source:
+  thermal_hdf5: data/raw/ambench/2022_single_track/AMB2022-03/mds2-2716/Thermography/AMB2022-03-718-AMMT-StaringCamera_Signal.h5
+  dataset: ThermalData/Line_0_1/Signal
+  source_shape: [700, 640, 304]
+target:
+  name: temperature_C
+  calibration: Calibration/ThermalCal
+  min_signal: 100
+sampling:
+  frame_start: 0
+  frame_step: 5
+  max_frames: 120
+  row_start: 0
+  row_step: 2
+  max_rows: 320
+  col_start: 0
+  col_step: 2
+  max_cols: 152
+split:
+  strategy: frame
+  train_fraction: 0.7
+  val_fraction: 0.15
+  test_fraction: 0.15
+outputs:
+  field_table: data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_dense_a800_v1.csv
+  conversion_manifest: outputs/data_audits/ambench_line_0_1_temperature_dense_a800_v1_manifest.json
+  split_manifest: outputs/data_splits/ambench_line_0_1_temperature_dense_a800_v1_split.json
+recommended_compute:
+  minimum: A800-SXM4-40GB
+  preferred_for_pde_or_sweeps: A100-80GB
+notes:
+  - "This YAML is a runbook config draft; current converter CLI uses explicit command-line flags."
+  - "If the generated CSV or training step is too slow, increase row_step/col_step to 4."

@@ -1,0 +1,8 @@
+--find-links https://data.pyg.org/whl/torch-2.7.0+cu126.html
+torch-geometric>=2.6,<3
+pyg_lib
+torch_scatter
+torch_sparse
+torch_cluster
+torch_spline_conv
+

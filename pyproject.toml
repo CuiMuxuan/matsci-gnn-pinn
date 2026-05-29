@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gnn-pinn"
+version = "0.1.0"
+description = "Executable research prototype for multiscale GNN-PINN materials coupling."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26",
+  "pyyaml>=6.0",
+  "rich>=13.7",
+  "sympy>=1.12",
+  "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+]
+notebooks = [
+  "ipykernel>=6.29",
+  "jupyterlab>=4.2",
+]
+symbolic = [
+  "pysindy>=1.7",
+]
+science = [
+  "h5py>=3.10",
+  "pandas>=2.2",
+  "scikit-image>=0.23",
+  "scikit-learn>=1.4",
+  "scipy>=1.12",
+  "xarray>=2024.1",
+  "zarr>=2.17",
+]
+gnn = [
+  "torch-geometric>=2.6,<3",
+]
+tracking = [
+  "mlflow>=2.12,<4",
+]
+
+[project.scripts]
+gnnpinn-data-audit = "gnnpinn.data.audit:main"
+gnnpinn-convert-ambench = "gnnpinn.data.loaders.ambench:main"
+gnnpinn-convert-ambench-hdf5 = "gnnpinn.data.loaders.ambench_hdf5:main"
+gnnpinn-check-ambench-download = "gnnpinn.data.ambench_downloads:main"
+gnnpinn-field-baseline = "gnnpinn.eval.field_baseline:main"
+gnnpinn-inspect-table = "gnnpinn.data.inspect_table:main"
+gnnpinn-train-macro-pinn = "gnnpinn.train.macro_pinn:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest_tmp/
+
+# Root-level working notes
+/*.md
+!/README.md
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg-info/
+
+# Local data and generated outputs
+data/raw/**
+!data/raw/
+!data/raw/ambench/
+!data/raw/ambench/2022_single_track/
+!data/raw/ambench/2022_single_track/examples/
+!data/raw/ambench/2022_single_track/examples/**
+
+data/interim/**
+!data/interim/
+!data/interim/examples/
+!data/interim/examples/**
+
+data/processed/**
+outputs/
+
+# Local environments
+.venv/
+venv/
+
+# Local indexes and accidental command logs
+.codegraph/
+3.10

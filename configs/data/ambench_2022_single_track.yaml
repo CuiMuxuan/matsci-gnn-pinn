@@ -1,0 +1,59 @@
+dataset_id: ambench_2022_single_track
+name: "NIST AM-Bench single-track starter case"
+status: planned_public_dataset
+primary_source: "https://www.nist.gov/ambench/benchmark-test-data"
+source_pages:
+  - "https://www.nist.gov/ambench"
+  - "https://www.nist.gov/ambench/am-bench-data-management-systems"
+  - "https://www.nist.gov/ambench/benchmark-test-data"
+local_root: "data/raw/ambench/2022_single_track"
+license: "Check NIST AM-Bench data page and per-file metadata before redistribution."
+materials:
+  - "nickel-based superalloy cases where available"
+  - "AM-Bench metal additive manufacturing benchmark artifacts"
+process:
+  family: "laser powder bed fusion / scan-track benchmark"
+  parameters:
+    - laser_power
+    - scan_speed
+    - scan_path
+    - layer_thickness
+expected_modalities:
+  thermal:
+    required: false
+    patterns:
+      - "**/*thermal*"
+      - "**/*temperature*"
+      - "**/*melt*pool*"
+      - "**/*IR*"
+  microstructure:
+    required: false
+    patterns:
+      - "**/*EBSD*"
+      - "**/*microstructure*"
+      - "**/*grain*"
+      - "**/*SEM*"
+  mechanics:
+    required: false
+    patterns:
+      - "**/*strain*"
+      - "**/*stress*"
+      - "**/*deflection*"
+      - "**/*mechanical*"
+  metadata:
+    required: false
+    patterns:
+      - "**/*.json"
+      - "**/*.yaml"
+      - "**/*.yml"
+      - "**/*.csv"
+      - "**/*.xlsx"
+phase0_gates:
+  min_existing_files: 1
+  min_modalities_present: 1
+  require_local_data: false
+notes:
+  - "Phase 0 does not download large AM-Bench artifacts automatically."
+  - "Place downloaded files under local_root, then run the audit command."
+  - "If no local files exist, audit still creates a source-registration report and marks data readiness as blocked_by_missing_local_files."
+

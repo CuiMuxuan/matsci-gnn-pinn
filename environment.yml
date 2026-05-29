@@ -1,0 +1,27 @@
+name: gnnpinn
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip>=24
+  - h5py>=3.10
+  - ipykernel>=6.29
+  - jupyterlab>=4.2
+  - matplotlib>=3.8
+  - numpy>=1.26
+  - pandas>=2.2
+  - pyarrow>=15
+  - pytest>=8
+  - python-graphviz
+  - pyyaml>=6
+  - rich>=13.7
+  - ruff>=0.6
+  - scikit-image>=0.23
+  - scikit-learn>=1.4
+  - scipy>=1.12
+  - seaborn>=0.13
+  - sympy>=1.12
+  - tqdm>=4.66
+  - xarray>=2024.1
+  - zarr>=2.17
+

@@ -1,0 +1,22 @@
+dataset_id: ambench_2022_single_track
+sample_id: toy_ambench_temperature
+source: data/raw/ambench/2022_single_track/examples/raw_temperature_points.csv
+output: data/processed/ambench/2022_single_track/field_tables/toy_temperature.csv
+split_manifest: data/processed/ambench/2022_single_track/splits/toy_temperature_split.json
+columns:
+  x: X_mm
+  y: Y_mm
+  t: time_s
+observations:
+  T: temperature_K
+process_parameters:
+  laser_power_W: 195
+  scan_speed_mm_s: 800
+splits:
+  train_fraction: 0.6
+  val_fraction: 0.2
+  test_fraction: 0.2
+  seed: 7
+metadata:
+  source_note: "Example mapping for AM-Bench-like point table. Replace source and column names after inspecting downloaded AM-Bench files."
+
