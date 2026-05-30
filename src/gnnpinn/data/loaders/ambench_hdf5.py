@@ -45,42 +45,14 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
     h5py = _h5py()
     source = Path(args.thermal_hdf5)
     output = Path(args.output)
-    dataset_path = args.dataset
+    dataset_paths = _dataset_paths(args.dataset)
     output.parent.mkdir(parents=True, exist_ok=True)
 
     with h5py.File(source, "r") as handle:
-        dataset = handle[dataset_path]
-        if len(dataset.shape) != 3:
-            raise ValueError(f"Expected a 3D thermography signal dataset, got shape {dataset.shape}")
-        n_frames, n_rows, n_cols = (int(value) for value in dataset.shape)
-        frame_indices = _sample_indices(
-            start=args.frame_start,
-            step=args.frame_step,
-            stop=n_frames,
-            max_count=args.max_frames,
-        )
-        row_indices = _sample_indices(
-            start=args.row_start,
-            step=args.row_step,
-            stop=n_rows,
-            max_count=args.max_rows,
-        )
-        col_indices = _sample_indices(
-            start=args.col_start,
-            step=args.col_step,
-            stop=n_cols,
-            max_count=args.max_cols,
-        )
-        parent = handle[_parent_path(dataset_path)]
         thermal_data = handle["ThermalData"]
         thermal_cal = handle.get("Calibration/ThermalCal")
         frame_rate_hz = _float_attr(thermal_data.attrs.get("frame_rate"), default=1.0)
         calibration = _read_calibration(thermal_cal) if thermal_cal is not None else None
-        process = {
-            "laser_power_W": _float_attr(parent.attrs.get("laser_power")),
-            "scan_speed_mm_s": _float_attr(parent.attrs.get("scan_speed")),
-            "spot_size_um": _float_attr(parent.attrs.get("spot_size")),
-        }
         fieldnames = [
             "x",
             "y",
@@ -90,6 +62,9 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
             "frame_index",
             "row_index",
             "col_index",
+            "dataset_path",
+            "line_id",
+            "line_index",
             "laser_power_W",
             "scan_speed_mm_s",
             "spot_size_um",
@@ -100,39 +75,119 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
                 raise ValueError("Calibration/ThermalCal group is missing; cannot calibrate temperature")
             fieldnames.insert(5, "temperature_C")
             target = "temperature_C"
-        n_written, rows_by_frame, sampling_frames = _write_sampled_signal_csv(
-            output=output,
-            dataset=dataset,
-            fieldnames=fieldnames,
-            frame_indices=frame_indices,
-            row_indices=row_indices,
-            col_indices=col_indices,
-            frame_rate_hz=frame_rate_hz,
-            process=process,
-            calibration=calibration if args.calibrate_temperature else None,
-            min_signal=args.min_signal,
-            sampling_mode=args.sampling_mode,
-            hot_quantile=args.hot_quantile,
-            gradient_quantile=args.gradient_quantile,
-            background_fraction=args.background_fraction,
-            max_points_per_frame=args.max_points_per_frame,
-        )
+        n_written = 0
+        rows_by_frame: dict[int, list[int]] = {}
+        rows_by_line: dict[str, list[int]] = {}
+        frame_groups: dict[str, dict[str, Any]] = {}
+        dataset_summaries: list[dict[str, Any]] = []
+        with output.open("w", encoding="utf-8", newline="") as output_handle:
+            writer = csv.DictWriter(output_handle, fieldnames=fieldnames)
+            writer.writeheader()
+            for line_index, dataset_path in enumerate(dataset_paths):
+                dataset = handle[dataset_path]
+                if len(dataset.shape) != 3:
+                    raise ValueError(f"Expected a 3D thermography signal dataset, got shape {dataset.shape}")
+                n_frames, n_rows, n_cols = (int(value) for value in dataset.shape)
+                frame_indices = _sample_indices(
+                    start=args.frame_start,
+                    step=args.frame_step,
+                    stop=n_frames,
+                    max_count=args.max_frames,
+                )
+                row_indices = _sample_indices(
+                    start=args.row_start,
+                    step=args.row_step,
+                    stop=n_rows,
+                    max_count=args.max_rows,
+                )
+                col_indices = _sample_indices(
+                    start=args.col_start,
+                    step=args.col_step,
+                    stop=n_cols,
+                    max_count=args.max_cols,
+                )
+                parent = handle[_parent_path(dataset_path)]
+                process = {
+                    "laser_power_W": _float_attr(parent.attrs.get("laser_power")),
+                    "scan_speed_mm_s": _float_attr(parent.attrs.get("scan_speed")),
+                    "spot_size_um": _float_attr(parent.attrs.get("spot_size")),
+                }
+                line_id = _line_id_from_dataset_path(dataset_path)
+                local_written, local_rows_by_frame, sampling_frames = _write_sampled_signal_rows(
+                    writer=writer,
+                    dataset=dataset,
+                    frame_indices=frame_indices,
+                    row_indices=row_indices,
+                    col_indices=col_indices,
+                    frame_rate_hz=frame_rate_hz,
+                    process=process,
+                    row_metadata={
+                        "dataset_path": dataset_path,
+                        "line_id": line_id,
+                        "line_index": line_index,
+                    },
+                    start_row_index=n_written,
+                    calibration=calibration if args.calibrate_temperature else None,
+                    min_signal=args.min_signal,
+                    sampling_mode=args.sampling_mode,
+                    hot_quantile=args.hot_quantile,
+                    gradient_quantile=args.gradient_quantile,
+                    background_fraction=args.background_fraction,
+                    max_points_per_frame=args.max_points_per_frame,
+                )
+                for frame_sampling in sampling_frames:
+                    frame_sampling["dataset_path"] = dataset_path
+                    frame_sampling["line_id"] = line_id
+                    frame_sampling["line_index"] = line_index
+                for frame_index, row_indices_for_frame in local_rows_by_frame.items():
+                    frame_group_id = len(rows_by_frame)
+                    rows_by_frame[frame_group_id] = row_indices_for_frame
+                    frame_groups[str(frame_group_id)] = {
+                        "dataset_path": dataset_path,
+                        "line_id": line_id,
+                        "line_index": line_index,
+                        "frame_index": frame_index,
+                    }
+                line_rows = list(range(n_written, n_written + local_written))
+                rows_by_line.setdefault(line_id, []).extend(line_rows)
+                dataset_summaries.append(
+                    {
+                        "dataset_path": dataset_path,
+                        "line_id": line_id,
+                        "line_index": line_index,
+                        "source_shape": [n_frames, n_rows, n_cols],
+                        "source_dtype": str(dataset.dtype),
+                        "n_rows": local_written,
+                        "frame_indices": frame_indices,
+                        "row_indices": row_indices,
+                        "col_indices": col_indices,
+                        "process_parameters": process,
+                        "sampling_frames": sampling_frames,
+                    }
+                )
+                n_written += local_written
         manifest = {
             "dataset_id": "mds2-2716",
             "sample_id": args.sample_id,
             "source": str(source),
             "output": str(output),
-            "dataset_path": dataset_path,
-            "source_shape": [n_frames, n_rows, n_cols],
-            "source_dtype": str(dataset.dtype),
+            "dataset_path": dataset_paths[0],
+            "dataset_paths": dataset_paths,
+            "source_shape": dataset_summaries[0]["source_shape"],
+            "source_shapes": {
+                item["dataset_path"]: item["source_shape"]
+                for item in dataset_summaries
+            },
+            "source_dtype": dataset_summaries[0]["source_dtype"],
             "n_rows": n_written,
-            "frame_indices": frame_indices,
-            "row_indices": row_indices,
-            "col_indices": col_indices,
+            "frame_indices": dataset_summaries[0]["frame_indices"],
+            "row_indices": dataset_summaries[0]["row_indices"],
+            "col_indices": dataset_summaries[0]["col_indices"],
             "frame_rate_hz": frame_rate_hz,
             "target": target,
             "coordinate_system": "camera_pixel_index",
-            "process_parameters": process,
+            "process_parameters": dataset_summaries[0]["process_parameters"],
+            "datasets": dataset_summaries,
             "metadata": {
                 "source_units": str(dataset.attrs.get("units", "digital levels")),
                 "calibration": calibration if args.calibrate_temperature else None,
@@ -154,36 +209,51 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
                         "gradient_quantile": args.gradient_quantile,
                         "background_fraction": args.background_fraction,
                         "max_points_per_frame": args.max_points_per_frame,
-                        "frames": sampling_frames,
+                        "frames": [
+                            frame
+                            for item in dataset_summaries
+                            for frame in item["sampling_frames"]
+                        ],
                     },
                 },
+                "frame_groups": frame_groups,
             },
         }
 
-    if args.split_manifest:
-        if args.split_strategy == "frame":
-            split = build_frame_split_manifest(
-                rows_by_frame=rows_by_frame,
-                sample_id=args.sample_id,
-                train_fraction=args.train_fraction,
-                val_fraction=args.val_fraction,
-                test_fraction=args.test_fraction,
-            )
-        else:
-            split = build_split_manifest(
-                n_rows=n_written,
-                sample_id=args.sample_id,
-                split_config={
-                    "train_fraction": args.train_fraction,
-                    "val_fraction": args.val_fraction,
-                    "test_fraction": args.test_fraction,
-                    "seed": args.seed,
-                },
-            )
-            split["strategy"] = "random_row"
-        args.split_manifest.parent.mkdir(parents=True, exist_ok=True)
-        args.split_manifest.write_text(json.dumps(split, indent=2, ensure_ascii=False), encoding="utf-8")
-        manifest["split_manifest"] = str(args.split_manifest)
+        if args.split_manifest:
+            if args.split_strategy == "frame":
+                split = build_frame_split_manifest(
+                    rows_by_frame=rows_by_frame,
+                    sample_id=args.sample_id,
+                    train_fraction=args.train_fraction,
+                    val_fraction=args.val_fraction,
+                    test_fraction=args.test_fraction,
+                )
+            elif args.split_strategy == "line":
+                split = build_group_split_manifest(
+                    rows_by_group=rows_by_line,
+                    sample_id=args.sample_id,
+                    train_fraction=args.train_fraction,
+                    val_fraction=args.val_fraction,
+                    test_fraction=args.test_fraction,
+                    seed=args.seed,
+                    group_key="line_id",
+                )
+            else:
+                split = build_split_manifest(
+                    n_rows=n_written,
+                    sample_id=args.sample_id,
+                    split_config={
+                        "train_fraction": args.train_fraction,
+                        "val_fraction": args.val_fraction,
+                        "test_fraction": args.test_fraction,
+                        "seed": args.seed,
+                    },
+                )
+                split["strategy"] = "random_row"
+            args.split_manifest.parent.mkdir(parents=True, exist_ok=True)
+            args.split_manifest.write_text(json.dumps(split, indent=2, ensure_ascii=False), encoding="utf-8")
+            manifest["split_manifest"] = str(args.split_manifest)
     return manifest
 
 
@@ -204,6 +274,47 @@ def _write_sampled_signal_csv(
     background_fraction: float = 0.1,
     max_points_per_frame: int | None = None,
 ) -> tuple[int, dict[int, list[int]], list[dict[str, Any]]]:
+    with output.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        return _write_sampled_signal_rows(
+            writer=writer,
+            dataset=dataset,
+            frame_indices=frame_indices,
+            row_indices=row_indices,
+            col_indices=col_indices,
+            frame_rate_hz=frame_rate_hz,
+            process=process,
+            row_metadata={},
+            start_row_index=0,
+            calibration=calibration,
+            min_signal=min_signal,
+            sampling_mode=sampling_mode,
+            hot_quantile=hot_quantile,
+            gradient_quantile=gradient_quantile,
+            background_fraction=background_fraction,
+            max_points_per_frame=max_points_per_frame,
+        )
+
+
+def _write_sampled_signal_rows(
+    writer: csv.DictWriter[str],
+    dataset: Any,
+    frame_indices: list[int],
+    row_indices: list[int],
+    col_indices: list[int],
+    frame_rate_hz: float,
+    process: dict[str, float | None],
+    row_metadata: dict[str, Any],
+    start_row_index: int = 0,
+    calibration: dict[str, Any] | None = None,
+    min_signal: float | None = None,
+    sampling_mode: str = "uniform",
+    hot_quantile: float = 0.9,
+    gradient_quantile: float = 0.9,
+    background_fraction: float = 0.1,
+    max_points_per_frame: int | None = None,
+) -> tuple[int, dict[int, list[int]], list[dict[str, Any]]]:
     import numpy as np
 
     _validate_sampling_config(
@@ -216,58 +327,56 @@ def _write_sampled_signal_csv(
     n_written = 0
     rows_by_frame: dict[int, list[int]] = {frame_index: [] for frame_index in frame_indices}
     sampling_frames: list[dict[str, Any]] = []
-    with output.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
-        for frame_index in frame_indices:
-            frame = dataset[frame_index, :, :]
-            t = frame_index / frame_rate_hz if frame_rate_hz else float(frame_index)
-            signal_grid = np.asarray(frame[row_indices, :][:, col_indices], dtype=float)
-            temperature_grid = None
-            if calibration is not None:
-                temperature_grid = calibrate_signal_to_temperature_c(
-                    signal_grid,
-                    coeff_a=float(calibration["coeff_a"]),
-                    coeff_b=float(calibration["coeff_b"]),
-                    coeff_c=float(calibration["coeff_c"]),
-                )
-            target_grid = temperature_grid if temperature_grid is not None else signal_grid
-            selected_points, frame_sampling = _select_sampled_grid_points(
-                signal_grid=signal_grid,
-                target_grid=target_grid,
-                row_indices=row_indices,
-                col_indices=col_indices,
-                min_signal=min_signal,
-                sampling_mode=sampling_mode,
-                hot_quantile=hot_quantile,
-                gradient_quantile=gradient_quantile,
-                background_fraction=background_fraction,
-                max_points_per_frame=max_points_per_frame,
+    for frame_index in frame_indices:
+        frame = dataset[frame_index, :, :]
+        t = frame_index / frame_rate_hz if frame_rate_hz else float(frame_index)
+        signal_grid = np.asarray(frame[row_indices, :][:, col_indices], dtype=float)
+        temperature_grid = None
+        if calibration is not None:
+            temperature_grid = calibrate_signal_to_temperature_c(
+                signal_grid,
+                coeff_a=float(calibration["coeff_a"]),
+                coeff_b=float(calibration["coeff_b"]),
+                coeff_c=float(calibration["coeff_c"]),
             )
-            frame_sampling["frame_index"] = frame_index
-            sampling_frames.append(frame_sampling)
-            for row_position, col_position in selected_points:
-                row_index = row_indices[row_position]
-                col_index = col_indices[col_position]
-                signal = signal_grid[row_position, col_position]
-                if min_signal is not None and float(signal) < min_signal:
-                    continue
-                row = {
-                    "x": float(col_index),
-                    "y": float(row_index),
-                    "z": 0.0,
-                    "t": t,
-                    "signal": float(signal),
-                    "frame_index": frame_index,
-                    "row_index": row_index,
-                    "col_index": col_index,
-                    **process,
-                }
-                if temperature_grid is not None:
-                    row["temperature_C"] = float(temperature_grid[row_position, col_position])
-                writer.writerow(row)
-                rows_by_frame[frame_index].append(n_written)
-                n_written += 1
+        target_grid = temperature_grid if temperature_grid is not None else signal_grid
+        selected_points, frame_sampling = _select_sampled_grid_points(
+            signal_grid=signal_grid,
+            target_grid=target_grid,
+            row_indices=row_indices,
+            col_indices=col_indices,
+            min_signal=min_signal,
+            sampling_mode=sampling_mode,
+            hot_quantile=hot_quantile,
+            gradient_quantile=gradient_quantile,
+            background_fraction=background_fraction,
+            max_points_per_frame=max_points_per_frame,
+        )
+        frame_sampling["frame_index"] = frame_index
+        sampling_frames.append(frame_sampling)
+        for row_position, col_position in selected_points:
+            row_index = row_indices[row_position]
+            col_index = col_indices[col_position]
+            signal = signal_grid[row_position, col_position]
+            if min_signal is not None and float(signal) < min_signal:
+                continue
+            row = {
+                "x": float(col_index),
+                "y": float(row_index),
+                "z": 0.0,
+                "t": t,
+                "signal": float(signal),
+                "frame_index": frame_index,
+                "row_index": row_index,
+                "col_index": col_index,
+                **row_metadata,
+                **process,
+            }
+            if temperature_grid is not None:
+                row["temperature_C"] = float(temperature_grid[row_position, col_position])
+            writer.writerow(row)
+            rows_by_frame[frame_index].append(start_row_index + n_written)
+            n_written += 1
     return n_written, rows_by_frame, sampling_frames
 
 
@@ -466,6 +575,54 @@ def build_frame_split_manifest(
     }
 
 
+def build_group_split_manifest(
+    rows_by_group: dict[str, list[int]],
+    sample_id: str,
+    train_fraction: float,
+    val_fraction: float,
+    test_fraction: float,
+    seed: int,
+    group_key: str,
+) -> dict[str, Any]:
+    import random
+
+    total = train_fraction + val_fraction + test_fraction
+    if abs(total - 1.0) > 1e-6:
+        raise ValueError("Split fractions must sum to 1.0")
+    group_names = [group_name for group_name, rows in rows_by_group.items() if rows]
+    if not group_names:
+        raise ValueError("Group split cannot be built because no rows were written")
+    rng = random.Random(seed)
+    rng.shuffle(group_names)
+    n_groups = len(group_names)
+    train_end = int(round(train_fraction * n_groups))
+    val_end = train_end + int(round(val_fraction * n_groups))
+    group_splits = {
+        "train": group_names[:train_end],
+        "val": group_names[train_end:val_end],
+        "test": group_names[val_end:],
+    }
+    row_splits: dict[str, list[int]] = {}
+    for split_name, split_groups in group_splits.items():
+        indices: list[int] = []
+        for group_name in group_names:
+            if group_name not in split_groups:
+                continue
+            indices.extend(rows_by_group[group_name])
+        row_splits[split_name] = indices
+    return {
+        "sample_id": sample_id,
+        "n_rows": sum(len(rows) for rows in rows_by_group.values()),
+        "n_groups": n_groups,
+        "group_key": group_key,
+        "strategy": f"{group_key}_order",
+        "group_order": group_names,
+        "group_splits": group_splits,
+        "rows_per_group": {group_name: len(rows) for group_name, rows in rows_by_group.items()},
+        "splits": row_splits,
+    }
+
+
 def _sample_indices(start: int, step: int, stop: int, max_count: int | None) -> list[int]:
     if step <= 0:
         raise ValueError("Sampling step must be positive")
@@ -477,6 +634,23 @@ def _sample_indices(start: int, step: int, stop: int, max_count: int | None) -> 
     if not indices:
         raise ValueError("Sampling configuration produced no indices")
     return indices
+
+
+def _dataset_paths(value: str | list[str]) -> list[str]:
+    if isinstance(value, str):
+        paths = [value]
+    else:
+        paths = list(value)
+    if not paths:
+        raise ValueError("At least one HDF5 dataset path is required")
+    return paths
+
+
+def _line_id_from_dataset_path(dataset_path: str) -> str:
+    parts = dataset_path.split("/")
+    if len(parts) < 3:
+        return _parent_path(dataset_path).replace("/", "_")
+    return parts[-2]
 
 
 def _parent_path(dataset_path: str) -> str:
@@ -535,7 +709,15 @@ def _decode_attr(value: Any) -> str | None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--thermal-hdf5", type=Path, default=DEFAULT_THERMAL_HDF5)
-    parser.add_argument("--dataset", default=DEFAULT_DATASET)
+    parser.add_argument(
+        "--dataset",
+        action="append",
+        default=[],
+        help=(
+            "HDF5 dataset path to convert. Can repeat to combine multiple "
+            "ThermalData/*/Signal datasets into one field table."
+        ),
+    )
     parser.add_argument("--sample-id", default="amb2022_03_line_0_1_signal_subset")
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--manifest", type=Path)
@@ -590,7 +772,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--split-strategy",
-        choices=["random_row", "frame"],
+        choices=["random_row", "frame", "line"],
         default="random_row",
         help="Split strategy used when --split-manifest is provided.",
     )
@@ -603,6 +785,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if not args.dataset:
+        args.dataset = [DEFAULT_DATASET]
     manifest = convert_thermography_hdf5(args)
     text = json.dumps(manifest, indent=2, ensure_ascii=False)
     if args.manifest:

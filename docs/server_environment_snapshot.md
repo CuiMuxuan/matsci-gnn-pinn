@@ -1,6 +1,6 @@
 # Server Environment Snapshot
 
-Snapshot date: 2026-05-31 00:52 Asia/Shanghai
+Snapshot date: 2026-05-31 05:28 Asia/Shanghai
 
 This file records the active Ubuntu server and `gnnpinn` conda environment used for the current A100 training workflow. Treat it as the working server baseline for follow-up experiments unless a newer snapshot supersedes it.
 
@@ -99,7 +99,8 @@ At snapshot time:
 ```text
 Repository: /root/matsci-gnn-pinn
 Branch: main...origin/main
-Commit: 4c01d3a Document rich micro feature results
+Commit: 6166628 Document fixed patch embedding results
+Untracked server-only handoff file before sync: scripts/server/inspect_ambench_hdf5_lines.py
 ```
 
 ## Environment Check
@@ -142,11 +143,12 @@ Installed in `gnnpinn` at snapshot time:
 | PyYAML | 6.0.3 |
 | pytest | 9.0.3 |
 | sympy | 1.13.1 |
-| matplotlib | not installed |
 | pillow | 12.2.0 |
 | tifffile | 2026.3.3 |
 | xarray | 2026.4.0 |
 | zarr | 3.1.6 |
+| ruff | 0.15.15 |
+| pip | 26.1.1 |
 
 ## Common Commands
 

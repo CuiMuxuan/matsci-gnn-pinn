@@ -48,6 +48,49 @@ def sample_to_tensors(sample: Any, target: str, device: str = "cpu") -> tuple[An
     return coords, time, values
 
 
+def _input_feature_tensor(sample: Any, feature_columns: list[str], device: str) -> Any | None:
+    if not feature_columns:
+        return None
+    torch = _torch()
+    row_metadata = sample.metadata.get("row_metadata", {})
+    rows: list[list[float]] = []
+    for row_index in range(sample.n_points):
+        row: list[float] = []
+        for column in feature_columns:
+            if column not in row_metadata:
+                raise ValueError(
+                    f"Input feature column {column!r} was not found in field-table row metadata. "
+                    "Use metadata/process columns such as laser_power_W, scan_speed_mm_s, or spot_size_um."
+                )
+            value = row_metadata[column][row_index]
+            try:
+                row.append(float(value))
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Input feature column {column!r} contains a non-numeric value at row {row_index}: {value!r}"
+                ) from exc
+        rows.append(row)
+    return torch.tensor(rows, dtype=torch.float32, device=device)
+
+
+def _input_feature_payload(
+    feature_columns: list[str],
+    normalization: dict[str, Any] | None,
+) -> dict[str, Any]:
+    return {
+        "enabled": bool(feature_columns),
+        "columns": feature_columns,
+        "count": len(feature_columns),
+        "normalization": normalization,
+    }
+
+
+def _model_forward(model: Any, coords: Any, time: Any, params: Any | None = None) -> Any:
+    if params is None:
+        return model(coords, time)
+    return model(coords, time, params)
+
+
 def _index_tensor(indices: list[int], device: str) -> Any:
     torch = _torch()
     return torch.tensor(indices, dtype=torch.long, device=device)
@@ -462,6 +505,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             )
         closure_graph_sample_ids = [str(value) for value in row_metadata[args.closure_graph_sample_id_column]]
     coords, time, target = sample_to_tensors(sample, args.target, args.device)
+    input_features = _input_feature_tensor(sample, args.input_feature_columns, args.device)
     split_manifest = load_split_manifest(args.split_manifest) if args.split_manifest else None
     train_indices = (
         split_indices(split_manifest, args.train_split)
@@ -479,6 +523,13 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     train_index = _index_tensor(train_indices, args.device)
     coords, coord_normalization = _normalize_feature_tensor(coords, train_index, args.input_normalization)
     time, time_normalization = _normalize_feature_tensor(time, train_index, args.input_normalization)
+    input_feature_normalization = None
+    if input_features is not None:
+        input_features, input_feature_normalization = _normalize_feature_tensor(
+            input_features,
+            train_index,
+            args.input_normalization,
+        )
     target_mean = target[train_index].mean()
     target_std = target[train_index].std(unbiased=False)
     if float(target_std.detach().cpu()) == 0.0:
@@ -488,6 +539,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     model = MacroPINN(
         coord_dim=coords.shape[-1],
         field_dim=1,
+        param_dim=input_features.shape[-1] if input_features is not None else 0,
         hidden_dim=args.hidden_dim,
         num_hidden_layers=args.layers,
         activation=args.activation,
@@ -551,7 +603,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         residual_index = _index_tensor(residual_indices, args.device)
         coords_data = coords[train_index].detach().clone()
         time_data = time[train_index].detach().clone()
-        pred = model(coords_data, time_data)
+        input_features_data = input_features[train_index].detach().clone() if input_features is not None else None
+        pred = _model_forward(model, coords_data, time_data, input_features_data)
         pred_for_loss = pred
         if args.normalize_target:
             pred_physical = pred * target_std + target_mean
@@ -564,7 +617,10 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         if args.pde_weight > 0:
             coords_residual = coords[residual_index].detach().clone().requires_grad_(True)
             time_residual = time[residual_index].detach().clone().requires_grad_(True)
-            pred_residual = model(coords_residual, time_residual)
+            input_features_residual = (
+                input_features[residual_index].detach().clone() if input_features is not None else None
+            )
+            pred_residual = _model_forward(model, coords_residual, time_residual, input_features_residual)
             if args.normalize_target:
                 pred_residual_physical = pred_residual * target_std + target_mean
             else:
@@ -639,7 +695,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             )
 
     with torch.no_grad():
-        pred_tensor = model(coords, time)
+        pred_tensor = _model_forward(model, coords, time, input_features)
         if args.normalize_target:
             pred_tensor = pred_tensor * target_std + target_mean
         pred = pred_tensor.detach().cpu().reshape(-1).tolist()
@@ -699,6 +755,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "coordinates": coord_normalization,
             "time": time_normalization,
         },
+        "input_features": _input_feature_payload(args.input_feature_columns, input_feature_normalization),
         "pde": {
             "field": args.pde_field,
             "weight": args.pde_weight,
@@ -738,6 +795,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 "sample_id": sample.sample_id,
                 "closure": metrics_payload["closure"],
                 "optimizer": metrics_payload["optimizer"],
+                "param_dim": int(input_features.shape[-1]) if input_features is not None else 0,
+                "input_features": metrics_payload["input_features"],
             },
         },
         checkpoint_path,
@@ -835,6 +894,16 @@ def build_parser() -> argparse.ArgumentParser:
         default="none",
         choices=["none", "minmax", "standard"],
         help="Normalize coordinate and time inputs using statistics fitted on the train split.",
+    )
+    parser.add_argument(
+        "--input-feature-column",
+        action="append",
+        dest="input_feature_columns",
+        default=[],
+        help=(
+            "Additional numeric row-metadata column to append to Macro PINN inputs. "
+            "Use this for process conditioning such as laser_power_W, scan_speed_mm_s, or spot_size_um."
+        ),
     )
     parser.add_argument(
         "--hot-quantile",

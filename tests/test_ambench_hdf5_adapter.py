@@ -1,3 +1,4 @@
+import json
 from argparse import Namespace
 from pathlib import Path
 
@@ -244,6 +245,95 @@ def test_convert_thermography_hdf5_active_sampling_can_keep_background_anchors(t
 
     assert sampling["background_points"] > 0
     assert manifest["n_rows"] > sampling["hot_points"]
+
+
+def test_convert_thermography_hdf5_can_merge_multiple_lines_and_split_by_line(tmp_path: Path):
+    source = tmp_path / "thermal.h5"
+    with h5py.File(source, "w") as handle:
+        thermal = handle.create_group("ThermalData")
+        thermal.attrs["frame_rate"] = [5.0]
+        for line_name, power, speed in [
+            ("Line_0_1", 285.0, 960.0),
+            ("Line_2_1", 325.0, 1200.0),
+        ]:
+            line = thermal.create_group(line_name)
+            line.attrs["laser_power"] = [power]
+            line.attrs["scan_speed"] = [speed]
+            line.attrs["spot_size"] = [67.0]
+            data = line.create_dataset("Signal", shape=(2, 1, 2), dtype="uint16")
+            data[...] = 10 if line_name == "Line_0_1" else 20
+
+    output = tmp_path / "merged.csv"
+    split = tmp_path / "split.json"
+    args = Namespace(
+        thermal_hdf5=source,
+        dataset=["ThermalData/Line_0_1/Signal", "ThermalData/Line_2_1/Signal"],
+        sample_id="multi_line",
+        output=output,
+        manifest=None,
+        split_manifest=split,
+        frame_start=0,
+        frame_step=1,
+        max_frames=2,
+        row_start=0,
+        row_step=1,
+        max_rows=1,
+        col_start=0,
+        col_step=1,
+        max_cols=2,
+        calibrate_temperature=False,
+        min_signal=None,
+        sampling_mode="uniform",
+        hot_quantile=0.9,
+        gradient_quantile=0.9,
+        background_fraction=0.1,
+        max_points_per_frame=None,
+        split_strategy="line",
+        train_fraction=0.5,
+        val_fraction=0.0,
+        test_fraction=0.5,
+        seed=11,
+    )
+
+    manifest = convert_thermography_hdf5(args)
+    sample = load_field_table(output, observation_columns=["signal"])
+    split_payload = json.loads(split.read_text(encoding="utf-8"))
+
+    assert manifest["dataset_paths"] == [
+        "ThermalData/Line_0_1/Signal",
+        "ThermalData/Line_2_1/Signal",
+    ]
+    assert manifest["datasets"][0]["line_id"] == "Line_0_1"
+    assert manifest["datasets"][1]["line_id"] == "Line_2_1"
+    assert manifest["datasets"][0]["process_parameters"] == {
+        "laser_power_W": 285.0,
+        "scan_speed_mm_s": 960.0,
+        "spot_size_um": 67.0,
+    }
+    assert manifest["datasets"][1]["process_parameters"] == {
+        "laser_power_W": 325.0,
+        "scan_speed_mm_s": 1200.0,
+        "spot_size_um": 67.0,
+    }
+    assert manifest["n_rows"] == 8
+    assert sample.n_points == 8
+    assert set(sample.metadata["row_metadata"]["line_id"]) == {"Line_0_1", "Line_2_1"}
+    assert set(sample.metadata["row_metadata"]["dataset_path"]) == {
+        "ThermalData/Line_0_1/Signal",
+        "ThermalData/Line_2_1/Signal",
+    }
+    assert set(sample.metadata["row_metadata"]["laser_power_W"]) == {"285.0", "325.0"}
+    assert set(sample.metadata["row_metadata"]["scan_speed_mm_s"]) == {"960.0", "1200.0"}
+    assert set(sample.metadata["row_metadata"]["spot_size_um"]) == {"67.0"}
+    assert split_payload["group_key"] == "line_id"
+    assert split_payload["strategy"] == "line_id_order"
+    assert len(split_payload["group_splits"]["train"]) == 1
+    assert len(split_payload["group_splits"]["test"]) == 1
+    train_line_ids = {sample.metadata["row_metadata"]["line_id"][index] for index in split_payload["splits"]["train"]}
+    test_line_ids = {sample.metadata["row_metadata"]["line_id"][index] for index in split_payload["splits"]["test"]}
+    assert len(train_line_ids) == 1
+    assert len(test_line_ids) == 1
+    assert train_line_ids.isdisjoint(test_line_ids)
 
 
 def test_calibrate_signal_to_temperature_c_returns_positive_value():

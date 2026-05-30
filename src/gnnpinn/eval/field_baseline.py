@@ -31,7 +31,10 @@ def evaluate_table(
     hot_quantiles: list[float] | None = None,
     gradient_quantiles: list[float] | None = None,
 ) -> dict[str, Any]:
-    sample = load_field_table(table_path)
+    observation_columns = [target]
+    if prediction_column and prediction_column not in observation_columns:
+        observation_columns.append(prediction_column)
+    sample = load_field_table(table_path, observation_columns=observation_columns)
     y_true = sample.require_observation(target)
     split_manifest = load_split_manifest(split_manifest_path) if split_manifest_path else None
     feature_matrix: list[list[float]] | None = None
@@ -161,6 +164,7 @@ def _feature_matrix(sample: Any, feature_columns: list[str] | None) -> tuple[lis
     rows: list[list[float]] = []
     coord_columns = list(sample.metadata.get("coordinate_columns") or [])
     time_column = sample.metadata.get("time_column")
+    row_metadata = sample.metadata.get("row_metadata", {})
     for row_idx in range(sample.n_points):
         row: list[float] = []
         for column in columns:
@@ -170,6 +174,14 @@ def _feature_matrix(sample: Any, feature_columns: list[str] | None) -> tuple[lis
                 row.append(float(sample.time[row_idx]))
             elif column in sample.observations:
                 row.append(float(sample.observations[column][row_idx]))
+            elif column in row_metadata:
+                value = row_metadata[column][row_idx]
+                try:
+                    row.append(float(value))
+                except (TypeError, ValueError) as exc:
+                    raise ValueError(
+                        f"Feature column {column!r} contains a non-numeric value at row {row_idx}: {value!r}"
+                    ) from exc
             else:
                 raise ValueError(f"Feature column not found: {column}")
         rows.append(row)

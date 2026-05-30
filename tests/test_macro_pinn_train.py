@@ -125,6 +125,75 @@ def test_macro_pinn_training_cli_with_split_manifest(tmp_path: Path):
     assert "gradient_q50" in payload["split_metrics"]["train"]["region_metrics"]
 
 
+def test_macro_pinn_training_cli_records_process_conditioning_columns(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_process_temperature.csv"
+    table.write_text(
+        "x,y,t,T,line_id,laser_power_W,scan_speed_mm_s,spot_size_um\n"
+        "0,0,0,10,Line_0_1,285,960,67\n"
+        "1,0,0,11,Line_0_1,285,960,67\n"
+        "0,1,1,20,Line_3_1,325,960,67\n"
+        "1,1,1,21,Line_3_1,325,960,67\n",
+        encoding="utf-8",
+    )
+    split = tmp_path / "split.json"
+    split.write_text(
+        '{"splits":{"train":[0,1],"val":[2],"test":[3]}}',
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "conditioned_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--split-manifest",
+            str(split),
+            "--input-normalization",
+            "standard",
+            "--input-feature-column",
+            "laser_power_W",
+            "--input-feature-column",
+            "scan_speed_mm_s",
+            "--input-feature-column",
+            "spot_size_um",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    checkpoint = __import__("torch").load(output_dir / "checkpoint.pt", map_location="cpu")
+
+    assert status == 0
+    assert payload["input_features"]["enabled"] is True
+    assert payload["input_features"]["columns"] == [
+        "laser_power_W",
+        "scan_speed_mm_s",
+        "spot_size_um",
+    ]
+    assert payload["input_features"]["count"] == 3
+    assert payload["input_features"]["normalization"]["mode"] == "standard"
+    assert payload["input_features"]["normalization"]["applied"] is True
+    assert checkpoint["metadata"]["param_dim"] == 3
+    assert checkpoint["metadata"]["input_features"]["columns"] == [
+        "laser_power_W",
+        "scan_speed_mm_s",
+        "spot_size_um",
+    ]
+
+
 def test_macro_pinn_training_cli_with_sparse_closure_writes_expression(tmp_path: Path):
     from gnnpinn.train.macro_pinn import main
 

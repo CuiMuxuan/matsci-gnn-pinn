@@ -166,3 +166,51 @@ def test_field_baseline_cli_with_knn_model_baseline(tmp_path: Path):
     assert '"baseline": "model:knn:fit=train"' in payload
     assert '"feature_columns": [' in payload
     assert '"n_neighbors": 1' in payload
+
+
+def test_field_baseline_model_baseline_can_use_process_metadata_columns(tmp_path: Path):
+    if importlib.util.find_spec("sklearn") is None:
+        pytest.skip("scikit-learn is not installed in this environment")
+
+    table = tmp_path / "thermal_process.csv"
+    table.write_text(
+        "x,y,t,T,line_id,laser_power_W,scan_speed_mm_s,spot_size_um\n"
+        "0,0,0,10,Line_0_1,285,960,67\n"
+        "1,0,0,11,Line_0_1,285,960,67\n"
+        "0,0,1,20,Line_3_1,325,960,67\n"
+        "1,0,1,21,Line_3_1,325,960,67\n",
+        encoding="utf-8",
+    )
+    output = tmp_path / "baseline.json"
+
+    status = field_baseline_main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--strategy",
+            "knn",
+            "--feature-column",
+            "x",
+            "--feature-column",
+            "t",
+            "--feature-column",
+            "laser_power_W",
+            "--feature-column",
+            "scan_speed_mm_s",
+            "--feature-column",
+            "spot_size_um",
+            "--n-neighbors",
+            "1",
+            "--output",
+            str(output),
+        ]
+    )
+
+    payload = output.read_text(encoding="utf-8")
+    assert status == 0
+    assert '"laser_power_W"' in payload
+    assert '"scan_speed_mm_s"' in payload
+    assert '"spot_size_um"' in payload
+    assert '"line_id"' in payload

@@ -186,6 +186,15 @@ bash scripts/server/build_mds2_2718_line0_1_micro_panel_region_embedding_a100.sh
 
 This route fits frozen PCA embeddings over lifted 8x8 patch descriptors and writes `region_embedding_*` fields for `--closure-graph-mode real_micro_region_embedding`.
 
+Multi-line/process-conditioned thermal branch:
+
+```bash
+bash scripts/server/run_multiline_process_conditioned_thermal_a100.sh \
+  > logs/ambench_multiline_process_conditioned_thermal_a100_v1.log 2>&1
+```
+
+This Phase 23 route builds a calibrated multi-line `mds2-2716` field table from representative `ThermalData/*/Signal` tracks, splits by `line_id`, and compares coordinate-only baselines/Macro PINN against process-conditioned variants using `laser_power_W`, `scan_speed_mm_s`, and `spot_size_um`.
+
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
 ```bash

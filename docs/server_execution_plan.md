@@ -745,6 +745,22 @@ bash scripts/server/run_real_micro_exact_line0_1_region_embedding_seed_check_a10
   > logs/ambench_real_micro_exact_line0_1_region_embedding_p4_masked_g4_seedcheck_a100_v1.log 2>&1
 ```
 
+Phase 23 已切换到 multi-line / process-conditioned thermal modeling。服务器 HDF5 盘点脚本：
+
+```bash
+PYTHONUTF8=1 PYTHONIOENCODING=utf-8 \
+/home/vipuser/miniconda3/bin/conda run -n gnnpinn python scripts/server/inspect_ambench_hdf5_lines.py
+```
+
+该盘点确认 `mds2-2716` 的单轨 `Line_*` 数据集有真实工艺多样性：`245/285/325 W`、`800/960/1200 mm/s`、`49/67/82 um`。首轮服务器比较使用代表性七条线，生成 line-split 多行温度表，并比较 coordinate-only 与 process-conditioned baseline/Macro PINN：
+
+```bash
+bash scripts/server/run_multiline_process_conditioned_thermal_a100.sh \
+  > logs/ambench_multiline_process_conditioned_thermal_a100_v1.log 2>&1
+```
+
+验收：manifest 记录七条 `dataset_paths` 和每条线的 process parameters；split manifest 为 `line_id_order`；metrics/checkpoint 中 process-conditioned Macro PINN 的 `input_features.columns` 应为 `laser_power_W`、`scan_speed_mm_s`、`spot_size_um`。若该分支在 line-held-out split 上优于 no-process-feature 版本，应优先写结果文档并作为比 exact-line micro TIFF 更强的论文主线候选。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
