@@ -273,6 +273,13 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_microstructure_mds2_2718_entry_v1.md](docs/results/ambench_microstructure_mds2_2718_entry_v1.md): AM-Bench optical microscopy 下载、校验和 coarse micro graph 首次真实入口。
 - [docs/results/ambench_real_micro_graph_conditioning_smoke_v1.md](docs/results/ambench_real_micro_graph_conditioning_smoke_v1.md): real micro graph feature 接入 sparse closure 的服务器 smoke。
 
+Real micro graph closure 对比脚本：
+
+```bash
+bash scripts/server/run_real_micro_graph_conditioned_closure_a100.sh \
+  > logs/ambench_real_micro_graph_conditioned_closure_a100_v1.log 2>&1
+```
+
 ## Public Resources
 
 - NIST AM-Bench: https://www.nist.gov/ambench

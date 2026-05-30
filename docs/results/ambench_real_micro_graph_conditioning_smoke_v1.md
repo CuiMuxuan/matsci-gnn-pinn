@@ -105,3 +105,10 @@ Run a controlled A100 comparison against the current sparse closure baseline:
 - include a scalar-statistics control using the same selected features without graph terminology
 
 If the single-image sample-level feature remains weak, expand `mds2-2718` to multiple `P/L/replicate` TIFFs before moving to `mds2-2775` or ExaCA.
+
+Implemented script for the next run:
+
+```bash
+bash scripts/server/run_real_micro_graph_conditioned_closure_a100.sh \
+  > logs/ambench_real_micro_graph_conditioned_closure_a100_v1.log 2>&1
+```

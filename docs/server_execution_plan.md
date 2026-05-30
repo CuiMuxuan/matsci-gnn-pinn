@@ -565,6 +565,15 @@ PYTHONUTF8=1 PYTHONIOENCODING=utf-8 \
   --output outputs/data_audits/ambench_mds2_2718_micrograph_feature_table_manifest.json
 ```
 
+完整 real-micro closure 对比脚本：
+
+```bash
+bash scripts/server/run_real_micro_graph_conditioned_closure_a100.sh \
+  > logs/ambench_real_micro_graph_conditioned_closure_a100_v1.log 2>&1
+```
+
+默认运行 `embedding_dim=4/8`、gate `0.25`、graph L1 `1e-4`，使用与 gated coordinate-RBF 分支相同的 sparse closure 优化设置，便于和 `docs/results/ambench_graph_conditioned_closure_gated_v1.md` 对齐比较。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
