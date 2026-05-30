@@ -47,6 +47,12 @@ class RealMicroRegionFeatureConfig:
     sample_id: str | None = None
     embedding_dim: int = 4
     normalize: bool = True
+    row_source: str = "y"
+    col_source: str = "x"
+    flip_row: bool = False
+    flip_col: bool = False
+    selection: str = "nearest"
+    inverse_distance_epsilon: float = 1e-6
 
 
 def graph_feature_names(embedding_dim: int, prefix: str = "g") -> list[str]:
@@ -303,6 +309,14 @@ class RealMicroRegionFeatureProvider(_torch().nn.Module):
         super().__init__()
         if config.embedding_dim <= 0:
             raise ValueError("embedding_dim must be positive")
+        if config.row_source not in {"x", "y"}:
+            raise ValueError("row_source must be 'x' or 'y'")
+        if config.col_source not in {"x", "y"}:
+            raise ValueError("col_source must be 'x' or 'y'")
+        if config.selection not in {"nearest", "inverse_distance"}:
+            raise ValueError("selection must be 'nearest' or 'inverse_distance'")
+        if config.inverse_distance_epsilon <= 0:
+            raise ValueError("inverse_distance_epsilon must be positive")
         self.config = config
         records = _load_real_micro_graph_records(Path(config.graph_features))
         if config.sample_id is not None:
@@ -392,17 +406,21 @@ class RealMicroRegionFeatureProvider(_torch().nn.Module):
                 dtype=torch.long,
                 device=coords.device,
             )
-        query = torch.stack(
-            [
-                coords[:, 1].clamp(0.0, 1.0),
-                coords[:, 0].clamp(0.0, 1.0),
-            ],
-            dim=-1,
+        query = _real_micro_region_query(
+            coords,
+            row_source=self.config.row_source,
+            col_source=self.config.col_source,
+            flip_row=self.config.flip_row,
+            flip_col=self.config.flip_col,
         )
         centers = self.region_centers.to(device=coords.device, dtype=coords.dtype).index_select(0, sample_indices)
         distances = torch.sum((query[:, None, :] - centers) ** 2, dim=-1)
-        region_indices = torch.argmin(distances, dim=-1)
         tables = self.region_feature_table.to(device=coords.device, dtype=coords.dtype).index_select(0, sample_indices)
+        if self.config.selection == "inverse_distance":
+            weights = 1.0 / (distances + self.config.inverse_distance_epsilon)
+            weights = weights / weights.sum(dim=-1, keepdim=True).clamp_min(torch.finfo(weights.dtype).eps)
+            return torch.sum(tables * weights[:, :, None], dim=1)
+        region_indices = torch.argmin(distances, dim=-1)
         batch_indices = torch.arange(coords.shape[0], dtype=torch.long, device=coords.device)
         return tables[batch_indices, region_indices, :]
 
@@ -436,9 +454,20 @@ class RealMicroRegionFeatureProvider(_torch().nn.Module):
             "region_feature_names_by_sample_id": self.region_feature_names_by_sample,
             "region_counts_by_sample_id": self.region_counts_by_sample,
             "coordinate_mapping": {
-                "query_row": "coords[:, 1] clamped to [0, 1]",
-                "query_col": "coords[:, 0] clamped to [0, 1]",
-                "selection": "nearest region center in normalized row/col space",
+                "row_source": self.config.row_source,
+                "col_source": self.config.col_source,
+                "flip_row": self.config.flip_row,
+                "flip_col": self.config.flip_col,
+                "query_row": _real_micro_region_query_description(
+                    self.config.row_source,
+                    self.config.flip_row,
+                ),
+                "query_col": _real_micro_region_query_description(
+                    self.config.col_source,
+                    self.config.flip_col,
+                ),
+                "selection": self.config.selection,
+                "inverse_distance_epsilon": self.config.inverse_distance_epsilon,
             },
             "sample_metadata": self.record.get("sample_metadata", {}),
             "graph_summary": self.record.get("graph_summary", {}),
@@ -539,6 +568,38 @@ def _real_micro_region_centers(
             "real_micro_region records must include center_row_norm and center_col_norm region features"
         ) from exc
     return [[float(region[row_index]), float(region[col_index])] for region in region_features]
+
+
+def _real_micro_region_query(
+    coords: Any,
+    *,
+    row_source: str,
+    col_source: str,
+    flip_row: bool,
+    flip_col: bool,
+) -> Any:
+    row = _real_micro_region_coordinate(coords, row_source)
+    col = _real_micro_region_coordinate(coords, col_source)
+    if flip_row:
+        row = 1.0 - row
+    if flip_col:
+        col = 1.0 - col
+    torch = _torch()
+    return torch.stack([row, col], dim=-1)
+
+
+def _real_micro_region_coordinate(coords: Any, source: str) -> Any:
+    if source == "x":
+        return coords[:, 0].clamp(0.0, 1.0)
+    if source == "y":
+        return coords[:, 1].clamp(0.0, 1.0)
+    raise ValueError("region coordinate source must be 'x' or 'y'")
+
+
+def _real_micro_region_query_description(source: str, flipped: bool) -> str:
+    axis = "0" if source == "x" else "1"
+    expression = f"coords[:, {axis}] clamped to [0, 1]"
+    return f"1 - ({expression})" if flipped else expression
 
 
 def _select_real_micro_region_features(

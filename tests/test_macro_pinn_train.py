@@ -922,6 +922,13 @@ def test_macro_pinn_sparse_closure_supports_real_micro_region_graph_conditioning
             "--closure-graph-embedding-dim",
             "3",
             "--no-closure-graph-normalize",
+            "--closure-graph-region-row-source",
+            "x",
+            "--closure-graph-region-col-source",
+            "y",
+            "--closure-graph-region-flip-row",
+            "--closure-graph-region-selection",
+            "inverse_distance",
             "--log-every",
             "1",
         ]
@@ -938,4 +945,10 @@ def test_macro_pinn_sparse_closure_supports_real_micro_region_graph_conditioning
         "std_intensity_norm",
     ]
     assert graph_payload["metadata"]["region_counts_by_sample_id"] == {"sample_a": 4}
+    assert graph_payload["metadata"]["coordinate_mapping"]["row_source"] == "x"
+    assert graph_payload["metadata"]["coordinate_mapping"]["col_source"] == "y"
+    assert graph_payload["metadata"]["coordinate_mapping"]["flip_row"] is True
+    assert graph_payload["metadata"]["coordinate_mapping"]["selection"] == "inverse_distance"
+    assert payload["config"]["closure_graph_region_row_source"] == "x"
+    assert payload["config"]["closure_graph_region_selection"] == "inverse_distance"
     assert payload["closure"]["term_names"] == ["1", "T", "g0", "g1", "g2"]

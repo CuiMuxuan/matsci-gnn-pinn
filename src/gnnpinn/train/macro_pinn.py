@@ -361,6 +361,12 @@ def _build_graph_conditioning(
                 sample_id=args.closure_graph_sample_id,
                 embedding_dim=args.closure_graph_embedding_dim,
                 normalize=not args.no_closure_graph_normalize,
+                row_source=args.closure_graph_region_row_source,
+                col_source=args.closure_graph_region_col_source,
+                flip_row=args.closure_graph_region_flip_row,
+                flip_col=args.closure_graph_region_flip_col,
+                selection=args.closure_graph_region_selection,
+                inverse_distance_epsilon=args.closure_graph_region_inverse_distance_epsilon,
             )
         ).to(device)
         payload = {
@@ -881,6 +887,40 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-closure-graph-normalize",
         action="store_true",
         help="Disable normalization of coordinate_rbf graph features across anchors.",
+    )
+    parser.add_argument(
+        "--closure-graph-region-row-source",
+        choices=["x", "y"],
+        default="y",
+        help="Coordinate source used as micrograph row for real_micro_region.",
+    )
+    parser.add_argument(
+        "--closure-graph-region-col-source",
+        choices=["x", "y"],
+        default="x",
+        help="Coordinate source used as micrograph column for real_micro_region.",
+    )
+    parser.add_argument(
+        "--closure-graph-region-flip-row",
+        action="store_true",
+        help="Map real_micro_region query row to 1 - row after source selection.",
+    )
+    parser.add_argument(
+        "--closure-graph-region-flip-col",
+        action="store_true",
+        help="Map real_micro_region query column to 1 - column after source selection.",
+    )
+    parser.add_argument(
+        "--closure-graph-region-selection",
+        choices=["nearest", "inverse_distance"],
+        default="nearest",
+        help="Patch selection rule for real_micro_region graph conditioning.",
+    )
+    parser.add_argument(
+        "--closure-graph-region-inverse-distance-epsilon",
+        type=float,
+        default=1e-6,
+        help="Positive epsilon for inverse-distance real_micro_region interpolation.",
     )
     parser.add_argument(
         "--closure-graph-lr",

@@ -329,6 +329,77 @@ def test_real_micro_region_feature_provider_selects_local_patch(tmp_path):
 
 
 @torchmark
+def test_real_micro_region_feature_provider_supports_registration_options(tmp_path):
+    import json
+    import torch
+
+    from gnnpinn.models.closure import RealMicroRegionFeatureConfig, RealMicroRegionFeatureProvider
+
+    feature_path = tmp_path / "region_features.jsonl"
+    record = {
+        "sample_id": "sample_a",
+        "sample_metadata": {"process": "P4"},
+        "feature_names": ["image_mask_fraction"],
+        "features": {"image_mask_fraction": 0.1},
+        "region_feature_names": [
+            "center_row_norm",
+            "center_col_norm",
+            "mean_intensity_norm",
+            "std_intensity_norm",
+            "mask_fraction",
+        ],
+        "region_features": [
+            [0.25, 0.25, 0.1, 0.01, 0.0],
+            [0.25, 0.75, 0.2, 0.02, 0.2],
+            [0.75, 0.25, 0.3, 0.03, 0.4],
+            [0.75, 0.75, 0.4, 0.04, 0.8],
+        ],
+        "graph_summary": {"num_nodes": 4},
+    }
+    feature_path.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+    swapped = RealMicroRegionFeatureProvider(
+        RealMicroRegionFeatureConfig(
+            graph_features=str(feature_path),
+            sample_id="sample_a",
+            embedding_dim=3,
+            normalize=False,
+            row_source="x",
+            col_source="y",
+        )
+    )
+    flipped = RealMicroRegionFeatureProvider(
+        RealMicroRegionFeatureConfig(
+            graph_features=str(feature_path),
+            sample_id="sample_a",
+            embedding_dim=3,
+            normalize=False,
+            flip_row=True,
+        )
+    )
+    interpolated = RealMicroRegionFeatureProvider(
+        RealMicroRegionFeatureConfig(
+            graph_features=str(feature_path),
+            sample_id="sample_a",
+            embedding_dim=3,
+            normalize=False,
+            selection="inverse_distance",
+        )
+    )
+
+    coords = torch.tensor([[0.1, 0.9]], dtype=torch.float32)
+    time = torch.zeros((1, 1), dtype=torch.float32)
+    center = torch.tensor([[0.5, 0.5]], dtype=torch.float32)
+
+    assert torch.allclose(swapped(coords, time)[0], torch.tensor([0.2, 0.2, 0.02]))
+    assert torch.allclose(flipped(coords, time)[0], torch.tensor([0.0, 0.1, 0.01]))
+    assert torch.allclose(interpolated(center, time)[0], torch.tensor([0.35, 0.25, 0.025]))
+    assert swapped.metadata()["coordinate_mapping"]["row_source"] == "x"
+    assert flipped.metadata()["coordinate_mapping"]["flip_row"] is True
+    assert interpolated.metadata()["coordinate_mapping"]["selection"] == "inverse_distance"
+
+
+@torchmark
 def test_weak_coupler_runs_two_macro_passes():
     import torch
 

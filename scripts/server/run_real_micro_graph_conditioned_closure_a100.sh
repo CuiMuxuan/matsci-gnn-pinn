@@ -27,6 +27,12 @@ MICRO_FEATURES_CSV="${MICRO_FEATURES_CSV:-data/processed/ambench/2022_single_tra
 MICRO_SAMPLE_ID="${MICRO_SAMPLE_ID:-AMB2022-718-SH1-BP1-P2-L2.1-3_m}"
 MICRO_SAMPLE_ID_COLUMN="${MICRO_SAMPLE_ID_COLUMN:-}"
 MICRO_AGGREGATE="${MICRO_AGGREGATE:-1}"
+CLOSURE_GRAPH_REGION_ROW_SOURCE="${CLOSURE_GRAPH_REGION_ROW_SOURCE:-y}"
+CLOSURE_GRAPH_REGION_COL_SOURCE="${CLOSURE_GRAPH_REGION_COL_SOURCE:-x}"
+CLOSURE_GRAPH_REGION_FLIP_ROW="${CLOSURE_GRAPH_REGION_FLIP_ROW:-0}"
+CLOSURE_GRAPH_REGION_FLIP_COL="${CLOSURE_GRAPH_REGION_FLIP_COL:-0}"
+CLOSURE_GRAPH_REGION_SELECTION="${CLOSURE_GRAPH_REGION_SELECTION:-nearest}"
+CLOSURE_GRAPH_REGION_INVERSE_DISTANCE_EPSILON="${CLOSURE_GRAPH_REGION_INVERSE_DISTANCE_EPSILON:-1e-6}"
 
 if [[ "$MICRO_AGGREGATE" == "1" ]]; then
   "$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.data.loaders.ambench_microstructure \
@@ -54,6 +60,20 @@ run_one() {
   fi
   if [[ "$CLOSURE_GRAPH_NORMALIZE" == "0" ]]; then
     graph_selection_args+=(--no-closure-graph-normalize)
+  fi
+  if [[ "$CLOSURE_GRAPH_MODE" == "real_micro_region" ]]; then
+    graph_selection_args+=(
+      --closure-graph-region-row-source "$CLOSURE_GRAPH_REGION_ROW_SOURCE"
+      --closure-graph-region-col-source "$CLOSURE_GRAPH_REGION_COL_SOURCE"
+      --closure-graph-region-selection "$CLOSURE_GRAPH_REGION_SELECTION"
+      --closure-graph-region-inverse-distance-epsilon "$CLOSURE_GRAPH_REGION_INVERSE_DISTANCE_EPSILON"
+    )
+    if [[ "$CLOSURE_GRAPH_REGION_FLIP_ROW" == "1" ]]; then
+      graph_selection_args+=(--closure-graph-region-flip-row)
+    fi
+    if [[ "$CLOSURE_GRAPH_REGION_FLIP_COL" == "1" ]]; then
+      graph_selection_args+=(--closure-graph-region-flip-col)
+    fi
   fi
 
   "$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.train.macro_pinn \
