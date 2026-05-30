@@ -336,6 +336,83 @@ def test_convert_thermography_hdf5_can_merge_multiple_lines_and_split_by_line(tm
     assert train_line_ids.isdisjoint(test_line_ids)
 
 
+def test_convert_thermography_hdf5_can_split_by_process_axis(tmp_path: Path):
+    source = tmp_path / "thermal.h5"
+    with h5py.File(source, "w") as handle:
+        thermal = handle.create_group("ThermalData")
+        thermal.attrs["frame_rate"] = [5.0]
+        for line_name, power, speed, value in [
+            ("Line_0_1", 245.0, 960.0, 10),
+            ("Line_1_1", 285.0, 960.0, 20),
+            ("Line_2_1", 325.0, 1200.0, 30),
+        ]:
+            line = thermal.create_group(line_name)
+            line.attrs["laser_power"] = [power]
+            line.attrs["scan_speed"] = [speed]
+            line.attrs["spot_size"] = [67.0]
+            data = line.create_dataset("Signal", shape=(1, 1, 2), dtype="uint16")
+            data[...] = value
+
+    output = tmp_path / "process_axis.csv"
+    split = tmp_path / "split.json"
+    args = Namespace(
+        thermal_hdf5=source,
+        dataset=[
+            "ThermalData/Line_0_1/Signal",
+            "ThermalData/Line_1_1/Signal",
+            "ThermalData/Line_2_1/Signal",
+        ],
+        sample_id="process_axis",
+        output=output,
+        manifest=None,
+        split_manifest=split,
+        frame_start=0,
+        frame_step=1,
+        max_frames=1,
+        row_start=0,
+        row_step=1,
+        max_rows=1,
+        col_start=0,
+        col_step=1,
+        max_cols=2,
+        calibrate_temperature=False,
+        min_signal=None,
+        sampling_mode="uniform",
+        hot_quantile=0.9,
+        gradient_quantile=0.9,
+        background_fraction=0.1,
+        max_points_per_frame=None,
+        split_strategy="laser_power",
+        train_fraction=0.34,
+        val_fraction=0.33,
+        test_fraction=0.33,
+        seed=2,
+    )
+
+    convert_thermography_hdf5(args)
+    sample = load_field_table(output, observation_columns=["signal"])
+    split_payload = json.loads(split.read_text(encoding="utf-8"))
+
+    assert split_payload["group_key"] == "laser_power_W"
+    assert split_payload["strategy"] == "laser_power_W_order"
+    assert set(split_payload["rows_per_group"]) == {
+        "laser_power_W=245",
+        "laser_power_W=285",
+        "laser_power_W=325",
+    }
+    assert all(len(split_payload["group_splits"][name]) == 1 for name in ["train", "val", "test"])
+    split_powers = {}
+    for split_name, indices in split_payload["splits"].items():
+        split_powers[split_name] = {
+            sample.metadata["row_metadata"]["laser_power_W"][index]
+            for index in indices
+        }
+    assert all(len(values) == 1 for values in split_powers.values())
+    assert split_powers["train"].isdisjoint(split_powers["val"])
+    assert split_powers["train"].isdisjoint(split_powers["test"])
+    assert split_powers["val"].isdisjoint(split_powers["test"])
+
+
 def test_calibrate_signal_to_temperature_c_returns_positive_value():
     value = calibrate_signal_to_temperature_c(1000.0, coeff_a=0.9655, coeff_b=197.2, coeff_c=43920000.0)
 

@@ -78,6 +78,12 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
         n_written = 0
         rows_by_frame: dict[int, list[int]] = {}
         rows_by_line: dict[str, list[int]] = {}
+        rows_by_process_group: dict[str, dict[str, list[int]]] = {
+            "laser_power": {},
+            "scan_speed": {},
+            "spot_size": {},
+            "process": {},
+        }
         frame_groups: dict[str, dict[str, Any]] = {}
         dataset_summaries: list[dict[str, Any]] = []
         with output.open("w", encoding="utf-8", newline="") as output_handle:
@@ -150,6 +156,7 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
                     }
                 line_rows = list(range(n_written, n_written + local_written))
                 rows_by_line.setdefault(line_id, []).extend(line_rows)
+                _append_process_groups(rows_by_process_group, process, line_rows)
                 dataset_summaries.append(
                     {
                         "dataset_path": dataset_path,
@@ -217,6 +224,13 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
                     },
                 },
                 "frame_groups": frame_groups,
+                "process_groups": {
+                    strategy: {
+                        group_name: len(rows)
+                        for group_name, rows in groups.items()
+                    }
+                    for strategy, groups in rows_by_process_group.items()
+                },
             },
         }
 
@@ -238,6 +252,16 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
                     test_fraction=args.test_fraction,
                     seed=args.seed,
                     group_key="line_id",
+                )
+            elif args.split_strategy in rows_by_process_group:
+                split = build_group_split_manifest(
+                    rows_by_group=rows_by_process_group[args.split_strategy],
+                    sample_id=args.sample_id,
+                    train_fraction=args.train_fraction,
+                    val_fraction=args.val_fraction,
+                    test_fraction=args.test_fraction,
+                    seed=args.seed,
+                    group_key=_split_strategy_group_key(args.split_strategy),
                 )
             else:
                 split = build_split_manifest(
@@ -623,6 +647,51 @@ def build_group_split_manifest(
     }
 
 
+def _append_process_groups(
+    rows_by_process_group: dict[str, dict[str, list[int]]],
+    process: dict[str, float | None],
+    rows: list[int],
+) -> None:
+    groups = {
+        "laser_power": _process_axis_group_name("laser_power_W", process.get("laser_power_W")),
+        "scan_speed": _process_axis_group_name("scan_speed_mm_s", process.get("scan_speed_mm_s")),
+        "spot_size": _process_axis_group_name("spot_size_um", process.get("spot_size_um")),
+        "process": _process_condition_group_name(process),
+    }
+    for strategy, group_name in groups.items():
+        rows_by_process_group[strategy].setdefault(group_name, []).extend(rows)
+
+
+def _process_axis_group_name(axis_name: str, value: float | None) -> str:
+    if value is None:
+        return f"{axis_name}=unknown"
+    return f"{axis_name}={_format_group_float(value)}"
+
+
+def _process_condition_group_name(process: dict[str, float | None]) -> str:
+    return "__".join(
+        [
+            _process_axis_group_name("laser_power_W", process.get("laser_power_W")),
+            _process_axis_group_name("scan_speed_mm_s", process.get("scan_speed_mm_s")),
+            _process_axis_group_name("spot_size_um", process.get("spot_size_um")),
+        ]
+    )
+
+
+def _format_group_float(value: float) -> str:
+    text = f"{float(value):g}"
+    return text.replace(".", "p").replace("-", "m")
+
+
+def _split_strategy_group_key(strategy: str) -> str:
+    return {
+        "laser_power": "laser_power_W",
+        "scan_speed": "scan_speed_mm_s",
+        "spot_size": "spot_size_um",
+        "process": "process_condition",
+    }[strategy]
+
+
 def _sample_indices(start: int, step: int, stop: int, max_count: int | None) -> list[int]:
     if step <= 0:
         raise ValueError("Sampling step must be positive")
@@ -772,7 +841,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--split-strategy",
-        choices=["random_row", "frame", "line"],
+        choices=["random_row", "frame", "line", "laser_power", "scan_speed", "spot_size", "process"],
         default="random_row",
         help="Split strategy used when --split-manifest is provided.",
     )

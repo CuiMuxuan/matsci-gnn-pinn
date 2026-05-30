@@ -765,6 +765,24 @@ Phase 23 首轮完整 A100 run 已完成，结果文档为 `docs/results/ambench
 
 同时，该分支还没有超过 train-mean baseline 的 global test RMSE `128.668856`。因此 Phase 23 结论应表述为正向方向选择，而不是最终模型主结果。下一步优先做 process-conditioned Macro PINN 的容量、seed 和按工艺轴 holdout split 检查；在该基线稳定前，不要急着把 sparse closure 或 real-micro graph conditioning 接回多线表。
 
+Phase 24 的第一步是把 split 从 `line_id` 扩展到工艺轴 holdout。转换器现在支持：
+
+```text
+--split-strategy laser_power
+--split-strategy scan_speed
+--split-strategy spot_size
+--split-strategy process
+```
+
+服务器一键脚本：
+
+```bash
+bash scripts/server/run_multiline_process_holdout_splits_a100.sh \
+  > logs/ambench_multiline_process_holdout_splits_a100_v1.log 2>&1
+```
+
+该脚本会分别生成 `line / laser_power / scan_speed / spot_size / process` grouped split 的多线温度表，并沿用相同 baseline 与 Macro PINN no-process/process-feature 对照。验收重点不是单个 split 的偶然胜负，而是 process-conditioned Macro PINN 是否在多个工艺轴 holdout 上稳定改善 no-process 版本，并是否开始接近或超过 mean/strong baseline。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

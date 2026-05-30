@@ -11,6 +11,10 @@ LAYERS="${LAYERS:-4}"
 LR="${LR:-1e-3}"
 SEED="${SEED:-7}"
 RUN_ID="${RUN_ID:-ambench_multiline_process_temperature_a100_sxm4_40gb_v1}"
+SPLIT_STRATEGY="${SPLIT_STRATEGY:-line}"
+TRAIN_FRACTION="${TRAIN_FRACTION:-0.6}"
+VAL_FRACTION="${VAL_FRACTION:-0.2}"
+TEST_FRACTION="${TEST_FRACTION:-0.2}"
 
 cd "$REPO_ROOT"
 mkdir -p logs outputs/baselines outputs/data_audits outputs/data_splits outputs/runs
@@ -39,10 +43,10 @@ DATASET_ARGS=(
   --manifest "$MANIFEST" \
   --split-manifest "$SPLIT" \
   --calibrate-temperature \
-  --split-strategy line \
-  --train-fraction 0.6 \
-  --val-fraction 0.2 \
-  --test-fraction 0.2 \
+  --split-strategy "$SPLIT_STRATEGY" \
+  --train-fraction "$TRAIN_FRACTION" \
+  --val-fraction "$VAL_FRACTION" \
+  --test-fraction "$TEST_FRACTION" \
   --seed "$SEED" \
   --min-signal 100 \
   --frame-step "${FRAME_STEP:-10}" \

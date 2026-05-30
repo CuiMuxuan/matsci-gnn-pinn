@@ -96,3 +96,5 @@ Recommended next step:
 2. Add a small capacity/seed check for the process-conditioned Macro PINN before returning to closure or GNN conditioning.
 3. Compare split construction by held-out process axis: spot-size holdout, speed holdout, and power holdout.
 4. Only after the process-conditioned baseline is stable should sparse closure or graph-conditioned closure be reintroduced on the multi-line table.
+
+Implementation follow-up: the converter now supports process-axis grouped splits (`laser_power`, `scan_speed`, `spot_size`, and full `process` condition), with the next server entry point at `scripts/server/run_multiline_process_holdout_splits_a100.sh`.

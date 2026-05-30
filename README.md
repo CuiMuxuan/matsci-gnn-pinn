@@ -196,6 +196,15 @@ bash scripts/server/run_multiline_process_conditioned_thermal_a100.sh \
 This Phase 23 route builds a calibrated multi-line `mds2-2716` field table from representative `ThermalData/*/Signal` tracks, splits by `line_id`, and compares coordinate-only baselines/Macro PINN against process-conditioned variants using `laser_power_W`, `scan_speed_mm_s`, and `spot_size_um`.
 The first A100 run shows the expected direction: process-conditioned Macro PINN improves held-out-line test RMSE from `175.127058` to `157.793227`, with hot q90 RMSE improving from `351.525048` to `316.794319`. It is a positive direction-selection result, but it has not yet beaten the train-mean baseline on global test RMSE.
 
+Process-axis holdout checks:
+
+```bash
+bash scripts/server/run_multiline_process_holdout_splits_a100.sh \
+  > logs/ambench_multiline_process_holdout_splits_a100_v1.log 2>&1
+```
+
+This runs the same seven-line table through `line`, `laser_power`, `scan_speed`, `spot_size`, and full process-condition grouped splits, so the next result can separate line memorization from true process-axis generalization.
+
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
 ```bash
