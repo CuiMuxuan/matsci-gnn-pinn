@@ -148,6 +148,56 @@ def test_real_micro_graph_feature_provider_reads_jsonl(tmp_path):
 
 
 @torchmark
+def test_real_micro_graph_feature_provider_selects_per_sample_id(tmp_path):
+    import json
+    import torch
+
+    from gnnpinn.models.closure import RealMicroGraphFeatureConfig, RealMicroGraphFeatureProvider
+
+    feature_path = tmp_path / "features.jsonl"
+    records = [
+        {
+            "sample_id": "sample_a",
+            "sample_metadata": {"process": "P1"},
+            "feature_names": ["image_mask_fraction", "node_mask_fraction_mean"],
+            "features": {"image_mask_fraction": 0.1, "node_mask_fraction_mean": 0.2},
+            "graph_summary": {"num_nodes": 64},
+        },
+        {
+            "sample_id": "sample_b",
+            "sample_metadata": {"process": "P2"},
+            "feature_names": ["image_mask_fraction", "node_mask_fraction_mean"],
+            "features": {"image_mask_fraction": 0.8, "node_mask_fraction_mean": 0.4},
+            "graph_summary": {"num_nodes": 64},
+        },
+    ]
+    feature_path.write_text(
+        "\n".join(json.dumps(record) for record in records) + "\n",
+        encoding="utf-8",
+    )
+
+    provider = RealMicroGraphFeatureProvider(
+        RealMicroGraphFeatureConfig(
+            graph_features=str(feature_path),
+            sample_id="sample_a",
+            embedding_dim=2,
+            normalize=False,
+        )
+    )
+    coords = torch.zeros((3, 2), dtype=torch.float32)
+    time = torch.zeros((3, 1), dtype=torch.float32)
+
+    features = provider(coords, time, sample_ids=["sample_a", "sample_b", "sample_a"])
+    metadata = provider.metadata()
+
+    assert tuple(features.shape) == (3, 2)
+    assert torch.allclose(features[0], torch.tensor([0.1, 0.2]))
+    assert torch.allclose(features[1], torch.tensor([0.8, 0.4]))
+    assert torch.allclose(features[2], features[0])
+    assert metadata["available_sample_ids"] == ["sample_a", "sample_b"]
+
+
+@torchmark
 def test_weak_coupler_runs_two_macro_passes():
     import torch
 

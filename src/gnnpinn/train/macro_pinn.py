@@ -343,6 +343,10 @@ def _build_graph_conditioning(
             "enabled": True,
             "mode": args.closure_graph_mode,
             "trainable": False,
+            "selection": {
+                "sample_id": args.closure_graph_sample_id,
+                "sample_id_column": args.closure_graph_sample_id_column,
+            },
             "metadata": provider.metadata(),
         }
         return provider, payload
@@ -379,6 +383,17 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             if feature_name not in args.closure_features:
                 args.closure_features.append(feature_name)
     sample = load_field_table(args.table, observation_columns=[args.target])
+    if args.closure_graph_sample_id_column and args.closure_graph_mode != "real_micro":
+        raise ValueError("--closure-graph-sample-id-column is only supported with --closure-graph-mode real_micro")
+    closure_graph_sample_ids = None
+    if args.closure_graph_sample_id_column:
+        row_metadata = sample.metadata.get("row_metadata", {})
+        if args.closure_graph_sample_id_column not in row_metadata:
+            raise ValueError(
+                f"Field table has no row metadata column {args.closure_graph_sample_id_column!r}; "
+                "add a micro sample-id column or use --closure-graph-sample-id for a fixed record."
+            )
+        closure_graph_sample_ids = [str(value) for value in row_metadata[args.closure_graph_sample_id_column]]
     coords, time, target = sample_to_tensors(sample, args.target, args.device)
     split_manifest = load_split_manifest(args.split_manifest) if args.split_manifest else None
     train_indices = (
@@ -493,8 +508,15 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 graph_features = None
                 if graph_provider is not None and args.closure_graph_mode == "toy_static":
                     graph_embedding = graph_provider()
-                elif graph_provider is not None and args.closure_graph_mode in {"coordinate_rbf", "real_micro"}:
+                elif graph_provider is not None and args.closure_graph_mode == "coordinate_rbf":
                     graph_features = graph_provider(coords_residual, time_residual)
+                elif graph_provider is not None and args.closure_graph_mode == "real_micro":
+                    residual_sample_ids = (
+                        [closure_graph_sample_ids[index] for index in residual_indices]
+                        if closure_graph_sample_ids is not None
+                        else None
+                    )
+                    graph_features = graph_provider(coords_residual, time_residual, sample_ids=residual_sample_ids)
                 closure_features = _closure_feature_tensor(
                     feature_names=args.closure_features,
                     pred_field=residual_field,
@@ -817,6 +839,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--closure-graph-sample-id",
         help="Sample id selected from --closure-graph-features for real_micro graph conditioning.",
+    )
+    parser.add_argument(
+        "--closure-graph-sample-id-column",
+        help=(
+            "Field-table metadata column containing per-row sample ids for real_micro graph conditioning. "
+            "Use this with a panel-level graph feature JSONL to avoid broadcasting one micro graph record."
+        ),
     )
     parser.add_argument(
         "--no-closure-graph-normalize",

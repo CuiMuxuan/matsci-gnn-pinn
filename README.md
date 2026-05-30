@@ -16,6 +16,8 @@
 - 已实现 sparse closure 与 synthetic graph-conditioned closure 消融，当前转入真实/半真实 microstructure conditioning。
 - 已新增 AM-Bench `mds2-2718` optical microscopy 下载/校验入口和 TIFF-to-coarse-micro-graph inspection 原型。
 - 已固定 `mds2-2718` multi-image optional micro panel，并提供服务器脚本生成 panel-level graph feature table。
+- 本地已完成 `mds2-2718` optional panel 下载、SHA256 校验、6 图 inspection 与 panel-level graph feature table 聚合。
+- 已支持 `real_micro` panel feature JSONL 通过 field-table `micro_sample_id` 等列做逐点 sample-aware graph conditioning。
 - 已预留 weak GNN-PINN coupling 模块。
 - 本地 smoke/probe 与第一批 A100 dense calibrated temperature 实验已完成，当前正在推进 Macro PINN 稳健化和闭合项实验前置工作。
 

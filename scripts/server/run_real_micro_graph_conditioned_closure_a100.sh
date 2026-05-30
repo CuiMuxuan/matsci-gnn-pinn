@@ -15,17 +15,21 @@ DEVICE="${DEVICE:-cuda}"
 ACTIVE_ID="ambench_line_0_1_temperature_hot_gradient_a100_sxm4_40gb_v1"
 ACTIVE_TABLE="data/interim/ambench/2022_single_track/AMB2022-03/ambench_line_0_1_temperature_hot_gradient_a100_sxm4_40gb_v1.csv"
 ACTIVE_SPLIT="outputs/data_splits/ambench_line_0_1_temperature_hot_gradient_a100_sxm4_40gb_v1_split.json"
-MICRO_INSPECTION="outputs/data_audits/ambench_mds2_2718_micrograph_inspection.json"
-MICRO_FEATURES="data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.jsonl"
-MICRO_FEATURES_CSV="data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.csv"
-MICRO_SAMPLE_ID="AMB2022-718-SH1-BP1-P2-L2.1-3_m"
+MICRO_INSPECTION="${MICRO_INSPECTION:-outputs/data_audits/ambench_mds2_2718_micrograph_inspection.json}"
+MICRO_FEATURES="${MICRO_FEATURES:-data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.jsonl}"
+MICRO_FEATURES_CSV="${MICRO_FEATURES_CSV:-data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.csv}"
+MICRO_SAMPLE_ID="${MICRO_SAMPLE_ID:-AMB2022-718-SH1-BP1-P2-L2.1-3_m}"
+MICRO_SAMPLE_ID_COLUMN="${MICRO_SAMPLE_ID_COLUMN:-}"
+MICRO_AGGREGATE="${MICRO_AGGREGATE:-1}"
 
-"$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.data.loaders.ambench_microstructure \
-  --mode aggregate \
-  --inspection "$MICRO_INSPECTION" \
-  --jsonl-output "$MICRO_FEATURES" \
-  --csv-output "$MICRO_FEATURES_CSV" \
-  --output outputs/data_audits/ambench_mds2_2718_micrograph_feature_table_manifest.json
+if [[ "$MICRO_AGGREGATE" == "1" ]]; then
+  "$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.data.loaders.ambench_microstructure \
+    --mode aggregate \
+    --inspection "$MICRO_INSPECTION" \
+    --jsonl-output "$MICRO_FEATURES" \
+    --csv-output "$MICRO_FEATURES_CSV" \
+    --output outputs/data_audits/ambench_mds2_2718_micrograph_feature_table_manifest.json
+fi
 
 run_one() {
   local embedding_dim="$1"
@@ -33,6 +37,12 @@ run_one() {
   local graph_l1="$3"
   local tag="$4"
   local run_id="${ACTIVE_ID}_macro_pinn_real_micro_sparse_closure_h256_l4_lr1e_3_clr1e_5_staged1500_random4096_${tag}_v1"
+  local graph_selection_args=(--closure-graph-features "$MICRO_FEATURES")
+  if [[ -n "$MICRO_SAMPLE_ID_COLUMN" ]]; then
+    graph_selection_args+=(--closure-graph-sample-id-column "$MICRO_SAMPLE_ID_COLUMN")
+  else
+    graph_selection_args+=(--closure-graph-sample-id "$MICRO_SAMPLE_ID")
+  fi
 
   "$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.train.macro_pinn \
     --table "$ACTIVE_TABLE" \
@@ -64,8 +74,7 @@ run_one() {
     --closure-l1-weight 1e-5 \
     --closure-threshold 1e-6 \
     --closure-graph-mode real_micro \
-    --closure-graph-features "$MICRO_FEATURES" \
-    --closure-graph-sample-id "$MICRO_SAMPLE_ID" \
+    "${graph_selection_args[@]}" \
     --closure-graph-embedding-dim "$embedding_dim" \
     --closure-graph-gate "$gate" \
     --closure-graph-l1-weight "$graph_l1" \

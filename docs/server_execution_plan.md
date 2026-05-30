@@ -550,8 +550,9 @@ D2 下一步研发：
 - 已新增 `--mode aggregate`，可将 inspection JSON 聚合成 `micro_graph_features.jsonl` 与 CSV。
 - 已新增 `RealMicroGraphFeatureProvider`。
 - `MacroPINN` training CLI 已支持 `--closure-graph-mode real_micro`、`--closure-graph-features`、`--closure-graph-sample-id`。
+- 本地已新增 panel-aware 选择入口：当 thermal field table 带有 `micro_sample_id` 等逐行对齐列时，可用 `--closure-graph-sample-id-column micro_sample_id` 从 panel-level JSONL 按 residual point 选择 micro record。
 - real micro graph features 暂时作为样品级固定特征注入 `g0/g1/...`，用于替代 synthetic RBF graph terms 进行接口验证。
-- 本地测试通过：full suite `57 passed, 2 skipped`。
+- 本地测试通过：full suite `66 passed, 2 skipped`。
 
 下一轮服务器命令：
 
@@ -573,6 +574,7 @@ bash scripts/server/run_real_micro_graph_conditioned_closure_a100.sh \
 ```
 
 默认运行 `embedding_dim=4/8`、gate `0.25`、graph L1 `1e-4`，使用与 gated coordinate-RBF 分支相同的 sparse closure 优化设置，便于和 `docs/results/ambench_graph_conditioned_closure_gated_v1.md` 对齐比较。
+当使用已构建的 panel-level feature table 时，可设置 `MICRO_AGGREGATE=0`、`MICRO_FEATURES=data/processed/.../micro_graph_features_panel.jsonl`，并通过 `MICRO_SAMPLE_ID_COLUMN=micro_sample_id` 让训练入口逐行选择 micro record。
 
 当前 D2c 决策：
 
@@ -581,6 +583,7 @@ bash scripts/server/run_real_micro_graph_conditioned_closure_a100.sh \
 - `configs/data/ambench_mds2_2718_sources.yaml` 的 optional files 已固定一个小面板：P2/L2.1 masked + unmasked、P1/L3.1 masked、P3/L0 masked、P4/L0 masked + unmasked。
 - 下载器已支持 `--include-optional`，也支持 `--file-id` 指定 required 或 optional 文件。
 - 下载器已支持 `--retries`、`--timeout-seconds`、`--resume-partial` 与 `--download-backend curl|wget`，用于处理 NIST PDR 偶发 read timeout；服务器脚本默认 `DOWNLOAD_RETRIES=3`、`DOWNLOAD_TIMEOUT_SECONDS=300`、`DOWNLOAD_BACKEND=wget`，并启用续传。
+- 本地 Windows 路径已完成 optional panel 下载、SHA256 校验、6 图 inspection 和 panel feature table 聚合；下一步应同步 `data/raw/.../mds2-2718`、`outputs/data_audits/mds2_2718_micro_panel/` 和 `data/processed/.../micro_graph_features_panel.*` 到服务器。
 
 下一轮服务器命令：
 
@@ -604,7 +607,7 @@ data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_featur
 - download report 中 required files ready，optional panel 文件存在且 SHA256 通过。
 - feature table manifest 的 `n_records=6`。
 - 每条 record 均带有可解析的 `process/line/replicate/masked` metadata。
-- 通过该表再决定是否做 process/sample-aware `real_micro` 选择，而不是继续广播单一图像特征。
+- 通过该表生成或补充 thermal field table 的 `micro_sample_id` 对齐列后，使用 `--closure-graph-sample-id-column` 跑 process/sample-aware `real_micro` closure，而不是继续广播单一图像特征。
 
 ## 阶段 E：方向三弱双向耦合
 

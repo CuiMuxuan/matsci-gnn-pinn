@@ -154,6 +154,12 @@ data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_featur
 data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features_panel.csv
 ```
 
+本地已完成该 panel 的下载、SHA256 校验、6 图 inspection 与 feature table 聚合；manifest 为：
+
+```text
+outputs/data_audits/ambench_mds2_2718_micro_panel_feature_table_manifest.json
+```
+
 训练入口已经支持读取该 JSONL 作为 `real_micro` graph conditioning：
 
 ```bash
@@ -162,6 +168,17 @@ python -m gnnpinn.train.macro_pinn \
   --closure-graph-mode real_micro \
   --closure-graph-features data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.jsonl \
   --closure-graph-sample-id AMB2022-718-SH1-BP1-P2-L2.1-3_m \
+  --closure-graph-embedding-dim 4
+```
+
+当热场 table 已经带有逐行 `micro_sample_id` 等对齐列时，可改用 panel-level JSONL 并按行选择 micro record，避免把单张 TIFF 的全局特征广播到所有 residual point：
+
+```bash
+python -m gnnpinn.train.macro_pinn \
+  --closure-mode sparse_linear \
+  --closure-graph-mode real_micro \
+  --closure-graph-features data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features_panel.jsonl \
+  --closure-graph-sample-id-column micro_sample_id \
   --closure-graph-embedding-dim 4
 ```
 

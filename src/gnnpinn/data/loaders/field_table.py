@@ -64,6 +64,15 @@ def load_field_table(
         column: [_to_float(row[column], column) for row in rows]
         for column in observation_columns
     }
+    excluded_columns = set(coordinate_columns)
+    excluded_columns.update(observation_columns)
+    if time_column:
+        excluded_columns.add(time_column)
+    row_metadata = {
+        column: [row.get(column, "") for row in rows]
+        for column in rows[0]
+        if column not in excluded_columns
+    }
 
     return FieldSample(
         sample_id=sample_id or path.stem,
@@ -75,6 +84,7 @@ def load_field_table(
             "coordinate_columns": coordinate_columns,
             "time_column": time_column,
             "observation_columns": observation_columns,
+            "row_metadata": row_metadata,
         },
     )
 
@@ -106,4 +116,3 @@ def _to_float(value: Any, column: str) -> float:
         return float(value)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"Column {column!r} contains non-numeric value: {value!r}") from exc
-

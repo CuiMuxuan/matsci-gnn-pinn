@@ -186,63 +186,129 @@ def _coordinate_rbf_anchors(state_dim: int, embedding_dim: int) -> Any:
 
 
 class RealMicroGraphFeatureProvider(_torch().nn.Module):
-    """Provide fixed sample-level features from real microstructure graph records."""
+    """Provide sample-level features from real microstructure graph records."""
 
     def __init__(self, config: RealMicroGraphFeatureConfig):
         super().__init__()
         if config.embedding_dim <= 0:
             raise ValueError("embedding_dim must be positive")
         self.config = config
-        record = _load_real_micro_graph_record(Path(config.graph_features), config.sample_id)
-        feature_names = list(record["feature_names"])
-        feature_values = [float(record["features"][name]) for name in feature_names]
-        selected_names, selected_values = _select_real_micro_features(
-            feature_names,
-            feature_values,
-            config.embedding_dim,
-            normalize=config.normalize,
-        )
-        torch = _torch()
-        self.record = record
-        self.selected_feature_names = selected_names
-        self.register_buffer("features", torch.tensor(selected_values, dtype=torch.float32).reshape(1, -1))
+        records = _load_real_micro_graph_records(Path(config.graph_features))
+        if config.sample_id is not None:
+            default_record = _find_real_micro_graph_record(records, config.sample_id, Path(config.graph_features))
+        else:
+            default_record = records[0]
 
-    def forward(self, coords: Any | None = None, time: Any | None = None) -> Any:
+        sample_ids: list[str] = []
+        selected_feature_names: list[str] | None = None
+        selected_values_by_sample: list[list[float]] = []
+        selected_names_by_sample: dict[str, list[str]] = {}
+        for record in records:
+            sample_id = str(record.get("sample_id") or "")
+            if not sample_id:
+                raise ValueError("Every real micro graph feature record must contain a non-empty sample_id")
+            feature_names = list(record["feature_names"])
+            feature_values = [float(record["features"][name]) for name in feature_names]
+            selected_names, selected_values = _select_real_micro_features(
+                feature_names,
+                feature_values,
+                config.embedding_dim,
+                normalize=config.normalize,
+            )
+            if selected_feature_names is None:
+                selected_feature_names = selected_names
+            elif selected_names != selected_feature_names:
+                raise ValueError("All real micro graph feature records must expose the same selected feature names")
+            sample_ids.append(sample_id)
+            selected_names_by_sample[sample_id] = selected_names
+            selected_values_by_sample.append(selected_values)
+
+        torch = _torch()
+        self.records = records
+        self.record = default_record
+        self.sample_ids = sample_ids
+        self.sample_index = {sample_id: index for index, sample_id in enumerate(sample_ids)}
+        self.default_sample_id = str(default_record.get("sample_id"))
+        self.selected_feature_names = selected_feature_names or []
+        self.selected_feature_names_by_sample = selected_names_by_sample
+        self.register_buffer("feature_table", torch.tensor(selected_values_by_sample, dtype=torch.float32))
+        default_index = self.sample_index[self.default_sample_id]
+        self.register_buffer("features", self.feature_table[default_index : default_index + 1].clone())
+
+    def forward(
+        self,
+        coords: Any | None = None,
+        time: Any | None = None,
+        sample_ids: list[str] | tuple[str, ...] | None = None,
+    ) -> Any:
         if coords is None:
             return self.features.reshape(-1)
+        if sample_ids is not None:
+            if len(sample_ids) != coords.shape[0]:
+                raise ValueError("sample_ids length must match coords batch size")
+            torch = _torch()
+            indices = torch.tensor(
+                [self._sample_index_for_id(sample_id) for sample_id in sample_ids],
+                dtype=torch.long,
+                device=coords.device,
+            )
+            return self.feature_table.to(device=coords.device, dtype=coords.dtype).index_select(0, indices)
         return self.features.to(device=coords.device, dtype=coords.dtype).expand(coords.shape[0], -1)
 
     @property
     def feature_names(self) -> list[str]:
         return graph_feature_names(self.config.embedding_dim)
 
+    def _sample_index_for_id(self, sample_id: str | None) -> int:
+        resolved_sample_id = self.default_sample_id if sample_id in {None, ""} else str(sample_id)
+        try:
+            return self.sample_index[resolved_sample_id]
+        except KeyError as exc:
+            available = ", ".join(self.sample_ids)
+            raise ValueError(
+                f"Sample id {resolved_sample_id!r} not found in real micro graph feature records. "
+                f"Available sample ids: {available}"
+            ) from exc
+
     def metadata(self) -> dict[str, Any]:
         return {
             "graph_features": self.config.graph_features,
             "sample_id": self.record.get("sample_id"),
             "requested_sample_id": self.config.sample_id,
+            "default_sample_id": self.default_sample_id,
+            "available_sample_ids": self.sample_ids,
             "embedding_dim": self.config.embedding_dim,
             "normalize": self.config.normalize,
             "feature_names": self.feature_names,
             "source_feature_names": self.selected_feature_names,
+            "source_feature_names_by_sample_id": self.selected_feature_names_by_sample,
             "features": self.features.detach().cpu().reshape(-1).tolist(),
             "sample_metadata": self.record.get("sample_metadata", {}),
             "graph_summary": self.record.get("graph_summary", {}),
         }
 
 
-def _load_real_micro_graph_record(path: Path, sample_id: str | None) -> dict[str, Any]:
+def _load_real_micro_graph_records(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         raise FileNotFoundError(f"Real micro graph feature file not found: {path}")
     records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     if not records:
         raise ValueError(f"Real micro graph feature file is empty: {path}")
-    if sample_id is None:
-        return records[0]
+    return records
+
+
+def _find_real_micro_graph_record(records: list[dict[str, Any]], sample_id: str, path: Path) -> dict[str, Any]:
     for record in records:
         if record.get("sample_id") == sample_id:
             return record
     raise ValueError(f"Sample id {sample_id!r} not found in real micro graph feature file: {path}")
+
+
+def _load_real_micro_graph_record(path: Path, sample_id: str | None) -> dict[str, Any]:
+    records = _load_real_micro_graph_records(path)
+    if sample_id is None:
+        return records[0]
+    return _find_real_micro_graph_record(records, sample_id, path)
 
 
 def _select_real_micro_features(

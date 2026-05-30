@@ -40,4 +40,4 @@ def test_ambench_mapping_converter_writes_field_table_and_split(tmp_path: Path):
     assert sample.coordinates[0] == [0.0, 0.0]
     assert sample.time[0] == 0.0
     assert sample.observations["T"][-1] == 340.0
-
+    assert sample.metadata["row_metadata"]["laser_power_W"] == ["195", "195", "195", "195", "195"]
