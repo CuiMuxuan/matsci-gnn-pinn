@@ -584,6 +584,7 @@ bash scripts/server/run_real_micro_graph_conditioned_closure_a100.sh \
 - 下载器已支持 `--include-optional`，也支持 `--file-id` 指定 required 或 optional 文件。
 - 下载器已支持 `--retries`、`--timeout-seconds`、`--resume-partial` 与 `--download-backend curl|wget`，用于处理 NIST PDR 偶发 read timeout；服务器脚本默认 `DOWNLOAD_RETRIES=3`、`DOWNLOAD_TIMEOUT_SECONDS=300`、`DOWNLOAD_BACKEND=wget`，并启用续传。
 - 本地 Windows 路径已完成 optional panel 下载、SHA256 校验、6 图 inspection 和 panel feature table 聚合；下一步应同步 `data/raw/.../mds2-2718`、`outputs/data_audits/mds2_2718_micro_panel/` 和 `data/processed/.../micro_graph_features_panel.*` 到服务器。
+- 服务器环境需要 `imagecodecs` 才能读取 LZW-compressed TIFF；若 inspection 报 `<COMPRESSION.LZW: 5> requires the 'imagecodecs' package`，先执行 `/home/vipuser/miniconda3/bin/conda run -n gnnpinn python -m pip install imagecodecs`。
 
 下一轮服务器命令：
 
@@ -608,6 +609,34 @@ data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_featur
 - feature table manifest 的 `n_records=6`。
 - 每条 record 均带有可解析的 `process/line/replicate/masked` metadata。
 - 通过该表生成或补充 thermal field table 的 `micro_sample_id` 对齐列后，使用 `--closure-graph-sample-id-column` 跑 process/sample-aware `real_micro` closure，而不是继续广播单一图像特征。
+
+生成 prototype 对齐表：
+
+```bash
+bash scripts/server/create_mds2_2718_micro_panel_aligned_table_a100.sh
+```
+
+默认输出：
+
+```text
+data/interim/ambench/2022_single_track/AMB2022-03/ambench_line_0_1_temperature_hot_gradient_mds2_2718_micro_panel_framecycle_v1.csv
+outputs/data_audits/ambench_line_0_1_temperature_hot_gradient_mds2_2718_micro_panel_framecycle_v1_manifest.json
+```
+
+该表使用 `frame_cycle` prototype 映射：按排序后的 `frame_index` 循环分配 6 个 panel `sample_id` 到 `micro_sample_id`。它只用于验证逐行 `real_micro` 选择链路，不作为真实 process-to-microstructure ground truth。
+
+运行 panel-aware closure：
+
+```bash
+ACTIVE_ID=ambench_line_0_1_temperature_hot_gradient_mds2_2718_micro_panel_framecycle_v1 \
+ACTIVE_TABLE=data/interim/ambench/2022_single_track/AMB2022-03/ambench_line_0_1_temperature_hot_gradient_mds2_2718_micro_panel_framecycle_v1.csv \
+ACTIVE_SPLIT=outputs/data_splits/ambench_line_0_1_temperature_hot_gradient_a100_sxm4_40gb_v1_split.json \
+MICRO_AGGREGATE=0 \
+MICRO_FEATURES=data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features_panel.jsonl \
+MICRO_SAMPLE_ID_COLUMN=micro_sample_id \
+bash scripts/server/run_real_micro_graph_conditioned_closure_a100.sh \
+  > logs/ambench_real_micro_graph_conditioned_closure_panel_framecycle_a100_v1.log 2>&1
+```
 
 ## 阶段 E：方向三弱双向耦合
 

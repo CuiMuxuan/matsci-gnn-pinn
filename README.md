@@ -168,6 +168,12 @@ bash scripts/server/build_mds2_2718_micro_panel_a100.sh \
   > logs/ambench_mds2_2718_micro_panel_build_a100_v1.log 2>&1
 ```
 
+生成带 `micro_sample_id` 的 prototype thermal 对齐表：
+
+```bash
+bash scripts/server/create_mds2_2718_micro_panel_aligned_table_a100.sh
+```
+
 ## Quick Start
 
 运行数据审计：
