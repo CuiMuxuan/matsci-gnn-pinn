@@ -645,6 +645,17 @@ bash scripts/server/run_real_micro_graph_conditioned_closure_a100.sh \
 - `g8` test RMSE `130.057854`，hot q90 RMSE `213.906003`，gradient q90 RMSE `206.215815`。
 - 该结果明显差于 sparse closure best 与 single-image real micro `g8`，应视为非物理 sample assignment 的负面控制；下一步应寻找真实 process/sample alignment，而不是继续调该 frame-cycle mapping 的超参。
 
+基于 `AMB2022-718-SH1-MeltPool_Cross-Section_Measurement_Results.xlsx` 的同工艺对齐：
+
+- 当前 active thermal table 来自 `Line_0_1`，工艺参数为 `285 W / 960 mm/s / 67 um`。
+- XLSX 中 BP1/P3 与 BP1/P4 的 `Line 0_*` 样本对应同一组工艺参数。
+- 因此下一轮不再使用 frame-cycle，而是固定 same-process micro sample 运行 `P3/L0` 与 `P4/L0`：
+
+```bash
+bash scripts/server/run_real_micro_same_process_line0_a100.sh \
+  > logs/ambench_real_micro_same_process_line0_a100_v1.log 2>&1
+```
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

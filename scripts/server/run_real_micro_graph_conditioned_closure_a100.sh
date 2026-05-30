@@ -11,6 +11,7 @@ CONDA_BIN="${CONDA_BIN:-/home/vipuser/miniconda3/bin/conda}"
 CONDA_ENV="${CONDA_ENV:-gnnpinn}"
 STEPS="${STEPS:-2000}"
 DEVICE="${DEVICE:-cuda}"
+RUN_TAG_SUFFIX="${RUN_TAG_SUFFIX:-}"
 
 ACTIVE_ID="${ACTIVE_ID:-ambench_line_0_1_temperature_hot_gradient_a100_sxm4_40gb_v1}"
 ACTIVE_TABLE="${ACTIVE_TABLE:-data/interim/ambench/2022_single_track/AMB2022-03/${ACTIVE_ID}.csv}"
@@ -36,6 +37,9 @@ run_one() {
   local gate="$2"
   local graph_l1="$3"
   local tag="$4"
+  if [[ -n "$RUN_TAG_SUFFIX" ]]; then
+    tag="${tag}_${RUN_TAG_SUFFIX}"
+  fi
   local run_id="${ACTIVE_ID}_macro_pinn_real_micro_sparse_closure_h256_l4_lr1e_3_clr1e_5_staged1500_random4096_${tag}_v1"
   local graph_selection_args=(--closure-graph-features "$MICRO_FEATURES")
   if [[ -n "$MICRO_SAMPLE_ID_COLUMN" ]]; then
