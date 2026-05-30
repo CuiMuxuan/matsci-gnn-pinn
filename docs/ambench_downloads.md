@@ -264,6 +264,19 @@ conda run -n gnnpinn-cu130 python -m gnnpinn.data.ambench_downloads `
   --output outputs/data_audits/ambench_mds2_2718_download_report.json
 ```
 
+如果某个 TIFF 下载中途断开，报告会出现 `"status": "incomplete"`，并留下 `.part` 文件。此时只重试对应 TIFF：
+
+```bash
+PYTHONUTF8=1 PYTHONIOENCODING=utf-8 conda run -n gnnpinn python -m gnnpinn.data.ambench_downloads \
+  --dataset-id mds2-2718 \
+  --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 \
+  --download \
+  --overwrite \
+  --file-id single_track_cross_section_representative_tif \
+  --verify-sha256 \
+  --output outputs/data_audits/ambench_mds2_2718_tif_redownload_report.json
+```
+
 Linux/云服务器命令：
 
 ```bash
