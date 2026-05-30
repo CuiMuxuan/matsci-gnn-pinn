@@ -720,6 +720,8 @@ Region-level seed-0 sweep 和 focused seed check 已完成，结果文档为 `do
 
 Phase 20 决策：deterministic region-level features 比继续扩展 global scalar descriptors 更有局部信号，但当前坐标映射和 nearest-patch 选择还不稳定，不能作为模型创新主结果。下一步优先做小规模 coordinate-registration ablation（row/col swap、flip、smooth interpolation），或在该问题被限定后转向 fixed learned patch embeddings。该路线仍不需要 A100-SXM4-80GB；只有进入 dense learned image encoder、更大图像 backbone 或多工况联合训练且当前 40GB 卡无法完成时，才向用户请求新服务器。
 
+Phase 21 coordinate-registration ablation 已完成，结果文档为 `docs/results/ambench_real_micro_exact_line0_1_region_registration_v1.md`。seed-0 最佳全局变体是 `col_flip`：test RMSE `66.288087`，hot q90 `49.074617`，gradient q90 `72.040545`。但 `col_flip` focused 3-seed 仍不稳定：test RMSE `79.911958 +/- 20.066421`，hot q90 `81.615574 +/- 61.088806`，gradient q90 `97.241934 +/- 48.236581`。结论：坐标注册消融能确认局部微观特征路线比 global scalar 更有诊断价值，但 deterministic nearest-patch provider 仍不是稳定性能分支。下一步不应继续堆手工 patch scalar，应转向 fixed learned patch embeddings 或更强物理配准的 microstructure source；当前仍不需要 A100-SXM4-80GB。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

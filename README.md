@@ -320,6 +320,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_real_micro_exact_line0_1_feature_v2_closure_v1.md](docs/results/ambench_real_micro_exact_line0_1_feature_v2_closure_v1.md): exact `Line_0_1` v2 rich micrograph features 对照结果。
 - [docs/results/ambench_real_micro_exact_line0_1_feature_v2_no_norm_closure_v1.md](docs/results/ambench_real_micro_exact_line0_1_feature_v2_no_norm_closure_v1.md): exact `Line_0_1` v2 no-normalization real-micro 诊断结果。
 - [docs/results/ambench_real_micro_exact_line0_1_region_closure_v1.md](docs/results/ambench_real_micro_exact_line0_1_region_closure_v1.md): exact `Line_0_1` deterministic region-level real-micro 诊断与 focused seed check 结果。
+- [docs/results/ambench_real_micro_exact_line0_1_region_registration_v1.md](docs/results/ambench_real_micro_exact_line0_1_region_registration_v1.md): exact `Line_0_1` region coordinate-registration 消融与 `col_flip` focused seed check 结果。
 
 Real micro graph closure 对比脚本：
 
