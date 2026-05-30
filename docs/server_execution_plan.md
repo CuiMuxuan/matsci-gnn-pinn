@@ -694,6 +694,13 @@ bash scripts/server/run_real_micro_exact_line0_1_feature_v2_a100.sh \
 
 验收：v2 manifest `n_records=4`，closure metadata 的 `source_feature_names` 前 8 项应包含 `mask_centroid_*`、`mask_bbox_area_fraction`、`mask_span_*`、`mask_perimeter_fraction`、`gradient_magnitude_q90_norm` 等，而不是只使用 v1 的 coarse grid 均值/方差。
 
+v2 rich-feature sweep 已完成，结果文档为 `docs/results/ambench_real_micro_exact_line0_1_feature_v2_closure_v1.md`。最佳 seed-0 为 `P4-L0-1/g8`：test RMSE `71.676666`，hot q90 RMSE `79.314583`，gradient q90 RMSE `90.549052`。结论：更多全局手工显微统计没有带来稳定提升。下一步只做一个小诊断：关闭 `real_micro` feature vector 内部 min-max normalization，检查绝对几何/纹理量级是否被洗掉。
+
+```bash
+bash scripts/server/run_real_micro_exact_line0_1_feature_v2_no_norm_a100.sh \
+  > logs/ambench_real_micro_exact_line0_1_feature_v2_no_norm_a100_v1.log 2>&1
+```
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

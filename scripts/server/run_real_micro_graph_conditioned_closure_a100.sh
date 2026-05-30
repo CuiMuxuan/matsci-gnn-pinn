@@ -15,6 +15,7 @@ RUN_TAG_SUFFIX="${RUN_TAG_SUFFIX:-}"
 SEED="${SEED:-0}"
 RUN_G4="${RUN_G4:-1}"
 RUN_G8="${RUN_G8:-1}"
+CLOSURE_GRAPH_NORMALIZE="${CLOSURE_GRAPH_NORMALIZE:-1}"
 
 ACTIVE_ID="${ACTIVE_ID:-ambench_line_0_1_temperature_hot_gradient_a100_sxm4_40gb_v1}"
 ACTIVE_TABLE="${ACTIVE_TABLE:-data/interim/ambench/2022_single_track/AMB2022-03/${ACTIVE_ID}.csv}"
@@ -49,6 +50,9 @@ run_one() {
     graph_selection_args+=(--closure-graph-sample-id-column "$MICRO_SAMPLE_ID_COLUMN")
   else
     graph_selection_args+=(--closure-graph-sample-id "$MICRO_SAMPLE_ID")
+  fi
+  if [[ "$CLOSURE_GRAPH_NORMALIZE" == "0" ]]; then
+    graph_selection_args+=(--no-closure-graph-normalize)
   fi
 
   "$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.train.macro_pinn \

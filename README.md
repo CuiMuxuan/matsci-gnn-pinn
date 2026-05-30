@@ -316,6 +316,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_real_micro_graph_conditioned_closure_v1.md](docs/results/ambench_real_micro_graph_conditioned_closure_v1.md): real micro graph-conditioned sparse closure 首轮 A100 对比结果。
 - [docs/results/ambench_real_micro_graph_conditioned_closure_panel_framecycle_v1.md](docs/results/ambench_real_micro_graph_conditioned_closure_panel_framecycle_v1.md): multi-image real micro panel frame-cycle prototype 对齐结果。
 - [docs/results/ambench_real_micro_exact_line0_1_closure_v1.md](docs/results/ambench_real_micro_exact_line0_1_closure_v1.md): exact `Line_0_1` P3/P4 real micro closure 与 focused seed check 结果。
+- [docs/results/ambench_real_micro_exact_line0_1_feature_v2_closure_v1.md](docs/results/ambench_real_micro_exact_line0_1_feature_v2_closure_v1.md): exact `Line_0_1` v2 rich micrograph features 对照结果。
 
 Real micro graph closure 对比脚本：
 
