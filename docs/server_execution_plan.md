@@ -638,6 +638,13 @@ bash scripts/server/run_real_micro_graph_conditioned_closure_a100.sh \
   > logs/ambench_real_micro_graph_conditioned_closure_panel_framecycle_a100_v1.log 2>&1
 ```
 
+当前 D2d 结果：
+
+- `frame_cycle` prototype 对齐链路已在 A100 跑通，结果文档为 `docs/results/ambench_real_micro_graph_conditioned_closure_panel_framecycle_v1.md`。
+- `g4` test RMSE `103.994793`，hot q90 RMSE `179.742978`，gradient q90 RMSE `175.162047`。
+- `g8` test RMSE `130.057854`，hot q90 RMSE `213.906003`，gradient q90 RMSE `206.215815`。
+- 该结果明显差于 sparse closure best 与 single-image real micro `g8`，应视为非物理 sample assignment 的负面控制；下一步应寻找真实 process/sample alignment，而不是继续调该 frame-cycle mapping 的超参。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
