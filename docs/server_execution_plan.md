@@ -580,6 +580,7 @@ bash scripts/server/run_real_micro_graph_conditioned_closure_a100.sh \
 - 下一步不扩大 closure 超参扫描，先把 `mds2-2718` 从单图扩展到多图 panel。
 - `configs/data/ambench_mds2_2718_sources.yaml` 的 optional files 已固定一个小面板：P2/L2.1 masked + unmasked、P1/L3.1 masked、P3/L0 masked、P4/L0 masked + unmasked。
 - 下载器已支持 `--include-optional`，也支持 `--file-id` 指定 required 或 optional 文件。
+- 下载器已支持 `--retries` 与 `--timeout-seconds`，用于处理 NIST PDR 偶发 read timeout；服务器脚本默认 `DOWNLOAD_RETRIES=3`、`DOWNLOAD_TIMEOUT_SECONDS=300`。
 
 下一轮服务器命令：
 

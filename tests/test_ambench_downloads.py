@@ -1,4 +1,5 @@
 from pathlib import Path
+import urllib.error
 
 import pytest
 import yaml
@@ -6,6 +7,7 @@ import yaml
 from gnnpinn.data.ambench_downloads import (
     download_mds2_2716,
     download_mds2_2718,
+    download_source_manifest,
     load_mds2_2716_sources,
     load_mds2_2718_sources,
     main,
@@ -376,6 +378,41 @@ def test_download_source_manifest_include_optional_downloads_panel(tmp_path: Pat
     assert report["validation"]["ready"] is True
     assert report["validation_failed"] is False
     assert report["mismatched_selected"] == []
+
+
+def test_download_source_manifest_records_download_error_and_retries(monkeypatch, tmp_path: Path):
+    calls = {"count": 0}
+
+    def flaky_urlopen(request, timeout):
+        calls["count"] += 1
+        raise urllib.error.URLError("timed out")
+
+    import gnnpinn.data.ambench_downloads as module
+
+    monkeypatch.setattr(module.urllib.request, "urlopen", flaky_urlopen)
+    sources = {
+        "dataset_id": "mds2-2718",
+        "required_files": [
+            {
+                "id": "readme",
+                "relative_path": "2718_README.txt",
+                "size_bytes": 6,
+                "download_url": "https://example.test/2718_README.txt",
+            }
+        ],
+    }
+
+    report = download_source_manifest(
+        tmp_path / "downloaded",
+        sources,
+        retries=2,
+        timeout_seconds=1,
+    )
+
+    assert calls["count"] == 3
+    assert report["actions"][0]["status"] == "download_error"
+    assert len(report["actions"][0]["attempts"]) == 3
+    assert report["validation_failed"] is True
 
 
 def test_download_cli_rejects_unknown_file_id(tmp_path: Path):

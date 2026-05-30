@@ -12,6 +12,8 @@ CONDA_ENV="${CONDA_ENV:-gnnpinn}"
 DATA_ROOT="${DATA_ROOT:-data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718}"
 AUDIT_ROOT="${AUDIT_ROOT:-outputs/data_audits/mds2_2718_micro_panel}"
 PROCESSED_ROOT="${PROCESSED_ROOT:-data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718}"
+DOWNLOAD_RETRIES="${DOWNLOAD_RETRIES:-3}"
+DOWNLOAD_TIMEOUT_SECONDS="${DOWNLOAD_TIMEOUT_SECONDS:-300}"
 
 mkdir -p "$AUDIT_ROOT"
 
@@ -21,6 +23,8 @@ mkdir -p "$AUDIT_ROOT"
   --download \
   --include-optional \
   --verify-sha256 \
+  --retries "$DOWNLOAD_RETRIES" \
+  --timeout-seconds "$DOWNLOAD_TIMEOUT_SECONDS" \
   --output outputs/data_audits/ambench_mds2_2718_micro_panel_download_report.json
 
 inspect_one() {

@@ -7,6 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 from typing import Any
+import urllib.error
 import urllib.request
 
 import yaml
@@ -89,7 +90,13 @@ def _sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
     return digest.hexdigest()
 
 
-def _download_url(url: str, destination: Path, overwrite: bool = False) -> dict[str, Any]:
+def _download_url(
+    url: str,
+    destination: Path,
+    *,
+    overwrite: bool = False,
+    timeout_seconds: int = 120,
+) -> dict[str, Any]:
     if destination.exists() and not overwrite:
         return {
             "path": str(destination),
@@ -106,16 +113,27 @@ def _download_url(url: str, destination: Path, overwrite: bool = False) -> dict[
     )
     bytes_written = 0
     expected_length = None
-    with urllib.request.urlopen(request, timeout=120) as response:
-        content_length = response.headers.get("Content-Length")
-        expected_length = int(content_length) if content_length and content_length.isdigit() else None
-        with part_path.open("wb") as handle:
-            while True:
-                chunk = response.read(1024 * 1024)
-                if not chunk:
-                    break
-                handle.write(chunk)
-                bytes_written += len(chunk)
+    try:
+        with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+            content_length = response.headers.get("Content-Length")
+            expected_length = int(content_length) if content_length and content_length.isdigit() else None
+            with part_path.open("wb") as handle:
+                while True:
+                    chunk = response.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    handle.write(chunk)
+                    bytes_written += len(chunk)
+    except (TimeoutError, OSError, urllib.error.URLError) as exc:
+        return {
+            "path": str(destination),
+            "partial_path": str(part_path),
+            "url": url,
+            "status": "download_error",
+            "bytes_written": bytes_written,
+            "expected_content_length": expected_length,
+            "error": f"{type(exc).__name__}: {exc}",
+        }
     if expected_length is not None and bytes_written != expected_length:
         return {
             "path": str(destination),
@@ -188,6 +206,8 @@ def download_mds2_2716(
     overwrite: bool = False,
     dry_run: bool = False,
     verify_hashes: bool = True,
+    retries: int = 0,
+    timeout_seconds: int = 120,
 ) -> dict[str, Any]:
     """Download required AMB2022-03 / mds2-2716 files from the source manifest."""
 
@@ -200,6 +220,8 @@ def download_mds2_2716(
         overwrite=overwrite,
         dry_run=dry_run,
         verify_hashes=verify_hashes,
+        retries=retries,
+        timeout_seconds=timeout_seconds,
     )
 
 
@@ -212,6 +234,8 @@ def download_mds2_2718(
     overwrite: bool = False,
     dry_run: bool = False,
     verify_hashes: bool = True,
+    retries: int = 0,
+    timeout_seconds: int = 120,
 ) -> dict[str, Any]:
     """Download selected AMB2022-03 optical microscopy files from the source manifest."""
 
@@ -224,6 +248,8 @@ def download_mds2_2718(
         overwrite=overwrite,
         dry_run=dry_run,
         verify_hashes=verify_hashes,
+        retries=retries,
+        timeout_seconds=timeout_seconds,
     )
 
 
@@ -236,6 +262,8 @@ def download_source_manifest(
     overwrite: bool = False,
     dry_run: bool = False,
     verify_hashes: bool = True,
+    retries: int = 0,
+    timeout_seconds: int = 120,
 ) -> dict[str, Any]:
     """Download files listed in a loaded AM-Bench source manifest."""
 
@@ -281,12 +309,29 @@ def download_source_manifest(
                 }
             )
             continue
-        result = _download_url(str(source["download_url"]), destination, overwrite=True)
+        result = _download_url(
+            str(source["download_url"]),
+            destination,
+            overwrite=True,
+            timeout_seconds=timeout_seconds,
+        )
+        attempts = [result]
+        for _ in range(max(retries, 0)):
+            if result.get("status") not in {"download_error", "incomplete"}:
+                break
+            result = _download_url(
+                str(source["download_url"]),
+                destination,
+                overwrite=True,
+                timeout_seconds=timeout_seconds,
+            )
+            attempts.append(result)
         actions.append(
             {
                 "id": source.get("id"),
                 "relative_path": source["relative_path"],
                 "download_url": source.get("download_url"),
+                "attempts": attempts,
                 **result,
             }
         )
@@ -313,6 +358,8 @@ def download_source_manifest(
         "overwrite": overwrite,
         "include_optional": include_optional,
         "file_ids": sorted(selected_ids),
+        "retries": retries,
+        "timeout_seconds": timeout_seconds,
         "actions": actions,
         "missing_selected": missing_selected,
         "mismatched_selected": mismatched_selected,
@@ -452,6 +499,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="When used with --download, only report planned downloads without writing files.",
     )
     parser.add_argument(
+        "--retries",
+        type=int,
+        default=0,
+        help="Retry each file this many times after a download_error or incomplete transfer.",
+    )
+    parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=120,
+        help="Network socket timeout per download attempt.",
+    )
+    parser.add_argument(
         "--file-id",
         action="append",
         dest="file_ids",
@@ -484,6 +543,8 @@ def main(argv: list[str] | None = None) -> int:
             overwrite=args.overwrite,
             dry_run=args.dry_run,
             verify_hashes=args.verify_sha256,
+            retries=args.retries,
+            timeout_seconds=args.timeout_seconds,
         )
     else:
         sources = load_source_manifest(
