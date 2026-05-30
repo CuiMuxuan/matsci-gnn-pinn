@@ -711,9 +711,14 @@ Phase 19 决策：停止继续扩展全局手工 sample-level micrograph scalar 
 ```bash
 bash scripts/server/run_real_micro_exact_line0_1_region_a100.sh \
   > logs/ambench_real_micro_exact_line0_1_region_a100_v1.log 2>&1
+
+bash scripts/server/run_real_micro_exact_line0_1_region_seed_check_a100.sh \
+  > logs/ambench_real_micro_exact_line0_1_region_seedcheck_a100_v1.log 2>&1
 ```
 
-该路线仍应在当前 A100-SXM4-40GB 上先跑 smoke 和 seed-0 comparison。只有进入 dense learned image encoder、更大图像 backbone 或多工况联合训练且当前 40GB 卡无法完成时，才向用户请求 NVIDIA A100-SXM4-80GB 新服务器。
+Region-level seed-0 sweep 和 focused seed check 已完成，结果文档为 `docs/results/ambench_real_micro_exact_line0_1_region_closure_v1.md`。最佳 seed-0 候选是 `P4-L0-1/g8`：test RMSE `74.072293`，hot q90 RMSE `21.377514`，gradient q90 RMSE `62.469599`。但 3-seed check 不稳定：test RMSE `84.664217 +/- 20.923602`，hot q90 `77.140936 +/- 66.143679`，gradient q90 `98.097679 +/- 48.567944`。
+
+Phase 20 决策：deterministic region-level features 比继续扩展 global scalar descriptors 更有局部信号，但当前坐标映射和 nearest-patch 选择还不稳定，不能作为模型创新主结果。下一步优先做小规模 coordinate-registration ablation（row/col swap、flip、smooth interpolation），或在该问题被限定后转向 fixed learned patch embeddings。该路线仍不需要 A100-SXM4-80GB；只有进入 dense learned image encoder、更大图像 backbone 或多工况联合训练且当前 40GB 卡无法完成时，才向用户请求新服务器。
 
 ## 阶段 E：方向三弱双向耦合
 
