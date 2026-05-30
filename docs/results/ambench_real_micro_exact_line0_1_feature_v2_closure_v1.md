@@ -64,15 +64,8 @@ Primary numbers below are test split metrics.
 
 The richer v2 hand-crafted feature schema does not improve the exact-line branch. Its best seed-0 result, `P4-L0-1/g8`, is close to the sparse closure global test RMSE but has much worse hot and gradient q90 metrics. It also does not beat the Phase 18 best seed-0 candidate `P4-L0-1_m/g4`.
 
-This is useful negative evidence: simply adding more global image statistics is not enough. The next low-cost diagnostic is to test whether the per-sample vector min-max normalization is washing out absolute geometry and texture magnitudes.
+This is useful negative evidence: simply adding more global image statistics is not enough. A follow-up no-normalization diagnostic was run to test whether the per-sample vector min-max normalization was washing out absolute geometry and texture magnitudes.
 
 ## Next Action
 
-Run a no-normalization ablation before moving to a learned image encoder:
-
-```bash
-bash scripts/server/run_real_micro_exact_line0_1_feature_v2_no_norm_a100.sh \
-  > logs/ambench_real_micro_exact_line0_1_feature_v2_no_norm_a100_v1.log 2>&1
-```
-
-If no-normalization also fails, stop expanding hand-crafted sample-level `mds2-2718` features and move to either region-level learned image embeddings or a dataset with stronger microstructure-to-thermal linkage.
+The no-normalization ablation is documented in [ambench_real_micro_exact_line0_1_feature_v2_no_norm_closure_v1.md](ambench_real_micro_exact_line0_1_feature_v2_no_norm_closure_v1.md). It recovered one good seed-0 diagnostic but failed the focused 3-seed check, so the next branch should move to region-level or learned microstructure representations rather than adding more global scalar descriptors.

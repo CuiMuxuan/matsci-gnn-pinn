@@ -41,6 +41,14 @@ class RealMicroGraphFeatureConfig:
     normalize: bool = True
 
 
+@dataclass(frozen=True)
+class RealMicroRegionFeatureConfig:
+    graph_features: str
+    sample_id: str | None = None
+    embedding_dim: int = 4
+    normalize: bool = True
+
+
 def graph_feature_names(embedding_dim: int, prefix: str = "g") -> list[str]:
     if embedding_dim <= 0:
         raise ValueError("embedding_dim must be positive")
@@ -288,6 +296,155 @@ class RealMicroGraphFeatureProvider(_torch().nn.Module):
         }
 
 
+class RealMicroRegionFeatureProvider(_torch().nn.Module):
+    """Select local micrograph patch features from real inspection grid nodes."""
+
+    def __init__(self, config: RealMicroRegionFeatureConfig):
+        super().__init__()
+        if config.embedding_dim <= 0:
+            raise ValueError("embedding_dim must be positive")
+        self.config = config
+        records = _load_real_micro_graph_records(Path(config.graph_features))
+        if config.sample_id is not None:
+            default_record = _find_real_micro_graph_record(records, config.sample_id, Path(config.graph_features))
+        else:
+            default_record = records[0]
+
+        sample_ids: list[str] = []
+        selected_feature_names: list[str] | None = None
+        selected_names_by_sample: dict[str, list[str]] = {}
+        region_feature_names_by_sample: dict[str, list[str]] = {}
+        region_counts_by_sample: dict[str, int] = {}
+        region_tables: list[list[list[float]]] = []
+        region_centers: list[list[list[float]]] = []
+        expected_region_count: int | None = None
+        for record in records:
+            sample_id = str(record.get("sample_id") or "")
+            if not sample_id:
+                raise ValueError("Every real micro region feature record must contain a non-empty sample_id")
+            region_feature_names = list(record.get("region_feature_names") or [])
+            region_features = record.get("region_features") or []
+            if not region_feature_names or not region_features:
+                raise ValueError(
+                    "real_micro_region requires records with region_feature_names and region_features. "
+                    "Regenerate the micro feature JSONL with the current ambench_microstructure aggregate path."
+                )
+            centers = _real_micro_region_centers(region_feature_names, region_features)
+            selected_names, selected_table = _select_real_micro_region_features(
+                region_feature_names,
+                region_features,
+                config.embedding_dim,
+                normalize=config.normalize,
+            )
+            if selected_feature_names is None:
+                selected_feature_names = selected_names
+            elif selected_names != selected_feature_names:
+                raise ValueError("All real micro region records must expose the same selected feature names")
+            if expected_region_count is None:
+                expected_region_count = len(selected_table)
+            elif len(selected_table) != expected_region_count:
+                raise ValueError("All real micro region records must expose the same number of regions")
+            sample_ids.append(sample_id)
+            selected_names_by_sample[sample_id] = selected_names
+            region_feature_names_by_sample[sample_id] = region_feature_names
+            region_counts_by_sample[sample_id] = len(selected_table)
+            region_tables.append(selected_table)
+            region_centers.append(centers)
+
+        torch = _torch()
+        self.records = records
+        self.record = default_record
+        self.sample_ids = sample_ids
+        self.sample_index = {sample_id: index for index, sample_id in enumerate(sample_ids)}
+        self.default_sample_id = str(default_record.get("sample_id"))
+        self.selected_feature_names = selected_feature_names or []
+        self.selected_feature_names_by_sample = selected_names_by_sample
+        self.region_feature_names_by_sample = region_feature_names_by_sample
+        self.region_counts_by_sample = region_counts_by_sample
+        self.register_buffer("region_feature_table", torch.tensor(region_tables, dtype=torch.float32))
+        self.register_buffer("region_centers", torch.tensor(region_centers, dtype=torch.float32))
+        default_index = self.sample_index[self.default_sample_id]
+        self.register_buffer("features", self.region_feature_table[default_index, 0:1, :].clone())
+
+    def forward(
+        self,
+        coords: Any | None = None,
+        time: Any | None = None,
+        sample_ids: list[str] | tuple[str, ...] | None = None,
+    ) -> Any:
+        if coords is None:
+            return self.features.reshape(-1)
+        if coords.shape[-1] < 2:
+            raise ValueError("real_micro_region requires at least two coordinate dimensions")
+        torch = _torch()
+        if sample_ids is not None:
+            if len(sample_ids) != coords.shape[0]:
+                raise ValueError("sample_ids length must match coords batch size")
+            sample_indices = torch.tensor(
+                [self._sample_index_for_id(sample_id) for sample_id in sample_ids],
+                dtype=torch.long,
+                device=coords.device,
+            )
+        else:
+            sample_indices = torch.full(
+                (coords.shape[0],),
+                self.sample_index[self.default_sample_id],
+                dtype=torch.long,
+                device=coords.device,
+            )
+        query = torch.stack(
+            [
+                coords[:, 1].clamp(0.0, 1.0),
+                coords[:, 0].clamp(0.0, 1.0),
+            ],
+            dim=-1,
+        )
+        centers = self.region_centers.to(device=coords.device, dtype=coords.dtype).index_select(0, sample_indices)
+        distances = torch.sum((query[:, None, :] - centers) ** 2, dim=-1)
+        region_indices = torch.argmin(distances, dim=-1)
+        tables = self.region_feature_table.to(device=coords.device, dtype=coords.dtype).index_select(0, sample_indices)
+        batch_indices = torch.arange(coords.shape[0], dtype=torch.long, device=coords.device)
+        return tables[batch_indices, region_indices, :]
+
+    @property
+    def feature_names(self) -> list[str]:
+        return graph_feature_names(self.config.embedding_dim)
+
+    def _sample_index_for_id(self, sample_id: str | None) -> int:
+        resolved_sample_id = self.default_sample_id if sample_id in {None, ""} else str(sample_id)
+        try:
+            return self.sample_index[resolved_sample_id]
+        except KeyError as exc:
+            available = ", ".join(self.sample_ids)
+            raise ValueError(
+                f"Sample id {resolved_sample_id!r} not found in real micro region feature records. "
+                f"Available sample ids: {available}"
+            ) from exc
+
+    def metadata(self) -> dict[str, Any]:
+        return {
+            "graph_features": self.config.graph_features,
+            "sample_id": self.record.get("sample_id"),
+            "requested_sample_id": self.config.sample_id,
+            "default_sample_id": self.default_sample_id,
+            "available_sample_ids": self.sample_ids,
+            "embedding_dim": self.config.embedding_dim,
+            "normalize": self.config.normalize,
+            "feature_names": self.feature_names,
+            "source_feature_names": self.selected_feature_names,
+            "source_feature_names_by_sample_id": self.selected_feature_names_by_sample,
+            "region_feature_names_by_sample_id": self.region_feature_names_by_sample,
+            "region_counts_by_sample_id": self.region_counts_by_sample,
+            "coordinate_mapping": {
+                "query_row": "coords[:, 1] clamped to [0, 1]",
+                "query_col": "coords[:, 0] clamped to [0, 1]",
+                "selection": "nearest region center in normalized row/col space",
+            },
+            "sample_metadata": self.record.get("sample_metadata", {}),
+            "graph_summary": self.record.get("graph_summary", {}),
+        }
+
+
 def _load_real_micro_graph_records(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         raise FileNotFoundError(f"Real micro graph feature file not found: {path}")
@@ -368,3 +525,69 @@ def _minmax_normalize_vector(values: list[float]) -> list[float]:
     if scale == 0:
         return [0.0 for _ in values]
     return [(value - minimum) / scale for value in values]
+
+
+def _real_micro_region_centers(
+    region_feature_names: list[str],
+    region_features: list[list[float]],
+) -> list[list[float]]:
+    try:
+        row_index = region_feature_names.index("center_row_norm")
+        col_index = region_feature_names.index("center_col_norm")
+    except ValueError as exc:
+        raise ValueError(
+            "real_micro_region records must include center_row_norm and center_col_norm region features"
+        ) from exc
+    return [[float(region[row_index]), float(region[col_index])] for region in region_features]
+
+
+def _select_real_micro_region_features(
+    region_feature_names: list[str],
+    region_features: list[list[float]],
+    embedding_dim: int,
+    *,
+    normalize: bool,
+) -> tuple[list[str], list[list[float]]]:
+    if len(region_feature_names) != len(region_features[0]):
+        raise ValueError("region_feature_names length must match region feature width")
+    preferred_names = [
+        "mask_fraction",
+        "mean_intensity_norm",
+        "std_intensity_norm",
+        "center_row_norm",
+        "center_col_norm",
+    ]
+    selected_names = [name for name in preferred_names if name in region_feature_names]
+    for name in region_feature_names:
+        if name not in selected_names:
+            selected_names.append(name)
+        if len(selected_names) >= embedding_dim:
+            break
+    selected_names = selected_names[:embedding_dim]
+    selected_indices = [region_feature_names.index(name) for name in selected_names]
+    selected_table = [[float(region[index]) for index in selected_indices] for region in region_features]
+    if len(selected_names) < embedding_dim:
+        padding_count = embedding_dim - len(selected_names)
+        selected_names.extend(f"padding_{index}" for index in range(padding_count))
+        for row in selected_table:
+            row.extend(0.0 for _ in range(padding_count))
+    if normalize:
+        selected_table = _minmax_normalize_columns(selected_table)
+    return selected_names, selected_table
+
+
+def _minmax_normalize_columns(rows: list[list[float]]) -> list[list[float]]:
+    if not rows:
+        return rows
+    width = len(rows[0])
+    columns = [[row[index] for row in rows] for index in range(width)]
+    minimums = [min(column) for column in columns]
+    maximums = [max(column) for column in columns]
+    normalized_rows: list[list[float]] = []
+    for row in rows:
+        normalized_row = []
+        for index, value in enumerate(row):
+            scale = maximums[index] - minimums[index]
+            normalized_row.append(0.0 if scale == 0 else (value - minimums[index]) / scale)
+        normalized_rows.append(normalized_row)
+    return normalized_rows

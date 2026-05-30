@@ -694,12 +694,26 @@ bash scripts/server/run_real_micro_exact_line0_1_feature_v2_a100.sh \
 
 验收：v2 manifest `n_records=4`，closure metadata 的 `source_feature_names` 前 8 项应包含 `mask_centroid_*`、`mask_bbox_area_fraction`、`mask_span_*`、`mask_perimeter_fraction`、`gradient_magnitude_q90_norm` 等，而不是只使用 v1 的 coarse grid 均值/方差。
 
-v2 rich-feature sweep 已完成，结果文档为 `docs/results/ambench_real_micro_exact_line0_1_feature_v2_closure_v1.md`。最佳 seed-0 为 `P4-L0-1/g8`：test RMSE `71.676666`，hot q90 RMSE `79.314583`，gradient q90 RMSE `90.549052`。结论：更多全局手工显微统计没有带来稳定提升。下一步只做一个小诊断：关闭 `real_micro` feature vector 内部 min-max normalization，检查绝对几何/纹理量级是否被洗掉。
+v2 rich-feature sweep 已完成，结果文档为 `docs/results/ambench_real_micro_exact_line0_1_feature_v2_closure_v1.md`。最佳 seed-0 为 `P4-L0-1/g8`：test RMSE `71.676666`，hot q90 RMSE `79.314583`，gradient q90 RMSE `90.549052`。结论：更多全局手工显微统计没有带来稳定提升。随后完成 no-normalization 诊断，结果文档为 `docs/results/ambench_real_micro_exact_line0_1_feature_v2_no_norm_closure_v1.md`。
 
 ```bash
 bash scripts/server/run_real_micro_exact_line0_1_feature_v2_no_norm_a100.sh \
   > logs/ambench_real_micro_exact_line0_1_feature_v2_no_norm_a100_v1.log 2>&1
+
+bash scripts/server/run_real_micro_exact_line0_1_feature_v2_no_norm_seed_check_a100.sh \
+  > logs/ambench_real_micro_exact_line0_1_feature_v2_no_norm_p3_masked_g4_seedcheck_a100_v1.log 2>&1
 ```
+
+No-normalization 的最佳 seed-0 global 结果为 `P3-L0-1_m/g8`：test RMSE `65.136753`。最佳 local-region seed-0 候选为 `P3-L0-1_m/g4`：test RMSE `67.843165`，hot q90 RMSE `40.724303`，gradient q90 RMSE `66.187221`。但 focused 3-seed check 不稳定：test RMSE `87.739183 +/- 33.551307`，hot q90 `94.058742 +/- 89.125747`，gradient q90 `108.484789 +/- 72.430034`。
+
+Phase 19 决策：停止继续扩展全局手工 sample-level micrograph scalar descriptors。下一步进入 Phase 20，把微观组织信号移动到 residual point 附近。第一条低风险路线是 deterministic patch/region-level provider：聚合 inspection JSON 时保留 8x8 grid node features，训练时通过 `--closure-graph-mode real_micro_region` 按归一化 `x/y` 选择最近 patch 的局部特征。
+
+```bash
+bash scripts/server/run_real_micro_exact_line0_1_region_a100.sh \
+  > logs/ambench_real_micro_exact_line0_1_region_a100_v1.log 2>&1
+```
+
+该路线仍应在当前 A100-SXM4-40GB 上先跑 smoke 和 seed-0 comparison。只有进入 dense learned image encoder、更大图像 backbone 或多工况联合训练且当前 40GB 卡无法完成时，才向用户请求 NVIDIA A100-SXM4-80GB 新服务器。
 
 ## 阶段 E：方向三弱双向耦合
 

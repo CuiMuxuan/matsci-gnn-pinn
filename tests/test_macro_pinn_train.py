@@ -850,3 +850,92 @@ def test_macro_pinn_real_micro_graph_conditioning_supports_sample_id_column(tmp_
     assert graph_payload["selection"]["sample_id_column"] == "micro_sample_id"
     assert graph_payload["metadata"]["available_sample_ids"] == ["sample_a", "sample_b"]
     assert payload["config"]["closure_graph_sample_id_column"] == "micro_sample_id"
+
+
+def test_macro_pinn_sparse_closure_supports_real_micro_region_graph_conditioning(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "field.csv"
+    table.write_text(
+        "x,y,t,T\n"
+        "0,0,0,1\n"
+        "1,0,0,2\n"
+        "0,1,1,3\n"
+        "1,1,1,4\n",
+        encoding="utf-8",
+    )
+    graph_features = tmp_path / "micro_region_features.jsonl"
+    graph_features.write_text(
+        json.dumps(
+            {
+                "sample_id": "sample_a",
+                "sample_metadata": {"process": "P3"},
+                "feature_names": ["image_mask_fraction"],
+                "features": {"image_mask_fraction": 0.1},
+                "region_feature_names": [
+                    "center_row_norm",
+                    "center_col_norm",
+                    "mean_intensity_norm",
+                    "std_intensity_norm",
+                    "mask_fraction",
+                ],
+                "region_features": [
+                    [0.25, 0.25, 0.1, 0.01, 0.0],
+                    [0.25, 0.75, 0.2, 0.02, 0.2],
+                    [0.75, 0.25, 0.3, 0.03, 0.4],
+                    [0.75, 0.75, 0.4, 0.04, 0.8],
+                ],
+                "graph_summary": {"num_nodes": 4},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--pde-weight",
+            "1e-4",
+            "--closure-mode",
+            "sparse_linear",
+            "--closure-feature",
+            "T",
+            "--closure-graph-mode",
+            "real_micro_region",
+            "--closure-graph-features",
+            str(graph_features),
+            "--closure-graph-sample-id",
+            "sample_a",
+            "--closure-graph-embedding-dim",
+            "3",
+            "--no-closure-graph-normalize",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    assert status == 0
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    graph_payload = payload["closure"]["graph_conditioning"]
+    assert graph_payload["mode"] == "real_micro_region"
+    assert graph_payload["metadata"]["sample_id"] == "sample_a"
+    assert graph_payload["metadata"]["source_feature_names"] == [
+        "mask_fraction",
+        "mean_intensity_norm",
+        "std_intensity_norm",
+    ]
+    assert graph_payload["metadata"]["region_counts_by_sample_id"] == {"sample_a": 4}
+    assert payload["closure"]["term_names"] == ["1", "T", "g0", "g1", "g2"]

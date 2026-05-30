@@ -292,6 +292,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/repo_architecture.md](docs/repo_architecture.md): 代码仓库结构和模块职责。
 - [docs/experiment_plan.md](docs/experiment_plan.md): 实验矩阵、指标和配置命名。
 - [docs/environment.md](docs/environment.md): 本地与远程环境迁移。
+- [docs/server_environment_snapshot.md](docs/server_environment_snapshot.md): 当前 A100 服务器 Ubuntu/GPU/CUDA/Conda 环境快照。
 - [docs/ambench_downloads.md](docs/ambench_downloads.md): AM-Bench 下载、断点处理和校验。
 - [docs/data_cards/ambench_2022_optical_microscopy_mds2_2718.md](docs/data_cards/ambench_2022_optical_microscopy_mds2_2718.md): AM-Bench optical microscopy 数据卡。
 - [docs/server_runbook.md](docs/server_runbook.md): 云 GPU 阶段运行手册。
@@ -317,6 +318,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_real_micro_graph_conditioned_closure_panel_framecycle_v1.md](docs/results/ambench_real_micro_graph_conditioned_closure_panel_framecycle_v1.md): multi-image real micro panel frame-cycle prototype 对齐结果。
 - [docs/results/ambench_real_micro_exact_line0_1_closure_v1.md](docs/results/ambench_real_micro_exact_line0_1_closure_v1.md): exact `Line_0_1` P3/P4 real micro closure 与 focused seed check 结果。
 - [docs/results/ambench_real_micro_exact_line0_1_feature_v2_closure_v1.md](docs/results/ambench_real_micro_exact_line0_1_feature_v2_closure_v1.md): exact `Line_0_1` v2 rich micrograph features 对照结果。
+- [docs/results/ambench_real_micro_exact_line0_1_feature_v2_no_norm_closure_v1.md](docs/results/ambench_real_micro_exact_line0_1_feature_v2_no_norm_closure_v1.md): exact `Line_0_1` v2 no-normalization real-micro 诊断结果。
 
 Real micro graph closure 对比脚本：
 

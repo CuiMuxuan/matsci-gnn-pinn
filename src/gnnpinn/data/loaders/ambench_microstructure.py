@@ -144,6 +144,13 @@ def graph_record_from_inspection(inspection: dict[str, Any]) -> dict[str, Any]:
         "feature_schema_version": inspection.get("feature_schema_version", "micrograph_features_v1"),
         "feature_names": list(features.keys()),
         "features": features,
+        "region_feature_names": node_names,
+        "region_features": node_array.tolist(),
+        "region_coordinate_convention": {
+            "row_feature": "center_row_norm",
+            "col_feature": "center_col_norm",
+            "training_coord_mapping": "coords[:, 1] -> row, coords[:, 0] -> col",
+        },
         "graph_summary": {
             "num_nodes": graph.get("num_nodes"),
             "num_edges": graph.get("num_edges"),

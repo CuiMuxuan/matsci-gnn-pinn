@@ -135,5 +135,8 @@ def test_build_graph_feature_table_writes_jsonl_and_csv(tmp_path: Path):
     assert "mask_bbox_area_fraction" in report["feature_names"]
     assert record["features"]["node_mask_fraction_mean"] == 0.25
     assert record["features"]["gradient_magnitude_q90_norm"] == 0.75
+    assert record["region_feature_names"] == ["center_row_norm", "mask_fraction"]
+    assert record["region_features"] == [[0.25, 0.0], [0.75, 0.5]]
+    assert record["region_coordinate_convention"]["row_feature"] == "center_row_norm"
     assert jsonl_output.read_text(encoding="utf-8").count("\n") == 1
     assert "image_mask_fraction" in csv_output.read_text(encoding="utf-8")

@@ -195,6 +195,12 @@ requirements/notebooks.txt: Notebook/绘图依赖
 docs/server_runbook.md
 ```
 
+当前 A100 服务器的 Ubuntu、GPU、CUDA、Conda 与 `gnnpinn` 环境快照见：
+
+```text
+docs/server_environment_snapshot.md
+```
+
 ## 版本冻结策略
 
 推荐三层冻结：

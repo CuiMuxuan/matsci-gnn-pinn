@@ -263,6 +263,72 @@ def test_real_micro_graph_feature_provider_prefers_material_image_features(tmp_p
 
 
 @torchmark
+def test_real_micro_region_feature_provider_selects_local_patch(tmp_path):
+    import json
+    import torch
+
+    from gnnpinn.models.closure import RealMicroRegionFeatureConfig, RealMicroRegionFeatureProvider
+
+    feature_path = tmp_path / "region_features.jsonl"
+    feature_path.write_text(
+        json.dumps(
+            {
+                "sample_id": "sample_a",
+                "sample_metadata": {"process": "P3"},
+                "feature_names": ["image_mask_fraction"],
+                "features": {"image_mask_fraction": 0.1},
+                "region_feature_names": [
+                    "center_row_norm",
+                    "center_col_norm",
+                    "mean_intensity_norm",
+                    "std_intensity_norm",
+                    "mask_fraction",
+                ],
+                "region_features": [
+                    [0.25, 0.25, 0.1, 0.01, 0.0],
+                    [0.25, 0.75, 0.2, 0.02, 0.2],
+                    [0.75, 0.25, 0.3, 0.03, 0.4],
+                    [0.75, 0.75, 0.4, 0.04, 0.8],
+                ],
+                "graph_summary": {"num_nodes": 4},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    provider = RealMicroRegionFeatureProvider(
+        RealMicroRegionFeatureConfig(
+            graph_features=str(feature_path),
+            sample_id="sample_a",
+            embedding_dim=3,
+            normalize=False,
+        )
+    )
+    coords = torch.tensor(
+        [
+            [0.1, 0.1],
+            [0.9, 0.9],
+        ],
+        dtype=torch.float32,
+    )
+    time = torch.zeros((2, 1), dtype=torch.float32)
+
+    features = provider(coords, time)
+    metadata = provider.metadata()
+
+    assert tuple(features.shape) == (2, 3)
+    assert torch.allclose(features[0], torch.tensor([0.0, 0.1, 0.01]))
+    assert torch.allclose(features[1], torch.tensor([0.8, 0.4, 0.04]))
+    assert metadata["source_feature_names"] == [
+        "mask_fraction",
+        "mean_intensity_norm",
+        "std_intensity_norm",
+    ]
+    assert metadata["region_counts_by_sample_id"] == {"sample_a": 4}
+
+
+@torchmark
 def test_weak_coupler_runs_two_macro_passes():
     import torch
 

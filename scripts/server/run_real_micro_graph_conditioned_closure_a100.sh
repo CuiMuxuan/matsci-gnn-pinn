@@ -16,6 +16,7 @@ SEED="${SEED:-0}"
 RUN_G4="${RUN_G4:-1}"
 RUN_G8="${RUN_G8:-1}"
 CLOSURE_GRAPH_NORMALIZE="${CLOSURE_GRAPH_NORMALIZE:-1}"
+CLOSURE_GRAPH_MODE="${CLOSURE_GRAPH_MODE:-real_micro}"
 
 ACTIVE_ID="${ACTIVE_ID:-ambench_line_0_1_temperature_hot_gradient_a100_sxm4_40gb_v1}"
 ACTIVE_TABLE="${ACTIVE_TABLE:-data/interim/ambench/2022_single_track/AMB2022-03/${ACTIVE_ID}.csv}"
@@ -44,7 +45,7 @@ run_one() {
   if [[ -n "$RUN_TAG_SUFFIX" ]]; then
     tag="${tag}_${RUN_TAG_SUFFIX}"
   fi
-  local run_id="${ACTIVE_ID}_macro_pinn_real_micro_sparse_closure_h256_l4_lr1e_3_clr1e_5_staged1500_random4096_${tag}_s${SEED}_v1"
+  local run_id="${ACTIVE_ID}_macro_pinn_${CLOSURE_GRAPH_MODE}_sparse_closure_h256_l4_lr1e_3_clr1e_5_staged1500_random4096_${tag}_s${SEED}_v1"
   local graph_selection_args=(--closure-graph-features "$MICRO_FEATURES")
   if [[ -n "$MICRO_SAMPLE_ID_COLUMN" ]]; then
     graph_selection_args+=(--closure-graph-sample-id-column "$MICRO_SAMPLE_ID_COLUMN")
@@ -84,7 +85,7 @@ run_one() {
     --closure-polynomial-order 1 \
     --closure-l1-weight 1e-5 \
     --closure-threshold 1e-6 \
-    --closure-graph-mode real_micro \
+    --closure-graph-mode "$CLOSURE_GRAPH_MODE" \
     "${graph_selection_args[@]}" \
     --closure-graph-embedding-dim "$embedding_dim" \
     --closure-graph-gate "$gate" \
