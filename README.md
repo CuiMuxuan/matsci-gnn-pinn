@@ -168,6 +168,15 @@ bash scripts/server/build_mds2_2718_micro_panel_a100.sh \
   > logs/ambench_mds2_2718_micro_panel_build_a100_v1.log 2>&1
 ```
 
+Exact `Line_0_1` v2 rich-feature panel:
+
+```bash
+bash scripts/server/build_mds2_2718_line0_1_micro_panel_feature_v2_a100.sh \
+  > logs/ambench_mds2_2718_line0_1_micro_panel_feature_v2_build_a100_v1.log 2>&1
+```
+
+The v2 feature schema keeps the coarse graph table but adds intensity distribution, threshold-mask geometry, and normalized texture/gradient descriptors. The `real_micro` provider prioritizes these descriptors for `g0..g7` before falling back to v1 coarse grid statistics.
+
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
 ```bash

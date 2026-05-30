@@ -12,6 +12,8 @@ CONDA_ENV="${CONDA_ENV:-gnnpinn}"
 DATA_ROOT="${DATA_ROOT:-data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718}"
 AUDIT_ROOT="${AUDIT_ROOT:-outputs/data_audits/mds2_2718_line0_1_micro_panel}"
 PROCESSED_ROOT="${PROCESSED_ROOT:-data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718}"
+FEATURE_BASENAME="${FEATURE_BASENAME:-micro_graph_features_line0_1_panel}"
+MANIFEST_OUTPUT="${MANIFEST_OUTPUT:-outputs/data_audits/ambench_mds2_2718_line0_1_micro_panel_feature_table_manifest.json}"
 DOWNLOAD_RETRIES="${DOWNLOAD_RETRIES:-3}"
 DOWNLOAD_TIMEOUT_SECONDS="${DOWNLOAD_TIMEOUT_SECONDS:-300}"
 DOWNLOAD_BACKEND="${DOWNLOAD_BACKEND:-wget}"
@@ -72,6 +74,6 @@ inspect_one \
   --inspection "$AUDIT_ROOT/AMB2022-718-SH1-BP1-P3-L0-1_inspection.json" \
   --inspection "$AUDIT_ROOT/AMB2022-718-SH1-BP1-P4-L0-1_m_inspection.json" \
   --inspection "$AUDIT_ROOT/AMB2022-718-SH1-BP1-P4-L0-1_inspection.json" \
-  --jsonl-output "$PROCESSED_ROOT/micro_graph_features_line0_1_panel.jsonl" \
-  --csv-output "$PROCESSED_ROOT/micro_graph_features_line0_1_panel.csv" \
-  --output outputs/data_audits/ambench_mds2_2718_line0_1_micro_panel_feature_table_manifest.json
+  --jsonl-output "$PROCESSED_ROOT/${FEATURE_BASENAME}.jsonl" \
+  --csv-output "$PROCESSED_ROOT/${FEATURE_BASENAME}.csv" \
+  --output "$MANIFEST_OUTPUT"

@@ -198,6 +198,71 @@ def test_real_micro_graph_feature_provider_selects_per_sample_id(tmp_path):
 
 
 @torchmark
+def test_real_micro_graph_feature_provider_prefers_material_image_features(tmp_path):
+    import json
+
+    from gnnpinn.models.closure import RealMicroGraphFeatureConfig, RealMicroGraphFeatureProvider
+
+    feature_path = tmp_path / "features_v2.jsonl"
+    feature_path.write_text(
+        json.dumps(
+            {
+                "sample_id": "sample_a",
+                "sample_metadata": {"process": "P4"},
+                "feature_names": [
+                    "image_mean_intensity",
+                    "image_std_intensity",
+                    "image_mask_fraction",
+                    "mask_centroid_row_norm",
+                    "mask_centroid_col_norm",
+                    "mask_bbox_area_fraction",
+                    "mask_span_row_norm",
+                    "mask_span_col_norm",
+                    "mask_perimeter_fraction",
+                    "gradient_magnitude_q90_norm",
+                ],
+                "features": {
+                    "image_mean_intensity": 10.0,
+                    "image_std_intensity": 2.0,
+                    "image_mask_fraction": 0.1,
+                    "mask_centroid_row_norm": 0.6,
+                    "mask_centroid_col_norm": 0.4,
+                    "mask_bbox_area_fraction": 0.2,
+                    "mask_span_row_norm": 0.3,
+                    "mask_span_col_norm": 0.5,
+                    "mask_perimeter_fraction": 0.05,
+                    "gradient_magnitude_q90_norm": 0.8,
+                },
+                "graph_summary": {"num_nodes": 64},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    provider = RealMicroGraphFeatureProvider(
+        RealMicroGraphFeatureConfig(
+            graph_features=str(feature_path),
+            sample_id="sample_a",
+            embedding_dim=8,
+            normalize=False,
+        )
+    )
+    metadata = provider.metadata()
+
+    assert metadata["source_feature_names"] == [
+        "image_mask_fraction",
+        "mask_centroid_row_norm",
+        "mask_centroid_col_norm",
+        "mask_bbox_area_fraction",
+        "mask_span_row_norm",
+        "mask_span_col_norm",
+        "mask_perimeter_fraction",
+        "gradient_magnitude_q90_norm",
+    ]
+
+
+@torchmark
 def test_weak_coupler_runs_two_macro_passes():
     import torch
 

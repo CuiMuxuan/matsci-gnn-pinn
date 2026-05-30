@@ -123,8 +123,12 @@ python -m gnnpinn.data.loaders.ambench_microstructure \
 输出包含：
 
 - 图像 shape、dtype、灰度统计。
+- `feature_schema_version=micrograph_features_v2`。
 - 从文件名解析出的 `BP/P/L/replicate/view/masked` 等样品元数据。
 - 阈值 mask fraction。
+- intensity distribution features: quantiles, normalized IQR/P90-P10 range, 32-bin entropy。
+- threshold-mask geometry features: centroid, span, bounding-box area, fill fraction, perimeter fraction, half-plane fractions, anisotropy。
+- texture features: normalized gradient magnitude, laplacian magnitude, and mask-boundary gradient summaries。
 - coarse grid `MicrostructureGraph`。
 - node features: `center_row_norm`, `center_col_norm`, `mean_intensity_norm`, `std_intensity_norm`, `mask_fraction`。
 - `edge_index`: 2D kNN graph。
@@ -183,6 +187,23 @@ python -m gnnpinn.train.macro_pinn \
 ```
 
 这不是最终显微组织表征，只是 Phase 17 的低风险入口。后续应加入 melt-pool contour、区域统计、grain/phase segmentation 或 `mds2-2775`/ExaCA 生成的晶粒图作为更强 microstructure features。
+
+当前 Phase 19 的低成本升级是 v2 rich-feature schema。服务器 exact-line 复现入口：
+
+```bash
+bash scripts/server/build_mds2_2718_line0_1_micro_panel_feature_v2_a100.sh \
+  > logs/ambench_mds2_2718_line0_1_micro_panel_feature_v2_build_a100_v1.log 2>&1
+
+bash scripts/server/run_real_micro_exact_line0_1_feature_v2_a100.sh \
+  > logs/ambench_real_micro_exact_line0_1_feature_v2_a100_v1.log 2>&1
+```
+
+该分支不覆盖 v1 产物；默认读取/写入：
+
+```text
+data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features_line0_1_panel_v2.jsonl
+outputs/data_audits/ambench_mds2_2718_line0_1_micro_panel_feature_v2_manifest.json
+```
 
 ## 与当前热场主线的关系
 

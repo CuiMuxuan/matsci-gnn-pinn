@@ -322,6 +322,18 @@ def _select_real_micro_features(
         raise ValueError("feature_names and feature_values must have the same length")
     preferred_names = [
         "image_mask_fraction",
+        "mask_centroid_row_norm",
+        "mask_centroid_col_norm",
+        "mask_bbox_area_fraction",
+        "mask_span_row_norm",
+        "mask_span_col_norm",
+        "mask_perimeter_fraction",
+        "gradient_magnitude_q90_norm",
+        "mask_fill_fraction",
+        "mask_anisotropy",
+        "gradient_magnitude_mean_norm",
+        "image_intensity_iqr_norm",
+        "image_entropy_32bin",
         "node_mask_fraction_mean",
         "node_mask_fraction_std",
         "node_mean_intensity_norm_mean",

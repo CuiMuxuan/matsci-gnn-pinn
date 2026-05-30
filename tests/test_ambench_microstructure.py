@@ -42,6 +42,9 @@ def test_inspect_microstructure_image_builds_grid_graph(tmp_path: Path):
     ]
     assert len(report["graph"]["node_features"][0]) == 5
     assert 0.0 < report["image"]["statistics"]["mask_fraction"] < 1.0
+    assert "mask_bbox_area_fraction" in report["image"]["derived_features"]
+    assert "gradient_magnitude_mean_norm" in report["image"]["derived_features"]
+    assert "image_entropy_32bin" in report["image"]["derived_features"]
 
 
 def test_inspect_microstructure_image_returns_payload_with_mocked_reader(monkeypatch, tmp_path: Path):
@@ -103,6 +106,10 @@ def test_build_graph_feature_table_writes_jsonl_and_csv(tmp_path: Path):
                 "std": 2.0,
                 "mask_fraction": 0.25,
             },
+            "derived_features": {
+                "mask_bbox_area_fraction": 0.5,
+                "gradient_magnitude_q90_norm": 0.75,
+            },
         },
         "graph": {
             "num_nodes": 2,
@@ -125,6 +132,8 @@ def test_build_graph_feature_table_writes_jsonl_and_csv(tmp_path: Path):
 
     assert report["n_records"] == 1
     assert "image_mask_fraction" in report["feature_names"]
+    assert "mask_bbox_area_fraction" in report["feature_names"]
     assert record["features"]["node_mask_fraction_mean"] == 0.25
+    assert record["features"]["gradient_magnitude_q90_norm"] == 0.75
     assert jsonl_output.read_text(encoding="utf-8").count("\n") == 1
     assert "image_mask_fraction" in csv_output.read_text(encoding="utf-8")

@@ -682,6 +682,18 @@ bash scripts/server/run_real_micro_exact_line0_1_seed_check_a100.sh \
 
 Focused seed check 结果为 test RMSE `77.355537 +/- 10.649284`，hot q90 RMSE `59.851597 +/- 15.391250`，gradient q90 RMSE `80.681988 +/- 11.027500`。结论：exact-line alignment 比 same-process `L0-2` 更合理，但当前 sample-level hand-crafted real-micro feature 仍不够稳定，不能作为模型创新主结果。结果文档：`docs/results/ambench_real_micro_exact_line0_1_closure_v1.md`。
 
+Phase 19 的下一步不是扩大 closure 超参，而是升级显微图像特征。v2 inspection 增加 intensity distribution、threshold-mask geometry、texture/gradient descriptors，并让 `RealMicroGraphFeatureProvider` 的 `g4/g8` 优先使用这些材料图像特征。服务器命令：
+
+```bash
+bash scripts/server/build_mds2_2718_line0_1_micro_panel_feature_v2_a100.sh \
+  > logs/ambench_mds2_2718_line0_1_micro_panel_feature_v2_build_a100_v1.log 2>&1
+
+bash scripts/server/run_real_micro_exact_line0_1_feature_v2_a100.sh \
+  > logs/ambench_real_micro_exact_line0_1_feature_v2_a100_v1.log 2>&1
+```
+
+验收：v2 manifest `n_records=4`，closure metadata 的 `source_feature_names` 前 8 项应包含 `mask_centroid_*`、`mask_bbox_area_fraction`、`mask_span_*`、`mask_perimeter_fraction`、`gradient_magnitude_q90_norm` 等，而不是只使用 v1 的 coarse grid 均值/方差。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

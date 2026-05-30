@@ -59,6 +59,11 @@ def inspect_microstructure_image(
     threshold = float(np.quantile(finite, threshold_quantile))
     mask = gray >= threshold
     graph = _build_grid_micro_graph(gray, mask, grid_rows=grid_rows, grid_cols=grid_cols, k=graph_k)
+    derived_features = {
+        **_intensity_distribution_features(finite),
+        **_mask_geometry_features(mask),
+        **_texture_features(gray, mask),
+    }
     stats = {
         "min": float(np.min(finite)),
         "max": float(np.max(finite)),
@@ -70,6 +75,7 @@ def inspect_microstructure_image(
     }
     return {
         "dataset_id": "mds2-2718",
+        "feature_schema_version": "micrograph_features_v2",
         "sample_id": sample_id or path.stem,
         "source": str(path),
         "sample_metadata": parse_ambench_microstructure_filename(path.name),
@@ -79,6 +85,7 @@ def inspect_microstructure_image(
             "dtype": str(image.dtype),
             "channels": _channel_count(image),
             "statistics": stats,
+            "derived_features": derived_features,
         },
         "graph": {
             "schema": "MicrostructureGraph",
@@ -120,6 +127,8 @@ def graph_record_from_inspection(inspection: dict[str, Any]) -> dict[str, Any]:
         "graph_num_nodes": float(graph["num_nodes"]),
         "graph_num_edges": float(graph["num_edges"]),
     }
+    for name, value in image.get("derived_features", {}).items():
+        features[name] = float(value)
     for index, name in enumerate(node_names):
         values = node_array[:, index]
         features[f"node_{name}_mean"] = float(np.mean(values))
@@ -132,6 +141,7 @@ def graph_record_from_inspection(inspection: dict[str, Any]) -> dict[str, Any]:
         "sample_id": inspection.get("sample_id"),
         "source": inspection.get("source"),
         "sample_metadata": inspection.get("sample_metadata", {}),
+        "feature_schema_version": inspection.get("feature_schema_version", "micrograph_features_v1"),
         "feature_names": list(features.keys()),
         "features": features,
         "graph_summary": {
@@ -250,6 +260,144 @@ def _channel_count(image: Any) -> int:
     if image.ndim == 2:
         return 1
     return int(image.shape[-1])
+
+
+def _intensity_distribution_features(finite: Any) -> dict[str, float]:
+    np = _numpy()
+    intensity_min = float(np.min(finite))
+    intensity_max = float(np.max(finite))
+    intensity_range = intensity_max - intensity_min
+    if intensity_range <= 0.0:
+        intensity_range = 1.0
+    q10, q25, q50, q75, q90 = [float(value) for value in np.quantile(finite, [0.1, 0.25, 0.5, 0.75, 0.9])]
+    histogram_max = intensity_max if intensity_max > intensity_min else intensity_min + 1.0
+    histogram, _ = np.histogram(finite, bins=32, range=(intensity_min, histogram_max))
+    probabilities = histogram.astype(float)
+    probability_sum = float(np.sum(probabilities))
+    if probability_sum > 0.0:
+        probabilities = probabilities / probability_sum
+        nonzero = probabilities[probabilities > 0.0]
+        entropy = float(-np.sum(nonzero * np.log(nonzero)) / np.log(32.0))
+    else:
+        entropy = 0.0
+    return {
+        "image_intensity_q10": q10,
+        "image_intensity_q25": q25,
+        "image_intensity_q50": q50,
+        "image_intensity_q75": q75,
+        "image_intensity_q90": q90,
+        "image_intensity_iqr_norm": float((q75 - q25) / intensity_range),
+        "image_intensity_p90_p10_norm": float((q90 - q10) / intensity_range),
+        "image_entropy_32bin": entropy,
+    }
+
+
+def _mask_geometry_features(mask: Any) -> dict[str, float]:
+    np = _numpy()
+    height, width = mask.shape
+    mask_count = int(np.sum(mask))
+    if mask_count == 0:
+        return {
+            "mask_centroid_row_norm": 0.0,
+            "mask_centroid_col_norm": 0.0,
+            "mask_row_std_norm": 0.0,
+            "mask_col_std_norm": 0.0,
+            "mask_span_row_norm": 0.0,
+            "mask_span_col_norm": 0.0,
+            "mask_bbox_area_fraction": 0.0,
+            "mask_fill_fraction": 0.0,
+            "mask_perimeter_fraction": 0.0,
+            "mask_border_touch_fraction": 0.0,
+            "mask_top_half_fraction": 0.0,
+            "mask_bottom_half_fraction": 0.0,
+            "mask_left_half_fraction": 0.0,
+            "mask_right_half_fraction": 0.0,
+            "mask_anisotropy": 0.0,
+        }
+
+    rows, cols = np.nonzero(mask)
+    row_min, row_max = int(np.min(rows)), int(np.max(rows))
+    col_min, col_max = int(np.min(cols)), int(np.max(cols))
+    span_rows = row_max - row_min + 1
+    span_cols = col_max - col_min + 1
+    bbox_area = span_rows * span_cols
+    boundary = _mask_boundary(mask)
+    border = np.zeros_like(mask, dtype=bool)
+    border[0, :] = mask[0, :]
+    border[-1, :] = mask[-1, :]
+    border[:, 0] = np.logical_or(border[:, 0], mask[:, 0])
+    border[:, -1] = np.logical_or(border[:, -1], mask[:, -1])
+    row_centered = rows.astype(float) - float(np.mean(rows))
+    col_centered = cols.astype(float) - float(np.mean(cols))
+    if mask_count > 1:
+        covariance = np.cov(np.stack([row_centered, col_centered], axis=0))
+        eigenvalues = np.linalg.eigvalsh(covariance)
+        anisotropy = float((eigenvalues[-1] - eigenvalues[0]) / max(eigenvalues[-1] + eigenvalues[0], 1e-12))
+    else:
+        anisotropy = 0.0
+    return {
+        "mask_centroid_row_norm": float(np.mean(rows) / max(height - 1, 1)),
+        "mask_centroid_col_norm": float(np.mean(cols) / max(width - 1, 1)),
+        "mask_row_std_norm": float(np.std(rows) / max(height - 1, 1)),
+        "mask_col_std_norm": float(np.std(cols) / max(width - 1, 1)),
+        "mask_span_row_norm": float(span_rows / height),
+        "mask_span_col_norm": float(span_cols / width),
+        "mask_bbox_area_fraction": float(bbox_area / mask.size),
+        "mask_fill_fraction": float(mask_count / max(bbox_area, 1)),
+        "mask_perimeter_fraction": float(np.sum(boundary) / mask.size),
+        "mask_border_touch_fraction": float(np.sum(border) / mask_count),
+        "mask_top_half_fraction": float(np.sum(mask[: height // 2, :]) / mask_count),
+        "mask_bottom_half_fraction": float(np.sum(mask[height // 2 :, :]) / mask_count),
+        "mask_left_half_fraction": float(np.sum(mask[:, : width // 2]) / mask_count),
+        "mask_right_half_fraction": float(np.sum(mask[:, width // 2 :]) / mask_count),
+        "mask_anisotropy": anisotropy,
+    }
+
+
+def _texture_features(gray: Any, mask: Any) -> dict[str, float]:
+    np = _numpy()
+    finite = gray[np.isfinite(gray)]
+    intensity_min = float(np.min(finite))
+    intensity_max = float(np.max(finite))
+    intensity_scale = intensity_max - intensity_min
+    if intensity_scale <= 0.0:
+        intensity_scale = 1.0
+    normalized = np.nan_to_num((gray.astype(float) - intensity_min) / intensity_scale)
+    grad_row, grad_col = np.gradient(normalized)
+    gradient_magnitude = np.sqrt(grad_row**2 + grad_col**2)
+    laplacian = np.gradient(grad_row, axis=0) + np.gradient(grad_col, axis=1)
+    boundary = _mask_boundary(mask)
+    boundary_gradients = gradient_magnitude[boundary]
+    if boundary_gradients.size == 0:
+        boundary_gradient_mean = 0.0
+        boundary_gradient_q90 = 0.0
+    else:
+        boundary_gradient_mean = float(np.mean(boundary_gradients))
+        boundary_gradient_q90 = float(np.quantile(boundary_gradients, 0.9))
+    return {
+        "gradient_magnitude_mean_norm": float(np.mean(gradient_magnitude)),
+        "gradient_magnitude_std_norm": float(np.std(gradient_magnitude)),
+        "gradient_magnitude_q90_norm": float(np.quantile(gradient_magnitude, 0.9)),
+        "gradient_magnitude_max_norm": float(np.max(gradient_magnitude)),
+        "laplacian_abs_mean_norm": float(np.mean(np.abs(laplacian))),
+        "laplacian_abs_q90_norm": float(np.quantile(np.abs(laplacian), 0.9)),
+        "mask_boundary_gradient_mean_norm": boundary_gradient_mean,
+        "mask_boundary_gradient_q90_norm": boundary_gradient_q90,
+    }
+
+
+def _mask_boundary(mask: Any) -> Any:
+    np = _numpy()
+    padded = np.pad(mask.astype(bool), 1, constant_values=False)
+    center = padded[1:-1, 1:-1]
+    eroded = (
+        center
+        & padded[:-2, 1:-1]
+        & padded[2:, 1:-1]
+        & padded[1:-1, :-2]
+        & padded[1:-1, 2:]
+    )
+    return center & ~eroded
 
 
 def _build_grid_micro_graph(gray: Any, mask: Any, *, grid_rows: int, grid_cols: int, k: int) -> MicrostructureGraph:

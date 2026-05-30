@@ -11,6 +11,7 @@ ACTIVE_ID="${ACTIVE_ID:-ambench_line_0_1_temperature_hot_gradient_a100_sxm4_40gb
 ACTIVE_TABLE="${ACTIVE_TABLE:-data/interim/ambench/2022_single_track/AMB2022-03/${ACTIVE_ID}.csv}"
 ACTIVE_SPLIT="${ACTIVE_SPLIT:-outputs/data_splits/${ACTIVE_ID}_split.json}"
 MICRO_FEATURES="${MICRO_FEATURES:-data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features_line0_1_panel.jsonl}"
+TAG_PREFIX="${TAG_PREFIX:-exactline}"
 
 # Exact Line_0_1 microscopy samples: same process condition and same line
 # replicate as the active thermal table (285 W, 960 mm/s, 67 um).
@@ -24,7 +25,7 @@ do
   MICRO_AGGREGATE=0 \
   MICRO_FEATURES="$MICRO_FEATURES" \
   MICRO_SAMPLE_ID="$sample_id" \
-  RUN_TAG_SUFFIX="exactline_${safe_sample_id}" \
+  RUN_TAG_SUFFIX="${TAG_PREFIX}_${safe_sample_id}" \
   ACTIVE_ID="$ACTIVE_ID" \
   ACTIVE_TABLE="$ACTIVE_TABLE" \
   ACTIVE_SPLIT="$ACTIVE_SPLIT" \
