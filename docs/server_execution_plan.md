@@ -656,6 +656,13 @@ bash scripts/server/run_real_micro_same_process_line0_a100.sh \
   > logs/ambench_real_micro_same_process_line0_a100_v1.log 2>&1
 ```
 
+如果 single-seed 结果出现正向信号，优先做小 seed check，而不是立刻扩大模型：
+
+```bash
+bash scripts/server/run_real_micro_same_process_seed_check_a100.sh \
+  > logs/ambench_real_micro_same_process_seed_check_a100_v1.log 2>&1
+```
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

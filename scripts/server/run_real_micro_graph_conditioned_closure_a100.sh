@@ -12,6 +12,9 @@ CONDA_ENV="${CONDA_ENV:-gnnpinn}"
 STEPS="${STEPS:-2000}"
 DEVICE="${DEVICE:-cuda}"
 RUN_TAG_SUFFIX="${RUN_TAG_SUFFIX:-}"
+SEED="${SEED:-0}"
+RUN_G4="${RUN_G4:-1}"
+RUN_G8="${RUN_G8:-1}"
 
 ACTIVE_ID="${ACTIVE_ID:-ambench_line_0_1_temperature_hot_gradient_a100_sxm4_40gb_v1}"
 ACTIVE_TABLE="${ACTIVE_TABLE:-data/interim/ambench/2022_single_track/AMB2022-03/${ACTIVE_ID}.csv}"
@@ -40,7 +43,7 @@ run_one() {
   if [[ -n "$RUN_TAG_SUFFIX" ]]; then
     tag="${tag}_${RUN_TAG_SUFFIX}"
   fi
-  local run_id="${ACTIVE_ID}_macro_pinn_real_micro_sparse_closure_h256_l4_lr1e_3_clr1e_5_staged1500_random4096_${tag}_v1"
+  local run_id="${ACTIVE_ID}_macro_pinn_real_micro_sparse_closure_h256_l4_lr1e_3_clr1e_5_staged1500_random4096_${tag}_s${SEED}_v1"
   local graph_selection_args=(--closure-graph-features "$MICRO_FEATURES")
   if [[ -n "$MICRO_SAMPLE_ID_COLUMN" ]]; then
     graph_selection_args+=(--closure-graph-sample-id-column "$MICRO_SAMPLE_ID_COLUMN")
@@ -58,7 +61,7 @@ run_one() {
     --layers 4 \
     --lr 1e-3 \
     --closure-lr 1e-5 \
-    --seed 0 \
+    --seed "$SEED" \
     --device "$DEVICE" \
     --input-normalization minmax \
     --pde-weight 1e-6 \
@@ -87,5 +90,10 @@ run_one() {
     --log-every 100
 }
 
-run_one 4 0.25 1e-4 g4_gate0_25_gl1e_4
-run_one 8 0.25 1e-4 g8_gate0_25_gl1e_4
+if [[ "$RUN_G4" == "1" ]]; then
+  run_one 4 0.25 1e-4 g4_gate0_25_gl1e_4
+fi
+
+if [[ "$RUN_G8" == "1" ]]; then
+  run_one 8 0.25 1e-4 g8_gate0_25_gl1e_4
+fi
