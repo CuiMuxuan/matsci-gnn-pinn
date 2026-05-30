@@ -663,6 +663,16 @@ bash scripts/server/run_real_micro_same_process_seed_check_a100.sh \
   > logs/ambench_real_micro_same_process_seed_check_a100_v1.log 2>&1
 ```
 
+同工艺 seed check 显示 seed 0 有正向信号，但 seed 1/2 不稳定。进一步检查 XLSX 后，`Line_0_1` 的精确显微对应应为 `P3/P4-L0-1`，而不是前一轮使用的 `P3/P4-L0-2`。下一步构建 exact-line panel：
+
+```bash
+bash scripts/server/build_mds2_2718_line0_1_micro_panel_a100.sh \
+  > logs/ambench_mds2_2718_line0_1_micro_panel_build_a100_v1.log 2>&1
+
+bash scripts/server/run_real_micro_exact_line0_1_a100.sh \
+  > logs/ambench_real_micro_exact_line0_1_a100_v1.log 2>&1
+```
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
