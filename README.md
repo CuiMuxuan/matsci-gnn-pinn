@@ -271,6 +271,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_graph_conditioned_closure_gated_v1.md](docs/results/ambench_graph_conditioned_closure_gated_v1.md): gated graph-conditioned closure 诊断结果。
 - [docs/results/ambench_graph_closure_l1_sensitivity_v1.md](docs/results/ambench_graph_closure_l1_sensitivity_v1.md): graph-conditioned closure L1 sensitivity 与分支决策。
 - [docs/results/ambench_microstructure_mds2_2718_entry_v1.md](docs/results/ambench_microstructure_mds2_2718_entry_v1.md): AM-Bench optical microscopy 下载、校验和 coarse micro graph 首次真实入口。
+- [docs/results/ambench_real_micro_graph_conditioning_smoke_v1.md](docs/results/ambench_real_micro_graph_conditioning_smoke_v1.md): real micro graph feature 接入 sparse closure 的服务器 smoke。
 
 ## Public Resources
 
