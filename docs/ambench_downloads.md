@@ -312,7 +312,7 @@ PYTHONUTF8=1 PYTHONIOENCODING=utf-8 conda run -n gnnpinn python -m gnnpinn.data.
   --retries 3 \
   --timeout-seconds 300 \
   --resume-partial \
-  --download-backend curl \
+  --download-backend wget \
   --output outputs/data_audits/ambench_mds2_2718_micro_panel_download_report.json
 ```
 
@@ -329,11 +329,11 @@ PYTHONUTF8=1 PYTHONIOENCODING=utf-8 conda run -n gnnpinn python -m gnnpinn.data.
   --retries 3 \
   --timeout-seconds 300 \
   --resume-partial \
-  --download-backend curl \
+  --download-backend wget \
   --output outputs/data_audits/ambench_mds2_2718_p4_l0_r2_masked_redownload_report.json
 ```
 
-`--retries`、`--timeout-seconds`、`--resume-partial` 和 `--download-backend curl` 用于处理 NIST PDR 偶发的 read timeout 或极慢连接。若下载仍失败，报告中的 action 会记录 `status: download_error`、`attempts`、`partial_path` 和错误文本，便于后续只重试对应 `--file-id`。`--resume-partial` 会在已有 `.part` 文件时尝试续传；Linux 服务器优先使用 `curl` 后端。
+`--retries`、`--timeout-seconds`、`--resume-partial` 和 `--download-backend wget` 用于处理 NIST PDR 偶发的 read timeout 或极慢连接。若下载仍失败，报告中的 action 会记录 `status: download_error`、`attempts`、`partial_path` 和错误文本，便于后续只重试对应 `--file-id`。`--resume-partial` 会在已有 `.part` 文件时尝试续传；Linux 服务器优先使用 `wget` 后端，若服务器装有 `curl` 也可改成 `--download-backend curl`。
 
 下载后生成第一版显微图像 inspection / coarse micro graph：
 

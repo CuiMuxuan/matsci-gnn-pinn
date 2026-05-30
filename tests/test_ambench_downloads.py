@@ -480,14 +480,17 @@ def test_download_source_manifest_can_resume_partial_file(monkeypatch, tmp_path:
     assert report["validation_failed"] is False
 
 
-def test_download_source_manifest_can_use_curl_backend(monkeypatch, tmp_path: Path):
+def test_download_source_manifest_can_use_external_download_backend(monkeypatch, tmp_path: Path):
     import gnnpinn.data.ambench_downloads as module
 
     def fake_which(name):
-        return "curl"
+        return name
 
     def fake_run(command, capture_output, text):
-        part_path = Path(command[command.index("-o") + 1])
+        if "-o" in command:
+            part_path = Path(command[command.index("-o") + 1])
+        else:
+            part_path = Path(command[command.index("-O") + 1])
         part_path.write_bytes(b"data")
 
         class Completed:
@@ -516,10 +519,10 @@ def test_download_source_manifest_can_use_curl_backend(monkeypatch, tmp_path: Pa
         tmp_path / "downloaded",
         sources,
         verify_hashes=True,
-        download_backend="curl",
+        download_backend="wget",
     )
 
-    assert report["actions"][0]["backend"] == "curl"
+    assert report["actions"][0]["backend"] == "wget"
     assert report["validation_failed"] is False
 
 

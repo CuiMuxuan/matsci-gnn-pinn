@@ -111,14 +111,15 @@ def _download_url(
 
     destination.parent.mkdir(parents=True, exist_ok=True)
     part_path = destination.with_name(f"{destination.name}.part")
-    if backend == "curl":
-        return _download_url_with_curl(
+    if backend in {"curl", "wget"}:
+        return _download_url_with_external_tool(
             url,
             destination,
             part_path=part_path,
             overwrite=overwrite,
             timeout_seconds=timeout_seconds,
             resume_partial=resume_partial,
+            backend=backend,
         )
 
     resume_from = part_path.stat().st_size if resume_partial and part_path.exists() else 0
@@ -192,7 +193,7 @@ def _download_url(
     }
 
 
-def _download_url_with_curl(
+def _download_url_with_external_tool(
     url: str,
     destination: Path,
     *,
@@ -200,33 +201,47 @@ def _download_url_with_curl(
     overwrite: bool,
     timeout_seconds: int,
     resume_partial: bool,
+    backend: str,
 ) -> dict[str, Any]:
-    curl = shutil.which("curl")
-    if curl is None:
+    executable = shutil.which(backend)
+    if executable is None:
         return {
             "path": str(destination),
             "partial_path": str(part_path),
             "url": url,
             "status": "download_error",
             "bytes_written": 0,
-            "error": "curl executable not found",
+            "error": f"{backend} executable not found",
+            "backend": backend,
         }
 
     before_size = part_path.stat().st_size if part_path.exists() else 0
-    command = [
-        curl,
-        "-L",
-        "--fail",
-        "--connect-timeout",
-        str(timeout_seconds),
-        "--max-time",
-        str(max(timeout_seconds * 3, timeout_seconds)),
-        "-o",
-        str(part_path),
-    ]
-    if resume_partial and before_size > 0:
-        command.extend(["-C", "-"])
-    command.append(url)
+    if backend == "curl":
+        command = [
+            executable,
+            "-L",
+            "--fail",
+            "--connect-timeout",
+            str(timeout_seconds),
+            "--max-time",
+            str(max(timeout_seconds * 3, timeout_seconds)),
+            "-o",
+            str(part_path),
+        ]
+        if resume_partial and before_size > 0:
+            command.extend(["-C", "-"])
+        command.append(url)
+    else:
+        command = [
+            executable,
+            "--tries=1",
+            f"--timeout={timeout_seconds}",
+            "-O",
+            str(part_path),
+        ]
+        if resume_partial and before_size > 0:
+            command.append("-c")
+        command.append(url)
     completed = subprocess.run(command, capture_output=True, text=True)
     after_size = part_path.stat().st_size if part_path.exists() else 0
     if completed.returncode != 0:
@@ -239,7 +254,7 @@ def _download_url_with_curl(
             "resume_from": before_size if resume_partial else 0,
             "actual_size_bytes": after_size,
             "error": completed.stderr.strip() or completed.stdout.strip(),
-            "backend": "curl",
+            "backend": backend,
         }
     part_path.replace(destination)
     return {
@@ -249,7 +264,7 @@ def _download_url_with_curl(
         "bytes_written": max(after_size - before_size, 0),
         "resume_from": before_size if resume_partial else 0,
         "actual_size_bytes": destination.stat().st_size,
-        "backend": "curl",
+        "backend": backend,
     }
 
 
@@ -633,9 +648,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--download-backend",
-        choices=["urllib", "curl"],
+        choices=["urllib", "curl", "wget"],
         default="urllib",
-        help="Download implementation. Use curl on Linux servers when NIST PDR urllib reads are very slow.",
+        help="Download implementation. Use curl or wget on Linux servers when NIST PDR urllib reads are very slow.",
     )
     parser.add_argument(
         "--file-id",
