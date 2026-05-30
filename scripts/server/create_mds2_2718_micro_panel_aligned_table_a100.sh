@@ -18,14 +18,13 @@ FRAME_COLUMN="${FRAME_COLUMN:-frame_index}"
 MAPPING_MODE="${MAPPING_MODE:-frame_cycle}"
 CONSTANT_SAMPLE_ID="${CONSTANT_SAMPLE_ID:-}"
 
-SOURCE_TABLE="$SOURCE_TABLE" \
-MICRO_FEATURES="$MICRO_FEATURES" \
-OUTPUT_TABLE="$OUTPUT_TABLE" \
-OUTPUT_MANIFEST="$OUTPUT_MANIFEST" \
-FRAME_COLUMN="$FRAME_COLUMN" \
-MAPPING_MODE="$MAPPING_MODE" \
-CONSTANT_SAMPLE_ID="$CONSTANT_SAMPLE_ID" \
-"$CONDA_BIN" run -n "$CONDA_ENV" python - <<'PY'
+ALIGN_SCRIPT="$(mktemp)"
+cleanup() {
+  rm -f "$ALIGN_SCRIPT"
+}
+trap cleanup EXIT
+
+cat > "$ALIGN_SCRIPT" <<'PY'
 import csv
 import json
 import os
@@ -129,3 +128,12 @@ print(f"Wrote: {output_table}")
 print(f"Wrote: {output_manifest}")
 print(json.dumps({k: manifest[k] for k in ["n_rows", "n_micro_records", "n_unique_frames", "sample_counts"]}, indent=2))
 PY
+
+SOURCE_TABLE="$SOURCE_TABLE" \
+MICRO_FEATURES="$MICRO_FEATURES" \
+OUTPUT_TABLE="$OUTPUT_TABLE" \
+OUTPUT_MANIFEST="$OUTPUT_MANIFEST" \
+FRAME_COLUMN="$FRAME_COLUMN" \
+MAPPING_MODE="$MAPPING_MODE" \
+CONSTANT_SAMPLE_ID="$CONSTANT_SAMPLE_ID" \
+"$CONDA_BIN" run -n "$CONDA_ENV" python "$ALIGN_SCRIPT"
