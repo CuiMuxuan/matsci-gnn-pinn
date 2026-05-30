@@ -194,6 +194,7 @@ bash scripts/server/run_multiline_process_conditioned_thermal_a100.sh \
 ```
 
 This Phase 23 route builds a calibrated multi-line `mds2-2716` field table from representative `ThermalData/*/Signal` tracks, splits by `line_id`, and compares coordinate-only baselines/Macro PINN against process-conditioned variants using `laser_power_W`, `scan_speed_mm_s`, and `spot_size_um`.
+The first A100 run shows the expected direction: process-conditioned Macro PINN improves held-out-line test RMSE from `175.127058` to `157.793227`, with hot q90 RMSE improving from `351.525048` to `316.794319`. It is a positive direction-selection result, but it has not yet beaten the train-mean baseline on global test RMSE.
 
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
@@ -300,6 +301,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - hot/gradient residual sampling 比 random 更差；下一步转向 staged/warm-start closure fine-tuning。
 - staged closure 起步有效但仍未超过 data-only；closure optimizer ablation 表明 `closure_lr=1e-5` 明显改善 hot/gradient 指标，但仍未超过 active data-only，下一步进入 GNN-conditioned closure 接口。
 - 已完成 graph-L1 sensitivity；synthetic coordinate/RBF graph terms 一旦保留就会损害 hot/gradient 指标，下一步转向真实/半真实 microstructure conditioning。
+- multi-line/process-conditioned thermal run 已完成；工艺特征让 Macro PINN 的 held-out-line test RMSE 从 `175.127058` 改善到 `157.793227`，hot q90 RMSE 从 `351.525048` 改善到 `316.794319`。该分支比继续扩展小规模 exact-line TIFF 手工特征更适合作为下一条主线，但仍需容量、split 和 seed 检查。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -340,6 +342,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_real_micro_exact_line0_1_region_closure_v1.md](docs/results/ambench_real_micro_exact_line0_1_region_closure_v1.md): exact `Line_0_1` deterministic region-level real-micro 诊断与 focused seed check 结果。
 - [docs/results/ambench_real_micro_exact_line0_1_region_registration_v1.md](docs/results/ambench_real_micro_exact_line0_1_region_registration_v1.md): exact `Line_0_1` region coordinate-registration 消融与 `col_flip` focused seed check 结果。
 - [docs/results/ambench_real_micro_exact_line0_1_region_embedding_v1.md](docs/results/ambench_real_micro_exact_line0_1_region_embedding_v1.md): exact `Line_0_1` fixed patch embedding 结果与 focused seed check 结果。
+- [docs/results/ambench_multiline_process_conditioned_thermal_v1.md](docs/results/ambench_multiline_process_conditioned_thermal_v1.md): multi-line/process-conditioned thermal modeling 的首轮 A100 对比结果。
 
 Real micro graph closure 对比脚本：
 

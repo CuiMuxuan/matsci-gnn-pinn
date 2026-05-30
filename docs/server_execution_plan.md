@@ -761,6 +761,10 @@ bash scripts/server/run_multiline_process_conditioned_thermal_a100.sh \
 
 验收：manifest 记录七条 `dataset_paths` 和每条线的 process parameters；split manifest 为 `line_id_order`；metrics/checkpoint 中 process-conditioned Macro PINN 的 `input_features.columns` 应为 `laser_power_W`、`scan_speed_mm_s`、`spot_size_um`。若该分支在 line-held-out split 上优于 no-process-feature 版本，应优先写结果文档并作为比 exact-line micro TIFF 更强的论文主线候选。
 
+Phase 23 首轮完整 A100 run 已完成，结果文档为 `docs/results/ambench_multiline_process_conditioned_thermal_v1.md`。七条 single-track 数据生成 `14,842` 个 calibrated temperature 点，line-held-out split 为 train `8,087`、val `1,884`、test `4,871`。process-conditioned Macro PINN 相比 coordinate-only Macro PINN 有清晰泛化收益：test RMSE `175.127058 -> 157.793227`，val RMSE `340.584340 -> 177.859802`，test hot q90 RMSE `351.525048 -> 316.794319`，test gradient q90 RMSE `323.786011 -> 293.650864`。
+
+同时，该分支还没有超过 train-mean baseline 的 global test RMSE `128.668856`。因此 Phase 23 结论应表述为正向方向选择，而不是最终模型主结果。下一步优先做 process-conditioned Macro PINN 的容量、seed 和按工艺轴 holdout split 检查；在该基线稳定前，不要急着把 sparse closure 或 real-micro graph conditioning 接回多线表。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
