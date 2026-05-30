@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import re
 from pathlib import Path
@@ -96,6 +97,105 @@ def inspect_microstructure_image(
             "global_features": graph.global_features,
             "target_statistics": graph.target_statistics,
         },
+    }
+
+
+def graph_record_from_inspection(inspection: dict[str, Any]) -> dict[str, Any]:
+    """Flatten one inspection payload into sample-level graph features."""
+
+    graph = inspection["graph"]
+    image = inspection["image"]
+    stats = image["statistics"]
+    node_features = graph.get("node_features", [])
+    np = _numpy()
+    node_array = np.asarray(node_features, dtype=float)
+    if node_array.ndim != 2 or node_array.shape[0] == 0:
+        raise ValueError("Inspection graph must contain a non-empty 2D node_features array")
+    node_names = graph.get("node_feature_names") or [f"node_feature_{index}" for index in range(node_array.shape[1])]
+
+    features: dict[str, float] = {
+        "image_mean_intensity": float(stats["mean"]),
+        "image_std_intensity": float(stats["std"]),
+        "image_mask_fraction": float(stats["mask_fraction"]),
+        "graph_num_nodes": float(graph["num_nodes"]),
+        "graph_num_edges": float(graph["num_edges"]),
+    }
+    for index, name in enumerate(node_names):
+        values = node_array[:, index]
+        features[f"node_{name}_mean"] = float(np.mean(values))
+        features[f"node_{name}_std"] = float(np.std(values))
+        features[f"node_{name}_min"] = float(np.min(values))
+        features[f"node_{name}_max"] = float(np.max(values))
+
+    return {
+        "dataset_id": inspection.get("dataset_id"),
+        "sample_id": inspection.get("sample_id"),
+        "source": inspection.get("source"),
+        "sample_metadata": inspection.get("sample_metadata", {}),
+        "feature_names": list(features.keys()),
+        "features": features,
+        "graph_summary": {
+            "num_nodes": graph.get("num_nodes"),
+            "num_edges": graph.get("num_edges"),
+            "node_feature_names": node_names,
+            "image_shape": image.get("shape"),
+            "gray_shape": image.get("gray_shape"),
+        },
+    }
+
+
+def build_graph_feature_table(
+    inspections: list[str | Path],
+    *,
+    jsonl_output: str | Path | None = None,
+    csv_output: str | Path | None = None,
+) -> dict[str, Any]:
+    """Aggregate one or more inspection JSON files into graph-feature records."""
+
+    records = []
+    for inspection_path in inspections:
+        path = Path(inspection_path)
+        inspection = json.loads(path.read_text(encoding="utf-8"))
+        record = graph_record_from_inspection(inspection)
+        record["inspection"] = str(path)
+        records.append(record)
+    if not records:
+        raise ValueError("At least one inspection JSON is required")
+
+    feature_names = records[0]["feature_names"]
+    for record in records[1:]:
+        if record["feature_names"] != feature_names:
+            raise ValueError("All inspection records must produce the same feature names")
+
+    if jsonl_output:
+        jsonl_path = Path(jsonl_output)
+        jsonl_path.parent.mkdir(parents=True, exist_ok=True)
+        jsonl_path.write_text(
+            "\n".join(json.dumps(record, ensure_ascii=False) for record in records) + "\n",
+            encoding="utf-8",
+        )
+    if csv_output:
+        csv_path = Path(csv_output)
+        csv_path.parent.mkdir(parents=True, exist_ok=True)
+        with csv_path.open("w", newline="", encoding="utf-8") as handle:
+            fieldnames = ["sample_id", "source", *feature_names]
+            writer = csv.DictWriter(handle, fieldnames=fieldnames)
+            writer.writeheader()
+            for record in records:
+                writer.writerow(
+                    {
+                        "sample_id": record["sample_id"],
+                        "source": record["source"],
+                        **record["features"],
+                    }
+                )
+    return {
+        "dataset_id": records[0].get("dataset_id"),
+        "n_records": len(records),
+        "feature_names": feature_names,
+        "jsonl_output": str(jsonl_output) if jsonl_output else None,
+        "csv_output": str(csv_output) if csv_output else None,
+        "records": records,
     }
 
 
@@ -202,26 +302,51 @@ def _build_grid_micro_graph(gray: Any, mask: Any, *, grid_rows: int, grid_cols: 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--image", required=True, type=Path, help="Input AM-Bench optical microscopy TIFF.")
+    parser.add_argument(
+        "--mode",
+        choices=["inspect", "aggregate"],
+        default="inspect",
+        help="inspect reads one TIFF; aggregate flattens inspection JSON files into graph-feature records.",
+    )
+    parser.add_argument("--image", type=Path, help="Input AM-Bench optical microscopy TIFF.")
     parser.add_argument("--sample-id", help="Sample id recorded in the output manifest.")
     parser.add_argument("--threshold-quantile", type=float, default=0.9)
     parser.add_argument("--grid-rows", type=int, default=4)
     parser.add_argument("--grid-cols", type=int, default=4)
     parser.add_argument("--graph-k", type=int, default=2)
+    parser.add_argument(
+        "--inspection",
+        action="append",
+        dest="inspections",
+        default=[],
+        type=Path,
+        help="Inspection JSON to aggregate. Can be repeated.",
+    )
+    parser.add_argument("--jsonl-output", type=Path, help="JSONL output path for aggregate mode.")
+    parser.add_argument("--csv-output", type=Path, help="CSV output path for aggregate mode.")
     parser.add_argument("--output", type=Path, help="Optional JSON output path.")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    report = inspect_microstructure_image(
-        args.image,
-        sample_id=args.sample_id,
-        threshold_quantile=args.threshold_quantile,
-        grid_rows=args.grid_rows,
-        grid_cols=args.grid_cols,
-        graph_k=args.graph_k,
-    )
+    if args.mode == "inspect":
+        if args.image is None:
+            raise ValueError("--image is required in inspect mode")
+        report = inspect_microstructure_image(
+            args.image,
+            sample_id=args.sample_id,
+            threshold_quantile=args.threshold_quantile,
+            grid_rows=args.grid_rows,
+            grid_cols=args.grid_cols,
+            graph_k=args.graph_k,
+        )
+    else:
+        report = build_graph_feature_table(
+            args.inspections,
+            jsonl_output=args.jsonl_output,
+            csv_output=args.csv_output,
+        )
     text = json.dumps(report, indent=2, ensure_ascii=False)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

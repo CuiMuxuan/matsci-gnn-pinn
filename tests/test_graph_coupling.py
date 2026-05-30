@@ -92,6 +92,62 @@ def test_coordinate_rbf_graph_feature_provider_is_per_point():
 
 
 @torchmark
+def test_real_micro_graph_feature_provider_reads_jsonl(tmp_path):
+    import json
+    import torch
+
+    from gnnpinn.models.closure import RealMicroGraphFeatureConfig, RealMicroGraphFeatureProvider
+
+    feature_path = tmp_path / "features.jsonl"
+    feature_path.write_text(
+        json.dumps(
+            {
+                "sample_id": "sample_a",
+                "sample_metadata": {"process": "P2"},
+                "feature_names": [
+                    "image_mask_fraction",
+                    "node_mask_fraction_mean",
+                    "node_mask_fraction_std",
+                    "node_mean_intensity_norm_mean",
+                ],
+                "features": {
+                    "image_mask_fraction": 0.1,
+                    "node_mask_fraction_mean": 0.2,
+                    "node_mask_fraction_std": 0.05,
+                    "node_mean_intensity_norm_mean": 0.7,
+                },
+                "graph_summary": {"num_nodes": 64},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    provider = RealMicroGraphFeatureProvider(
+        RealMicroGraphFeatureConfig(
+            graph_features=str(feature_path),
+            sample_id="sample_a",
+            embedding_dim=3,
+            normalize=False,
+        )
+    )
+    coords = torch.zeros((2, 2), dtype=torch.float32)
+    time = torch.zeros((2, 1), dtype=torch.float32)
+    features = provider(coords, time)
+    metadata = provider.metadata()
+
+    assert tuple(features.shape) == (2, 3)
+    assert torch.allclose(features[0], features[1])
+    assert metadata["sample_id"] == "sample_a"
+    assert metadata["feature_names"] == ["g0", "g1", "g2"]
+    assert metadata["source_feature_names"] == [
+        "image_mask_fraction",
+        "node_mask_fraction_mean",
+        "node_mask_fraction_std",
+    ]
+
+
+@torchmark
 def test_weak_coupler_runs_two_macro_passes():
     import torch
 

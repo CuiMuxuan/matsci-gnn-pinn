@@ -3,6 +3,8 @@
 from .graph_conditioning import (
     CoordinateRBFGraphConfig,
     CoordinateRBFGraphFeatureProvider,
+    RealMicroGraphFeatureConfig,
+    RealMicroGraphFeatureProvider,
     ToyStaticGraphConfig,
     ToyStaticGraphEmbeddingProvider,
     graph_feature_names,
@@ -15,6 +17,8 @@ __all__ = [
     "LibraryTerm",
     "CoordinateRBFGraphConfig",
     "CoordinateRBFGraphFeatureProvider",
+    "RealMicroGraphFeatureConfig",
+    "RealMicroGraphFeatureProvider",
     "SparseLibrary",
     "SparseLibraryConfig",
     "ToyStaticGraphConfig",

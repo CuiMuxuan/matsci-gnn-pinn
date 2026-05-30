@@ -100,6 +100,28 @@ python -m gnnpinn.data.loaders.ambench_microstructure \
 - node features: `center_row_norm`, `center_col_norm`, `mean_intensity_norm`, `std_intensity_norm`, `mask_fraction`。
 - `edge_index`: 2D kNN graph。
 
+把 inspection JSON 聚合成训练分支可读取的 graph feature table：
+
+```bash
+python -m gnnpinn.data.loaders.ambench_microstructure \
+  --mode aggregate \
+  --inspection outputs/data_audits/ambench_mds2_2718_micrograph_inspection.json \
+  --jsonl-output data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.jsonl \
+  --csv-output data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.csv \
+  --output outputs/data_audits/ambench_mds2_2718_micrograph_feature_table_manifest.json
+```
+
+训练入口已经支持读取该 JSONL 作为 `real_micro` graph conditioning：
+
+```bash
+python -m gnnpinn.train.macro_pinn \
+  --closure-mode sparse_linear \
+  --closure-graph-mode real_micro \
+  --closure-graph-features data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.jsonl \
+  --closure-graph-sample-id AMB2022-718-SH1-BP1-P2-L2.1-3_m \
+  --closure-graph-embedding-dim 4
+```
+
 这不是最终显微组织表征，只是 Phase 17 的低风险入口。后续应加入 melt-pool contour、区域统计、grain/phase segmentation 或 `mds2-2775`/ExaCA 生成的晶粒图作为更强 microstructure features。
 
 ## 与当前热场主线的关系

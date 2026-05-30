@@ -545,6 +545,26 @@ D2 下一步研发：
 4. If `mds2-2718` sample-level alignment is too weak, move to `mds2-2775` or ExaCA-generated microstructures as the second route.
 ```
 
+当前 D2b 本地实现状态：
+
+- 已新增 `--mode aggregate`，可将 inspection JSON 聚合成 `micro_graph_features.jsonl` 与 CSV。
+- 已新增 `RealMicroGraphFeatureProvider`。
+- `MacroPINN` training CLI 已支持 `--closure-graph-mode real_micro`、`--closure-graph-features`、`--closure-graph-sample-id`。
+- real micro graph features 暂时作为样品级固定特征注入 `g0/g1/...`，用于替代 synthetic RBF graph terms 进行接口验证。
+- 本地测试通过：full suite `57 passed, 2 skipped`。
+
+下一轮服务器命令：
+
+```bash
+PYTHONUTF8=1 PYTHONIOENCODING=utf-8 \
+/home/vipuser/miniconda3/bin/conda run -n gnnpinn python -m gnnpinn.data.loaders.ambench_microstructure \
+  --mode aggregate \
+  --inspection outputs/data_audits/ambench_mds2_2718_micrograph_inspection.json \
+  --jsonl-output data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.jsonl \
+  --csv-output data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.csv \
+  --output outputs/data_audits/ambench_mds2_2718_micrograph_feature_table_manifest.json
+```
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

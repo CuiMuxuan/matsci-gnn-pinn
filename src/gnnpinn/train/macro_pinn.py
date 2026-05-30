@@ -15,6 +15,8 @@ from gnnpinn.eval.regions import _spatial_gradient_scores, region_metric_tables
 from gnnpinn.models.closure import (
     CoordinateRBFGraphConfig,
     CoordinateRBFGraphFeatureProvider,
+    RealMicroGraphFeatureConfig,
+    RealMicroGraphFeatureProvider,
     SparseLibrary,
     SparseLibraryConfig,
     ToyStaticGraphConfig,
@@ -326,6 +328,24 @@ def _build_graph_conditioning(
             "metadata": provider.metadata(),
         }
         return provider, payload
+    if args.closure_graph_mode == "real_micro":
+        if args.closure_graph_features is None:
+            raise ValueError("--closure-graph-features is required for real_micro graph conditioning")
+        provider = RealMicroGraphFeatureProvider(
+            RealMicroGraphFeatureConfig(
+                graph_features=str(args.closure_graph_features),
+                sample_id=args.closure_graph_sample_id,
+                embedding_dim=args.closure_graph_embedding_dim,
+                normalize=not args.no_closure_graph_normalize,
+            )
+        ).to(device)
+        payload = {
+            "enabled": True,
+            "mode": args.closure_graph_mode,
+            "trainable": False,
+            "metadata": provider.metadata(),
+        }
+        return provider, payload
     if args.closure_graph_mode != "toy_static":
         raise ValueError(f"Unsupported closure graph mode: {args.closure_graph_mode}")
     provider = ToyStaticGraphEmbeddingProvider(
@@ -473,7 +493,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 graph_features = None
                 if graph_provider is not None and args.closure_graph_mode == "toy_static":
                     graph_embedding = graph_provider()
-                elif graph_provider is not None and args.closure_graph_mode == "coordinate_rbf":
+                elif graph_provider is not None and args.closure_graph_mode in {"coordinate_rbf", "real_micro"}:
                     graph_features = graph_provider(coords_residual, time_residual)
                 closure_features = _closure_feature_tensor(
                     feature_names=args.closure_features,
@@ -773,7 +793,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--closure-graph-mode",
-        choices=["none", "toy_static", "coordinate_rbf"],
+        choices=["none", "toy_static", "coordinate_rbf", "real_micro"],
         default="none",
         help="Optional graph-conditioned closure features. coordinate_rbf creates per-point anchor features.",
     )
@@ -789,6 +809,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--closure-graph-hidden-dim", type=int, default=16)
     parser.add_argument("--closure-graph-steps", type=int, default=1)
     parser.add_argument("--closure-graph-seed", type=int, default=2026)
+    parser.add_argument(
+        "--closure-graph-features",
+        type=Path,
+        help="JSONL graph feature table used by real_micro graph conditioning.",
+    )
+    parser.add_argument(
+        "--closure-graph-sample-id",
+        help="Sample id selected from --closure-graph-features for real_micro graph conditioning.",
+    )
     parser.add_argument(
         "--no-closure-graph-normalize",
         action="store_true",

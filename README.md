@@ -131,6 +131,17 @@ python -m gnnpinn.data.loaders.ambench_microstructure \
   --output outputs/data_audits/ambench_mds2_2718_micrograph_inspection.json
 ```
 
+将 inspection 聚合为 `real_micro` graph feature JSONL：
+
+```bash
+python -m gnnpinn.data.loaders.ambench_microstructure \
+  --mode aggregate \
+  --inspection outputs/data_audits/ambench_mds2_2718_micrograph_inspection.json \
+  --jsonl-output data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.jsonl \
+  --csv-output data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.csv \
+  --output outputs/data_audits/ambench_mds2_2718_micrograph_feature_table_manifest.json
+```
+
 ## Quick Start
 
 运行数据审计：
@@ -201,7 +212,7 @@ $env:CONDA_NO_PLUGINS="true"
 conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 ```
 
-最近一次本地验证状态：`54 passed, 2 skipped`。
+最近一次本地验证状态：`58 passed, 2 skipped`。
 
 ## Server Stage
 

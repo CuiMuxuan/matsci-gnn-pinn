@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
+from pathlib import Path
 from typing import Any
 
 from gnnpinn.models.gnn import MicroGNNEncoder
@@ -28,6 +30,14 @@ class CoordinateRBFGraphConfig:
     state_dim: int = 3
     embedding_dim: int = 4
     length_scale: float = 0.35
+    normalize: bool = True
+
+
+@dataclass(frozen=True)
+class RealMicroGraphFeatureConfig:
+    graph_features: str
+    sample_id: str | None = None
+    embedding_dim: int = 4
     normalize: bool = True
 
 
@@ -173,3 +183,110 @@ def _coordinate_rbf_anchors(state_dim: int, embedding_dim: int) -> Any:
             ]
         )
     return torch.tensor(anchors, dtype=torch.float32)
+
+
+class RealMicroGraphFeatureProvider(_torch().nn.Module):
+    """Provide fixed sample-level features from real microstructure graph records."""
+
+    def __init__(self, config: RealMicroGraphFeatureConfig):
+        super().__init__()
+        if config.embedding_dim <= 0:
+            raise ValueError("embedding_dim must be positive")
+        self.config = config
+        record = _load_real_micro_graph_record(Path(config.graph_features), config.sample_id)
+        feature_names = list(record["feature_names"])
+        feature_values = [float(record["features"][name]) for name in feature_names]
+        selected_names, selected_values = _select_real_micro_features(
+            feature_names,
+            feature_values,
+            config.embedding_dim,
+            normalize=config.normalize,
+        )
+        torch = _torch()
+        self.record = record
+        self.selected_feature_names = selected_names
+        self.register_buffer("features", torch.tensor(selected_values, dtype=torch.float32).reshape(1, -1))
+
+    def forward(self, coords: Any | None = None, time: Any | None = None) -> Any:
+        if coords is None:
+            return self.features.reshape(-1)
+        return self.features.to(device=coords.device, dtype=coords.dtype).expand(coords.shape[0], -1)
+
+    @property
+    def feature_names(self) -> list[str]:
+        return graph_feature_names(self.config.embedding_dim)
+
+    def metadata(self) -> dict[str, Any]:
+        return {
+            "graph_features": self.config.graph_features,
+            "sample_id": self.record.get("sample_id"),
+            "requested_sample_id": self.config.sample_id,
+            "embedding_dim": self.config.embedding_dim,
+            "normalize": self.config.normalize,
+            "feature_names": self.feature_names,
+            "source_feature_names": self.selected_feature_names,
+            "features": self.features.detach().cpu().reshape(-1).tolist(),
+            "sample_metadata": self.record.get("sample_metadata", {}),
+            "graph_summary": self.record.get("graph_summary", {}),
+        }
+
+
+def _load_real_micro_graph_record(path: Path, sample_id: str | None) -> dict[str, Any]:
+    if not path.exists():
+        raise FileNotFoundError(f"Real micro graph feature file not found: {path}")
+    records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if not records:
+        raise ValueError(f"Real micro graph feature file is empty: {path}")
+    if sample_id is None:
+        return records[0]
+    for record in records:
+        if record.get("sample_id") == sample_id:
+            return record
+    raise ValueError(f"Sample id {sample_id!r} not found in real micro graph feature file: {path}")
+
+
+def _select_real_micro_features(
+    feature_names: list[str],
+    feature_values: list[float],
+    embedding_dim: int,
+    *,
+    normalize: bool,
+) -> tuple[list[str], list[float]]:
+    if len(feature_names) != len(feature_values):
+        raise ValueError("feature_names and feature_values must have the same length")
+    preferred_names = [
+        "image_mask_fraction",
+        "node_mask_fraction_mean",
+        "node_mask_fraction_std",
+        "node_mean_intensity_norm_mean",
+        "node_std_intensity_norm_mean",
+        "node_mean_intensity_norm_std",
+        "image_mean_intensity",
+        "image_std_intensity",
+    ]
+    by_name = dict(zip(feature_names, feature_values))
+    selected_names = [name for name in preferred_names if name in by_name]
+    for name in feature_names:
+        if name not in selected_names:
+            selected_names.append(name)
+        if len(selected_names) >= embedding_dim:
+            break
+    selected_names = selected_names[:embedding_dim]
+    selected_values = [float(by_name[name]) for name in selected_names]
+    if len(selected_values) < embedding_dim:
+        selected_names.extend(f"padding_{index}" for index in range(embedding_dim - len(selected_values)))
+        selected_values.extend(0.0 for _ in range(embedding_dim - len(selected_values)))
+    if normalize:
+        selected_values = _minmax_normalize_vector(selected_values)
+    return selected_names, selected_values
+
+
+def _minmax_normalize_vector(values: list[float]) -> list[float]:
+    if not values:
+        return values
+    minimum = min(values)
+    maximum = max(values)
+    scale = maximum - minimum
+    if scale == 0:
+        return [0.0 for _ in values]
+    return [(value - minimum) / scale for value in values]

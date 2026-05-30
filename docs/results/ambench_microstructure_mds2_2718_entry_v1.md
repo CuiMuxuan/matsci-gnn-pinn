@@ -122,4 +122,12 @@ mask_fraction
 
 This confirms a real AM-Bench optical microscopy file can be downloaded, verified, parsed into sample metadata, and converted into a coarse `MicrostructureGraph` artifact. The graph is intentionally simple: it is not yet a grain graph, but it creates a real-data bridge for replacing synthetic coordinate/RBF graph features in the closure branch.
 
-Next implementation should aggregate one or more TIFF inspections into a sample-level graph-feature table or JSONL, then add a training-time provider that reads real graph features and exposes `g0/g1/...` to sparse closure construction.
+## Follow-up Implementation
+
+The next data bridge has been implemented after this first inspection:
+
+- `gnnpinn.data.loaders.ambench_microstructure --mode aggregate` converts inspection JSON into graph feature JSONL/CSV.
+- `RealMicroGraphFeatureProvider` reads the JSONL and exposes fixed `g0/g1/...` features.
+- `gnnpinn.train.macro_pinn` supports `--closure-graph-mode real_micro`.
+
+The next server action is to aggregate the first real inspection into `data/processed/.../micro_graph_features.jsonl`, then run a small real-micro closure smoke before expanding to more `P/L/replicate` images.
