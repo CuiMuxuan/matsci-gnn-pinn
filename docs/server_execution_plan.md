@@ -738,6 +738,13 @@ bash scripts/server/run_real_micro_exact_line0_1_region_embedding_a100.sh \
 
 验收：feature manifest 中 `region_embedding_dim=8`，训练 artifact 的 graph conditioning metadata 记录 `region_embedding_metadata_by_sample_id`；若 seed-0 没有同时改善全局 test RMSE 与 hot/gradient q90，则不做 3-seed 扩大。该分支仍适合当前 A100-SXM4-40GB。
 
+Phase 22 seed-0 小矩阵完成后，若只出现单个候选正向信号，使用 focused seed check，而不是扩大整张矩阵：
+
+```bash
+bash scripts/server/run_real_micro_exact_line0_1_region_embedding_seed_check_a100.sh \
+  > logs/ambench_real_micro_exact_line0_1_region_embedding_p4_masked_g4_seedcheck_a100_v1.log 2>&1
+```
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
