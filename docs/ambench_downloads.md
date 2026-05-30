@@ -311,6 +311,7 @@ PYTHONUTF8=1 PYTHONIOENCODING=utf-8 conda run -n gnnpinn python -m gnnpinn.data.
   --verify-sha256 \
   --retries 3 \
   --timeout-seconds 300 \
+  --resume-partial \
   --output outputs/data_audits/ambench_mds2_2718_micro_panel_download_report.json
 ```
 
@@ -326,10 +327,11 @@ PYTHONUTF8=1 PYTHONIOENCODING=utf-8 conda run -n gnnpinn python -m gnnpinn.data.
   --verify-sha256 \
   --retries 3 \
   --timeout-seconds 300 \
+  --resume-partial \
   --output outputs/data_audits/ambench_mds2_2718_p4_l0_r2_masked_redownload_report.json
 ```
 
-`--retries` 和 `--timeout-seconds` 用于处理 NIST PDR 偶发的 read timeout。若下载仍失败，报告中的 action 会记录 `status: download_error`、`attempts`、`partial_path` 和错误文本，便于后续只重试对应 `--file-id`。
+`--retries`、`--timeout-seconds` 和 `--resume-partial` 用于处理 NIST PDR 偶发的 read timeout。若下载仍失败，报告中的 action 会记录 `status: download_error`、`attempts`、`partial_path` 和错误文本，便于后续只重试对应 `--file-id`。`--resume-partial` 会在已有 `.part` 文件时尝试 HTTP Range 续传。
 
 下载后生成第一版显微图像 inspection / coarse micro graph：
 

@@ -25,6 +25,7 @@ mkdir -p "$AUDIT_ROOT"
   --verify-sha256 \
   --retries "$DOWNLOAD_RETRIES" \
   --timeout-seconds "$DOWNLOAD_TIMEOUT_SECONDS" \
+  --resume-partial \
   --output outputs/data_audits/ambench_mds2_2718_micro_panel_download_report.json
 
 inspect_one() {

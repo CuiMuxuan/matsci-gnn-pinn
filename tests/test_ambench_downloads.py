@@ -415,6 +415,71 @@ def test_download_source_manifest_records_download_error_and_retries(monkeypatch
     assert report["validation_failed"] is True
 
 
+def test_download_source_manifest_can_resume_partial_file(monkeypatch, tmp_path: Path):
+    class FakeHeaders(dict):
+        def get(self, key, default=None):
+            return super().get(key, default)
+
+    class FakeResponse:
+        status = 206
+
+        def __init__(self, data: bytes):
+            self._data = data
+            self.headers = FakeHeaders(
+                {
+                    "Content-Length": str(len(data)),
+                    "Content-Range": "bytes 3-5/6",
+                }
+            )
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, traceback):
+            return False
+
+        def read(self, size: int):
+            data, self._data = self._data, b""
+            return data
+
+    captured_headers = {}
+
+    def resume_urlopen(request, timeout):
+        captured_headers.update(dict(request.header_items()))
+        return FakeResponse(b"def")
+
+    import gnnpinn.data.ambench_downloads as module
+
+    monkeypatch.setattr(module.urllib.request, "urlopen", resume_urlopen)
+    root = tmp_path / "downloaded"
+    root.mkdir()
+    (root / "toy.txt.part").write_bytes(b"abc")
+    sources = {
+        "dataset_id": "toy",
+        "required_files": [
+            {
+                "id": "toy",
+                "relative_path": "toy.txt",
+                "size_bytes": 6,
+                "sha256": "bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721",
+                "download_url": "https://example.test/toy.txt",
+            }
+        ],
+    }
+
+    report = download_source_manifest(
+        root,
+        sources,
+        verify_hashes=True,
+        resume_partial=True,
+    )
+
+    assert captured_headers["Range"] == "bytes=3-"
+    assert (root / "toy.txt").read_bytes() == b"abcdef"
+    assert report["actions"][0]["resume_from"] == 3
+    assert report["validation_failed"] is False
+
+
 def test_download_cli_rejects_unknown_file_id(tmp_path: Path):
     manifest = tmp_path / "sources.yaml"
     manifest.write_text(

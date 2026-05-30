@@ -96,6 +96,7 @@ def _download_url(
     *,
     overwrite: bool = False,
     timeout_seconds: int = 120,
+    resume_partial: bool = False,
 ) -> dict[str, Any]:
     if destination.exists() and not overwrite:
         return {
@@ -107,17 +108,31 @@ def _download_url(
 
     destination.parent.mkdir(parents=True, exist_ok=True)
     part_path = destination.with_name(f"{destination.name}.part")
+    resume_from = part_path.stat().st_size if resume_partial and part_path.exists() else 0
     request = urllib.request.Request(
         url,
         headers={"User-Agent": "gnn-pinn-data-downloader/0.1"},
     )
+    if resume_from > 0:
+        request.add_header("Range", f"bytes={resume_from}-")
     bytes_written = 0
     expected_length = None
+    total_expected_length = None
     try:
         with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
             content_length = response.headers.get("Content-Length")
             expected_length = int(content_length) if content_length and content_length.isdigit() else None
-            with part_path.open("wb") as handle:
+            content_range = response.headers.get("Content-Range")
+            if content_range and "/" in content_range:
+                try:
+                    total_expected_length = int(content_range.rsplit("/", 1)[1])
+                except ValueError:
+                    total_expected_length = None
+            if resume_from > 0 and getattr(response, "status", None) != 206:
+                resume_from = 0
+                total_expected_length = None
+            mode = "ab" if resume_from > 0 else "wb"
+            with part_path.open(mode) as handle:
                 while True:
                     chunk = response.read(1024 * 1024)
                     if not chunk:
@@ -131,17 +146,25 @@ def _download_url(
             "url": url,
             "status": "download_error",
             "bytes_written": bytes_written,
+            "resume_from": resume_from,
+            "actual_size_bytes": part_path.stat().st_size if part_path.exists() else None,
             "expected_content_length": expected_length,
+            "expected_total_size_bytes": total_expected_length,
             "error": f"{type(exc).__name__}: {exc}",
         }
-    if expected_length is not None and bytes_written != expected_length:
+    final_size = part_path.stat().st_size if part_path.exists() else bytes_written
+    expected_final_size = total_expected_length if total_expected_length is not None else expected_length
+    if expected_final_size is not None and final_size != expected_final_size:
         return {
             "path": str(destination),
             "partial_path": str(part_path),
             "url": url,
             "status": "incomplete",
             "bytes_written": bytes_written,
+            "resume_from": resume_from,
+            "actual_size_bytes": final_size,
             "expected_content_length": expected_length,
+            "expected_total_size_bytes": expected_final_size,
         }
     part_path.replace(destination)
     return {
@@ -149,7 +172,10 @@ def _download_url(
         "url": url,
         "status": "downloaded",
         "bytes_written": bytes_written,
+        "resume_from": resume_from,
+        "actual_size_bytes": destination.stat().st_size,
         "expected_content_length": expected_length,
+        "expected_total_size_bytes": expected_final_size,
     }
 
 
@@ -208,6 +234,7 @@ def download_mds2_2716(
     verify_hashes: bool = True,
     retries: int = 0,
     timeout_seconds: int = 120,
+    resume_partial: bool = False,
 ) -> dict[str, Any]:
     """Download required AMB2022-03 / mds2-2716 files from the source manifest."""
 
@@ -222,6 +249,7 @@ def download_mds2_2716(
         verify_hashes=verify_hashes,
         retries=retries,
         timeout_seconds=timeout_seconds,
+        resume_partial=resume_partial,
     )
 
 
@@ -236,6 +264,7 @@ def download_mds2_2718(
     verify_hashes: bool = True,
     retries: int = 0,
     timeout_seconds: int = 120,
+    resume_partial: bool = False,
 ) -> dict[str, Any]:
     """Download selected AMB2022-03 optical microscopy files from the source manifest."""
 
@@ -250,6 +279,7 @@ def download_mds2_2718(
         verify_hashes=verify_hashes,
         retries=retries,
         timeout_seconds=timeout_seconds,
+        resume_partial=resume_partial,
     )
 
 
@@ -264,6 +294,7 @@ def download_source_manifest(
     verify_hashes: bool = True,
     retries: int = 0,
     timeout_seconds: int = 120,
+    resume_partial: bool = False,
 ) -> dict[str, Any]:
     """Download files listed in a loaded AM-Bench source manifest."""
 
@@ -314,6 +345,7 @@ def download_source_manifest(
             destination,
             overwrite=True,
             timeout_seconds=timeout_seconds,
+            resume_partial=resume_partial,
         )
         attempts = [result]
         for _ in range(max(retries, 0)):
@@ -324,6 +356,7 @@ def download_source_manifest(
                 destination,
                 overwrite=True,
                 timeout_seconds=timeout_seconds,
+                resume_partial=resume_partial,
             )
             attempts.append(result)
         actions.append(
@@ -360,6 +393,7 @@ def download_source_manifest(
         "file_ids": sorted(selected_ids),
         "retries": retries,
         "timeout_seconds": timeout_seconds,
+        "resume_partial": resume_partial,
         "actions": actions,
         "missing_selected": missing_selected,
         "mismatched_selected": mismatched_selected,
@@ -511,6 +545,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Network socket timeout per download attempt.",
     )
     parser.add_argument(
+        "--resume-partial",
+        action="store_true",
+        help="Resume from an existing .part file with HTTP Range requests when retrying slow downloads.",
+    )
+    parser.add_argument(
         "--file-id",
         action="append",
         dest="file_ids",
@@ -545,6 +584,7 @@ def main(argv: list[str] | None = None) -> int:
             verify_hashes=args.verify_sha256,
             retries=args.retries,
             timeout_seconds=args.timeout_seconds,
+            resume_partial=args.resume_partial,
         )
     else:
         sources = load_source_manifest(
