@@ -184,6 +184,7 @@ def download_mds2_2716(
     source_manifest: str | Path | None = None,
     *,
     file_ids: list[str] | None = None,
+    include_optional: bool = False,
     overwrite: bool = False,
     dry_run: bool = False,
     verify_hashes: bool = True,
@@ -195,6 +196,7 @@ def download_mds2_2716(
         root,
         sources,
         file_ids=file_ids,
+        include_optional=include_optional,
         overwrite=overwrite,
         dry_run=dry_run,
         verify_hashes=verify_hashes,
@@ -206,6 +208,7 @@ def download_mds2_2718(
     source_manifest: str | Path | None = None,
     *,
     file_ids: list[str] | None = None,
+    include_optional: bool = False,
     overwrite: bool = False,
     dry_run: bool = False,
     verify_hashes: bool = True,
@@ -217,6 +220,7 @@ def download_mds2_2718(
         root,
         sources,
         file_ids=file_ids,
+        include_optional=include_optional,
         overwrite=overwrite,
         dry_run=dry_run,
         verify_hashes=verify_hashes,
@@ -228,6 +232,7 @@ def download_source_manifest(
     sources: dict[str, Any],
     *,
     file_ids: list[str] | None = None,
+    include_optional: bool = False,
     overwrite: bool = False,
     dry_run: bool = False,
     verify_hashes: bool = True,
@@ -236,14 +241,21 @@ def download_source_manifest(
 
     root = Path(root)
     selected_ids = set(file_ids or [])
-    required_sources = [
-        source
-        for source in sources.get("required_files", [])
-        if not selected_ids or source.get("id") in selected_ids
-    ]
+    required_sources = list(sources.get("required_files", []))
+    optional_sources = list(sources.get("optional_files", []))
+    available_sources = [*required_sources, *optional_sources]
+    available_ids = {str(source.get("id")) for source in available_sources if source.get("id") is not None}
+    unknown_ids = sorted(selected_ids - available_ids)
+    if unknown_ids:
+        raise ValueError(f"Unknown file id(s) for dataset {sources.get('dataset_id')}: {', '.join(unknown_ids)}")
+
+    if selected_ids:
+        selected_sources = [source for source in available_sources if source.get("id") in selected_ids]
+    else:
+        selected_sources = [*required_sources, *optional_sources] if include_optional else required_sources
 
     actions: list[dict[str, Any]] = []
-    for source in required_sources:
+    for source in selected_sources:
         destination = root / source["relative_path"]
         check = _check_expected_file(root, source, verify_hashes=False)
         should_download = overwrite or not check["present"] or "size_mismatch" in check["issues"]
@@ -281,7 +293,17 @@ def download_source_manifest(
 
     final_report = validate_source_manifest(root, sources, verify_hashes=verify_hashes)
     _add_dataset_ready_aliases(final_report, sources.get("dataset_id"))
-    validation_failed = not final_report["ready"]
+    selected_checks = {
+        source["id"]: _check_expected_file(root, source, verify_hashes)
+        for source in selected_sources
+    }
+    missing_selected = [name for name, check in selected_checks.items() if not check["present"]]
+    mismatched_selected = [
+        name
+        for name, check in selected_checks.items()
+        if check["present"] and ("size_mismatch" in check["issues"] or "sha256_mismatch" in check["issues"])
+    ]
+    validation_failed = not final_report["ready"] or bool(missing_selected) or bool(mismatched_selected)
     return {
         "dataset_id": sources.get("dataset_id"),
         "dataset_name": sources.get("dataset_name"),
@@ -289,8 +311,12 @@ def download_source_manifest(
         "source_manifest": sources.get("_source_manifest"),
         "dry_run": dry_run,
         "overwrite": overwrite,
+        "include_optional": include_optional,
         "file_ids": sorted(selected_ids),
         "actions": actions,
+        "missing_selected": missing_selected,
+        "mismatched_selected": mismatched_selected,
+        "selected_checks": selected_checks,
         "validation_failed": validation_failed,
         "validation": final_report,
     }
@@ -429,7 +455,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--file-id",
         action="append",
         dest="file_ids",
-        help="Restrict --download to a required file id. Can be repeated.",
+        help="Restrict --download to a required or optional file id. Can be repeated.",
+    )
+    parser.add_argument(
+        "--include-optional",
+        action="store_true",
+        help="When used with --download and no --file-id, also download optional files from the manifest.",
     )
     parser.add_argument("--output", type=Path, help="Optional JSON report path.")
     return parser
@@ -449,6 +480,7 @@ def main(argv: list[str] | None = None) -> int:
             args.root,
             sources,
             file_ids=args.file_ids,
+            include_optional=args.include_optional,
             overwrite=args.overwrite,
             dry_run=args.dry_run,
             verify_hashes=args.verify_sha256,

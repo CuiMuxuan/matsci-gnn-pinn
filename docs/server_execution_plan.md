@@ -574,6 +574,37 @@ bash scripts/server/run_real_micro_graph_conditioned_closure_a100.sh \
 
 默认运行 `embedding_dim=4/8`、gate `0.25`、graph L1 `1e-4`，使用与 gated coordinate-RBF 分支相同的 sparse closure 优化设置，便于和 `docs/results/ambench_graph_conditioned_closure_gated_v1.md` 对齐比较。
 
+当前 D2c 决策：
+
+- 单张 real-micro sample-level feature 的 `g8` run 对 hot q90 有改善，但 global RMSE 退化，说明一张全局 TIFF 广播到所有 thermal residual point 仍太粗。
+- 下一步不扩大 closure 超参扫描，先把 `mds2-2718` 从单图扩展到多图 panel。
+- `configs/data/ambench_mds2_2718_sources.yaml` 的 optional files 已固定一个小面板：P2/L2.1 masked + unmasked、P1/L3.1 masked、P3/L0 masked、P4/L0 masked + unmasked。
+- 下载器已支持 `--include-optional`，也支持 `--file-id` 指定 required 或 optional 文件。
+
+下一轮服务器命令：
+
+```bash
+bash scripts/server/build_mds2_2718_micro_panel_a100.sh \
+  > logs/ambench_mds2_2718_micro_panel_build_a100_v1.log 2>&1
+```
+
+该脚本只构建数据资产，不启动长训练。预期产物：
+
+```text
+outputs/data_audits/ambench_mds2_2718_micro_panel_download_report.json
+outputs/data_audits/mds2_2718_micro_panel/*_inspection.json
+outputs/data_audits/ambench_mds2_2718_micro_panel_feature_table_manifest.json
+data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features_panel.jsonl
+data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features_panel.csv
+```
+
+验收：
+
+- download report 中 required files ready，optional panel 文件存在且 SHA256 通过。
+- feature table manifest 的 `n_records=6`。
+- 每条 record 均带有可解析的 `process/line/replicate/masked` metadata。
+- 通过该表再决定是否做 process/sample-aware `real_micro` 选择，而不是继续广播单一图像特征。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

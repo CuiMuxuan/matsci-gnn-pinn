@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 import yaml
 
 from gnnpinn.data.ambench_downloads import (
@@ -179,8 +180,11 @@ def test_load_mds2_2718_sources_default_manifest():
     sources = load_mds2_2718_sources()
 
     file_ids = {entry["id"] for entry in sources["required_files"]}
+    optional_file_ids = {entry["id"] for entry in sources["optional_files"]}
     assert "melt_pool_measurements_xlsx" in file_ids
     assert "single_track_cross_section_representative_tif" in file_ids
+    assert "single_track_cross_section_p4_l0_r2_masked_tif" in optional_file_ids
+    assert "single_track_cross_section_p2_l2_1_r3_unmasked_tif" in optional_file_ids
 
 
 def test_validate_mds2_2718_ready_for_microstructure_adapter(tmp_path: Path):
@@ -266,6 +270,147 @@ def test_download_mds2_2718_from_manifest_file_urls(tmp_path: Path):
     assert (root / "Single_Track_Cross_Sections" / "toy.tif").read_text(encoding="utf-8") == "data"
     assert report["validation"]["ready"] is True
     assert report["validation"]["checks"]["tiff_files"]["count"] == 1
+
+
+def test_download_mds2_2718_file_id_can_select_optional_file(tmp_path: Path):
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    readme_source = source_dir / "2718_README.txt"
+    optional_tif_source = source_dir / "optional.tif"
+    readme_source.write_text("readme", encoding="utf-8")
+    optional_tif_source.write_text("data", encoding="utf-8")
+
+    manifest = tmp_path / "sources.yaml"
+    manifest.write_text(
+        yaml.safe_dump(
+            {
+                "dataset_id": "mds2-2718",
+                "required_files": [
+                    {
+                        "id": "readme",
+                        "relative_path": "2718_README.txt",
+                        "size_bytes": 6,
+                        "download_url": readme_source.as_uri(),
+                    },
+                ],
+                "optional_files": [
+                    {
+                        "id": "optional_tif",
+                        "relative_path": "Single_Track_Cross_Sections/optional.tif",
+                        "size_bytes": 4,
+                        "sha256": "3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7",
+                        "download_url": optional_tif_source.as_uri(),
+                    }
+                ],
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    root = tmp_path / "downloaded"
+    report = download_mds2_2718(
+        root,
+        source_manifest=manifest,
+        file_ids=["optional_tif"],
+        verify_hashes=True,
+    )
+
+    assert not (root / "2718_README.txt").exists()
+    assert (root / "Single_Track_Cross_Sections" / "optional.tif").read_text(encoding="utf-8") == "data"
+    assert [action["id"] for action in report["actions"]] == ["optional_tif"]
+    assert report["validation_failed"] is True
+    assert report["validation"]["missing_required"] == ["readme"]
+    assert report["mismatched_selected"] == []
+    assert report["selected_checks"]["optional_tif"]["sha256_ok"] is True
+
+
+def test_download_source_manifest_include_optional_downloads_panel(tmp_path: Path):
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    readme_source = source_dir / "2718_README.txt"
+    optional_tif_source = source_dir / "optional.tif"
+    readme_source.write_text("readme", encoding="utf-8")
+    optional_tif_source.write_text("data", encoding="utf-8")
+
+    manifest = tmp_path / "sources.yaml"
+    manifest.write_text(
+        yaml.safe_dump(
+            {
+                "dataset_id": "mds2-2718",
+                "required_files": [
+                    {
+                        "id": "readme",
+                        "relative_path": "2718_README.txt",
+                        "size_bytes": 6,
+                        "sha256": "711a6108ba2ce6ca93dd47d6817f2361db10d8ab6eec89460b2dfc2c325efabe",
+                        "download_url": readme_source.as_uri(),
+                    },
+                ],
+                "optional_files": [
+                    {
+                        "id": "optional_tif",
+                        "relative_path": "Single_Track_Cross_Sections/optional.tif",
+                        "size_bytes": 4,
+                        "sha256": "3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7",
+                        "download_url": optional_tif_source.as_uri(),
+                    }
+                ],
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    root = tmp_path / "downloaded"
+    report = download_mds2_2718(
+        root,
+        source_manifest=manifest,
+        include_optional=True,
+        verify_hashes=True,
+    )
+
+    assert (root / "2718_README.txt").read_text(encoding="utf-8") == "readme"
+    assert (root / "Single_Track_Cross_Sections" / "optional.tif").read_text(encoding="utf-8") == "data"
+    assert {action["id"] for action in report["actions"]} == {"readme", "optional_tif"}
+    assert report["validation"]["ready"] is True
+    assert report["validation_failed"] is False
+    assert report["mismatched_selected"] == []
+
+
+def test_download_cli_rejects_unknown_file_id(tmp_path: Path):
+    manifest = tmp_path / "sources.yaml"
+    manifest.write_text(
+        yaml.safe_dump(
+            {
+                "dataset_id": "mds2-2718",
+                "required_files": [
+                    {
+                        "id": "readme",
+                        "relative_path": "2718_README.txt",
+                        "size_bytes": 6,
+                        "download_url": "file:///readme.txt",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="Unknown file id"):
+        main(
+            [
+                "--dataset-id",
+                "mds2-2718",
+                "--root",
+                str(tmp_path / "downloaded"),
+                "--source-manifest",
+                str(manifest),
+                "--download",
+                "--file-id",
+                "does_not_exist",
+            ]
+        )
 
 
 def test_download_cli_dry_run_returns_zero_when_files_missing(tmp_path: Path):

@@ -14,7 +14,7 @@ notes:
   - "Phase 17 starts with this optical microscopy dataset because it is smaller and simpler than mds2-2775, while sharing the AMB2022-03 process context."
   - "The full PDR record contains 102 TIFF images, 104 checksum files, one README, and one measurement-results XLSX file."
   - "This manifest pins a small first subset: README, melt-pool measurement XLSX, one representative measured single-track cross-section TIFF, and its checksum sidecar."
-  - "Additional TIFF files should be added deliberately after the first inspection and graph-feature pipeline is validated."
+  - "Optional files define a deliberately small multi-image single-track panel across P/L/replicate conditions; use --include-optional or repeated --file-id only after the first inspection route is validated."
 required_files:
   - id: readme
     relative_path: 2718_README.txt
@@ -45,14 +45,70 @@ required_files:
     download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3_m.tif.sha256
     purpose: "NIST checksum sidecar for the representative TIFF."
 optional_files:
-  - id: single_track_small_unmasked_tif
+  - id: single_track_cross_section_p2_l2_1_r3_unmasked_tif
+    relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3.tif
+    media_type: image/tiff
+    size_bytes: 18429782
+    sha256: ba108682b9fb730bf2ef6ff331cd010bd839d71187c01cedd7cb8fce41003e64
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3.tif
+    purpose: "Optional unmasked counterpart for the required P2/L2.1/replicate-3 representative image."
+  - id: single_track_cross_section_p2_l2_1_r3_unmasked_tif_sha256
+    relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3.tif.sha256
+    media_type: text/plain
+    size_bytes: 64
+    sha256: f957ab4d8fa78e87afced2851663881ae578ab2a57d1f9910fa47abbfd1a2d35
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3.tif.sha256
+    purpose: "NIST checksum sidecar for the optional P2/L2.1/replicate-3 unmasked TIFF."
+  - id: single_track_cross_section_p1_l3_1_r3_masked_tif
+    relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P1-L3.1-3_m.tif
+    media_type: image/tiff
+    size_bytes: 36962638
+    sha256: 63400441ef3bc54d7aa9acbed173f676d11eda4badb4128a45282ccc67c5dea9
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P1-L3.1-3_m.tif
+    purpose: "Optional masked TIFF for the first multi-image panel, adding a lower process-index condition."
+  - id: single_track_cross_section_p1_l3_1_r3_masked_tif_sha256
+    relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P1-L3.1-3_m.tif.sha256
+    media_type: text/plain
+    size_bytes: 64
+    sha256: 42fb97cfa699cca56b2e03821ff1e2f6fed15db6fa59bbc3158987298f20fcd9
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P1-L3.1-3_m.tif.sha256
+    purpose: "NIST checksum sidecar for the optional P1/L3.1/replicate-3 masked TIFF."
+  - id: single_track_cross_section_p3_l0_r2_masked_tif
+    relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P3-L0-2_m.tif
+    media_type: image/tiff
+    size_bytes: 36962772
+    sha256: d96d32c40f10f059594b99387c58bab1b8ac16f21388e5325c8666b2ef0329df
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P3-L0-2_m.tif
+    purpose: "Optional masked TIFF for the first multi-image panel, adding a P3/L0 process condition."
+  - id: single_track_cross_section_p3_l0_r2_masked_tif_sha256
+    relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P3-L0-2_m.tif.sha256
+    media_type: text/plain
+    size_bytes: 64
+    sha256: e91b2dfd4b543051da27c0ade2a442f61ed48b96f790afc4d9b35cd5251099af
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P3-L0-2_m.tif.sha256
+    purpose: "NIST checksum sidecar for the optional P3/L0/replicate-2 masked TIFF."
+  - id: single_track_cross_section_p4_l0_r2_masked_tif
+    relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-2_m.tif
+    media_type: image/tiff
+    size_bytes: 36962772
+    sha256: 30a7a098ed56681f1aa395141503727217af2da2bdd1e02fec413d01cdefd555
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-2_m.tif
+    purpose: "Optional masked TIFF for the first multi-image panel, adding a P4/L0 process condition."
+  - id: single_track_cross_section_p4_l0_r2_masked_tif_sha256
+    relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-2_m.tif.sha256
+    media_type: text/plain
+    size_bytes: 64
+    sha256: eb19c8748373eb4991db9743a3b120952f1412e5b2e02ac822662b7a740e98ec
+    download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-2_m.tif.sha256
+    purpose: "NIST checksum sidecar for the optional P4/L0/replicate-2 masked TIFF."
+  - id: single_track_cross_section_p4_l0_r2_unmasked_tif
     relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-2.tif
     media_type: image/tiff
     size_bytes: 20553076
     sha256: e22eab832ad9e9780d63319d4e9c3670b07c2dc38b23a1c2bbc7af7f4e99d70b
     download_url: https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-2.tif
-    purpose: "Optional smaller unmasked TIFF for contrast with the representative masked image."
-  - id: single_track_small_unmasked_tif_sha256
+    purpose: "Optional smaller unmasked TIFF for contrast with its masked P4/L0 counterpart."
+  - id: single_track_cross_section_p4_l0_r2_unmasked_tif_sha256
     relative_path: Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-2.tif.sha256
     media_type: text/plain
     size_bytes: 64
@@ -64,3 +120,5 @@ download_examples:
     - "conda run -n gnnpinn-cu130 python -m gnnpinn.data.ambench_downloads --dataset-id mds2-2718 --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 --verify-sha256"
   download_first_subset:
     - "conda run -n gnnpinn-cu130 python -m gnnpinn.data.ambench_downloads --dataset-id mds2-2718 --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 --download --verify-sha256"
+  download_optional_micro_panel:
+    - "conda run -n gnnpinn-cu130 python -m gnnpinn.data.ambench_downloads --dataset-id mds2-2718 --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 --download --include-optional --verify-sha256"

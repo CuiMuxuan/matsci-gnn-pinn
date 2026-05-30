@@ -240,7 +240,19 @@ conda run -n gnnpinn python -m gnnpinn.data.ambench_downloads --root data/raw/am
 data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718/
 ```
 
-该 PDR 记录全量包含 102 个 TIFF 图像，合计约 10.6 GB。项目第一版只固定一个低风险子集：README、melt-pool measurement XLSX、一个 representative single-track cross-section TIFF 及其 `.sha256`。
+该 PDR 记录全量包含 102 个 TIFF 图像，合计约 10.6 GB。项目第一版 required files 只固定一个低风险子集：README、melt-pool measurement XLSX、一个 representative single-track cross-section TIFF 及其 `.sha256`。
+
+Phase 17b 已在 `optional_files` 中固定一个更小的 multi-image single-track panel，用于把单张显微图扩展到多工艺条件 graph feature 表。面板包含：
+
+| ID | Purpose |
+| --- | --- |
+| `single_track_cross_section_p2_l2_1_r3_unmasked_tif` | required representative masked image 的 unmasked counterpart |
+| `single_track_cross_section_p1_l3_1_r3_masked_tif` | P1/L3.1/replicate-3 masked condition |
+| `single_track_cross_section_p3_l0_r2_masked_tif` | P3/L0/replicate-2 masked condition |
+| `single_track_cross_section_p4_l0_r2_masked_tif` | P4/L0/replicate-2 masked condition |
+| `single_track_cross_section_p4_l0_r2_unmasked_tif` | P4/L0/replicate-2 unmasked counterpart |
+
+默认下载命令仍只拉 required files。只有显式传入 `--include-optional`，或用 repeated `--file-id` 指定上述 ID 时，才会下载 optional panel。
 
 查看计划下载内容：
 
@@ -288,6 +300,31 @@ PYTHONUTF8=1 PYTHONIOENCODING=utf-8 conda run -n gnnpinn python -m gnnpinn.data.
   --output outputs/data_audits/ambench_mds2_2718_download_report.json
 ```
 
+下载并校验 optional micro panel：
+
+```bash
+PYTHONUTF8=1 PYTHONIOENCODING=utf-8 conda run -n gnnpinn python -m gnnpinn.data.ambench_downloads \
+  --dataset-id mds2-2718 \
+  --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 \
+  --download \
+  --include-optional \
+  --verify-sha256 \
+  --output outputs/data_audits/ambench_mds2_2718_micro_panel_download_report.json
+```
+
+如果只想补其中某一张图，用 `--file-id` 精确下载。`--file-id` 可以选择 required 或 optional 文件：
+
+```bash
+PYTHONUTF8=1 PYTHONIOENCODING=utf-8 conda run -n gnnpinn python -m gnnpinn.data.ambench_downloads \
+  --dataset-id mds2-2718 \
+  --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 \
+  --download \
+  --overwrite \
+  --file-id single_track_cross_section_p4_l0_r2_masked_tif \
+  --verify-sha256 \
+  --output outputs/data_audits/ambench_mds2_2718_p4_l0_r2_masked_redownload_report.json
+```
+
 下载后生成第一版显微图像 inspection / coarse micro graph：
 
 ```powershell
@@ -299,6 +336,23 @@ conda run -n gnnpinn-cu130 python -m gnnpinn.data.loaders.ambench_microstructure
   --grid-cols 8 `
   --graph-k 4 `
   --output outputs/data_audits/ambench_mds2_2718_micrograph_inspection.json
+```
+
+服务器上一键构建 multi-image micro panel：
+
+```bash
+bash scripts/server/build_mds2_2718_micro_panel_a100.sh \
+  > logs/ambench_mds2_2718_micro_panel_build_a100_v1.log 2>&1
+```
+
+该脚本会生成：
+
+```text
+outputs/data_audits/ambench_mds2_2718_micro_panel_download_report.json
+outputs/data_audits/mds2_2718_micro_panel/*_inspection.json
+outputs/data_audits/ambench_mds2_2718_micro_panel_feature_table_manifest.json
+data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features_panel.jsonl
+data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features_panel.csv
 ```
 
 ## 稍后可下载

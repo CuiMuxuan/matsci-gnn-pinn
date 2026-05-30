@@ -15,6 +15,7 @@
 - 已实现 hot/gradient active sampling、region-aware metrics 与服务器端复现实验脚本。
 - 已实现 sparse closure 与 synthetic graph-conditioned closure 消融，当前转入真实/半真实 microstructure conditioning。
 - 已新增 AM-Bench `mds2-2718` optical microscopy 下载/校验入口和 TIFF-to-coarse-micro-graph inspection 原型。
+- 已固定 `mds2-2718` multi-image optional micro panel，并提供服务器脚本生成 panel-level graph feature table。
 - 已预留 weak GNN-PINN coupling 模块。
 - 本地 smoke/probe 与第一批 A100 dense calibrated temperature 实验已完成，当前正在推进 Macro PINN 稳健化和闭合项实验前置工作。
 
@@ -118,6 +119,18 @@ python -m gnnpinn.data.ambench_downloads \
   --output outputs/data_audits/ambench_mds2_2718_download_report.json
 ```
 
+扩展到第一版 multi-image optional panel：
+
+```bash
+python -m gnnpinn.data.ambench_downloads \
+  --dataset-id mds2-2718 \
+  --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 \
+  --download \
+  --include-optional \
+  --verify-sha256 \
+  --output outputs/data_audits/ambench_mds2_2718_micro_panel_download_report.json
+```
+
 下载后可先生成 coarse micro graph inspection：
 
 ```bash
@@ -140,6 +153,13 @@ python -m gnnpinn.data.loaders.ambench_microstructure \
   --jsonl-output data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.jsonl \
   --csv-output data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.csv \
   --output outputs/data_audits/ambench_mds2_2718_micrograph_feature_table_manifest.json
+```
+
+服务器上一键构建多图 panel inspection 与 feature table：
+
+```bash
+bash scripts/server/build_mds2_2718_micro_panel_a100.sh \
+  > logs/ambench_mds2_2718_micro_panel_build_a100_v1.log 2>&1
 ```
 
 ## Quick Start

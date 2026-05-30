@@ -31,7 +31,7 @@ Pad_Cross_Sections/
 Top_View_Images/
 ```
 
-第一版项目 manifest 只固定一个小子集：
+第一版项目 manifest 的 required files 只固定一个小子集：
 
 ```text
 2718_README.txt
@@ -40,7 +40,20 @@ Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3_m.tif
 Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P2-L2.1-3_m.tif.sha256
 ```
 
-这样做的目的不是缩小研究对象，而是先验证真实显微图像到 graph feature 的可复现链路。后续再按实验需要扩展更多 `P/L` 条件、replicate 和 pad images。
+这样做的目的不是缩小研究对象，而是先验证真实显微图像到 graph feature 的可复现链路。
+
+当前 optional files 进一步固定了第一版 multi-image panel，覆盖不同 `P/L/replicate` 条件和 masked/unmasked 对照：
+
+| Image | Role |
+| --- | --- |
+| `AMB2022-718-SH1-BP1-P2-L2.1-3_m.tif` | required representative masked TIFF |
+| `AMB2022-718-SH1-BP1-P2-L2.1-3.tif` | same condition, unmasked counterpart |
+| `AMB2022-718-SH1-BP1-P1-L3.1-3_m.tif` | additional P1/L3.1 masked condition |
+| `AMB2022-718-SH1-BP1-P3-L0-2_m.tif` | additional P3/L0 masked condition |
+| `AMB2022-718-SH1-BP1-P4-L0-2_m.tif` | additional P4/L0 masked condition |
+| `AMB2022-718-SH1-BP1-P4-L0-2.tif` | P4/L0 unmasked counterpart |
+
+默认下载只处理 required files；下载 multi-image panel 时必须显式使用 `--include-optional` 或逐个指定 `--file-id`，避免误拉全量 TIFF。
 
 ## 复现入口
 
@@ -64,6 +77,18 @@ python -m gnnpinn.data.ambench_downloads \
   --download \
   --verify-sha256 \
   --output outputs/data_audits/ambench_mds2_2718_download_report.json
+```
+
+下载并校验 multi-image optional panel：
+
+```bash
+python -m gnnpinn.data.ambench_downloads \
+  --dataset-id mds2-2718 \
+  --root data/raw/ambench/2022_single_track/AMB2022-03/mds2-2718 \
+  --download \
+  --include-optional \
+  --verify-sha256 \
+  --output outputs/data_audits/ambench_mds2_2718_micro_panel_download_report.json
 ```
 
 只校验已下载文件：
@@ -109,6 +134,20 @@ python -m gnnpinn.data.loaders.ambench_microstructure \
   --jsonl-output data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.jsonl \
   --csv-output data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features.csv \
   --output outputs/data_audits/ambench_mds2_2718_micrograph_feature_table_manifest.json
+```
+
+服务器上可用一键脚本构建 multi-image panel 的 inspection 与聚合表：
+
+```bash
+bash scripts/server/build_mds2_2718_micro_panel_a100.sh \
+  > logs/ambench_mds2_2718_micro_panel_build_a100_v1.log 2>&1
+```
+
+输出的 panel feature 表为：
+
+```text
+data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features_panel.jsonl
+data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features_panel.csv
 ```
 
 训练入口已经支持读取该 JSONL 作为 `real_micro` graph conditioning：
