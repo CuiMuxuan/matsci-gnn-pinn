@@ -722,6 +722,22 @@ Phase 20 决策：deterministic region-level features 比继续扩展 global sca
 
 Phase 21 coordinate-registration ablation 已完成，结果文档为 `docs/results/ambench_real_micro_exact_line0_1_region_registration_v1.md`。seed-0 最佳全局变体是 `col_flip`：test RMSE `66.288087`，hot q90 `49.074617`，gradient q90 `72.040545`。但 `col_flip` focused 3-seed 仍不稳定：test RMSE `79.911958 +/- 20.066421`，hot q90 `81.615574 +/- 61.088806`，gradient q90 `97.241934 +/- 48.236581`。结论：坐标注册消融能确认局部微观特征路线比 global scalar 更有诊断价值，但 deterministic nearest-patch provider 仍不是稳定性能分支。下一步不应继续堆手工 patch scalar，应转向 fixed learned patch embeddings 或更强物理配准的 microstructure source；当前仍不需要 A100-SXM4-80GB。
 
+Phase 22 固定 patch embedding 分支已进入实现。该分支先不训练重型图像编码器，而是在 exact `Line_0_1` inspection 的 8x8 patch descriptors 上拟合冻结 PCA embedding，并用 `--closure-graph-mode real_micro_region_embedding` 按 residual point 坐标选择局部 embedding。构建脚本不会覆盖 v1/v2/region scalar 产物：
+
+```bash
+bash scripts/server/build_mds2_2718_line0_1_micro_panel_region_embedding_a100.sh \
+  > logs/ambench_mds2_2718_line0_1_region_embedding_build_a100_v1.log 2>&1
+```
+
+首轮 seed-0 小矩阵沿用 Phase 21 最好的 `col_flip` 坐标注册，跑 exact-line 四个 P3/P4 masked/unmasked 样本的 `g4/g8`：
+
+```bash
+bash scripts/server/run_real_micro_exact_line0_1_region_embedding_a100.sh \
+  > logs/ambench_real_micro_exact_line0_1_region_embedding_a100_v1.log 2>&1
+```
+
+验收：feature manifest 中 `region_embedding_dim=8`，训练 artifact 的 graph conditioning metadata 记录 `region_embedding_metadata_by_sample_id`；若 seed-0 没有同时改善全局 test RMSE 与 hot/gradient q90，则不做 3-seed 扩大。该分支仍适合当前 A100-SXM4-40GB。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

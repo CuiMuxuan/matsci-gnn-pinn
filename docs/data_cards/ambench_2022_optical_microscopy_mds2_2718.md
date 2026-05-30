@@ -205,6 +205,22 @@ data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_featur
 outputs/data_audits/ambench_mds2_2718_line0_1_micro_panel_feature_v2_manifest.json
 ```
 
+固定 patch embedding 分支会在 exact `Line_0_1` 8x8 patch descriptors 上拟合冻结 PCA 表征，不覆盖 v1/v2 产物：
+
+```bash
+bash scripts/server/build_mds2_2718_line0_1_micro_panel_region_embedding_a100.sh \
+  > logs/ambench_mds2_2718_line0_1_region_embedding_build_a100_v1.log 2>&1
+```
+
+默认读取/写入：
+
+```text
+data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718/micro_graph_features_line0_1_panel_region_embedding_v1.jsonl
+outputs/data_audits/ambench_mds2_2718_line0_1_micro_panel_region_embedding_v1_manifest.json
+```
+
+该 JSONL 保留原有 `region_features`，并新增 `region_embedding_feature_names`、`region_embedding_features` 与 `region_embedding_metadata`，供 `--closure-graph-mode real_micro_region_embedding` 逐 residual point 选择局部 embedding。
+
 ## 与当前热场主线的关系
 
 当前热场主线来自 `mds2-2716`：

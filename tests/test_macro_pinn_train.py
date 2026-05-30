@@ -952,3 +952,111 @@ def test_macro_pinn_sparse_closure_supports_real_micro_region_graph_conditioning
     assert payload["config"]["closure_graph_region_row_source"] == "x"
     assert payload["config"]["closure_graph_region_selection"] == "inverse_distance"
     assert payload["closure"]["term_names"] == ["1", "T", "g0", "g1", "g2"]
+
+
+def test_macro_pinn_sparse_closure_supports_real_micro_region_embedding_graph_conditioning(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "field.csv"
+    table.write_text(
+        "x,y,t,T\n"
+        "0,0,0,1\n"
+        "1,0,0,2\n"
+        "0,1,1,3\n"
+        "1,1,1,4\n",
+        encoding="utf-8",
+    )
+    graph_features = tmp_path / "micro_region_embedding_features.jsonl"
+    graph_features.write_text(
+        json.dumps(
+            {
+                "sample_id": "sample_a",
+                "sample_metadata": {"process": "P4"},
+                "feature_names": ["image_mask_fraction"],
+                "features": {"image_mask_fraction": 0.1},
+                "region_feature_names": [
+                    "center_row_norm",
+                    "center_col_norm",
+                    "mean_intensity_norm",
+                    "std_intensity_norm",
+                    "mask_fraction",
+                ],
+                "region_features": [
+                    [0.25, 0.25, 0.1, 0.01, 0.0],
+                    [0.25, 0.75, 0.2, 0.02, 0.2],
+                    [0.75, 0.25, 0.3, 0.03, 0.4],
+                    [0.75, 0.75, 0.4, 0.04, 0.8],
+                ],
+                "region_embedding_feature_names": [
+                    "patch_embedding_0",
+                    "patch_embedding_1",
+                    "patch_embedding_2",
+                ],
+                "region_embedding_features": [
+                    [1.0, 0.1, 0.0],
+                    [2.0, 0.2, 0.0],
+                    [3.0, 0.3, 0.0],
+                    [4.0, 0.4, 0.0],
+                ],
+                "region_embedding_metadata": {
+                    "method": "pca_lifted_region_descriptors",
+                    "embedding_dim": 3,
+                },
+                "graph_summary": {"num_nodes": 4},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--pde-weight",
+            "1e-4",
+            "--closure-mode",
+            "sparse_linear",
+            "--closure-feature",
+            "T",
+            "--closure-graph-mode",
+            "real_micro_region_embedding",
+            "--closure-graph-features",
+            str(graph_features),
+            "--closure-graph-sample-id",
+            "sample_a",
+            "--closure-graph-embedding-dim",
+            "3",
+            "--no-closure-graph-normalize",
+            "--closure-graph-region-flip-col",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    assert status == 0
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    graph_payload = payload["closure"]["graph_conditioning"]
+    assert graph_payload["mode"] == "real_micro_region_embedding"
+    assert graph_payload["metadata"]["source_feature_names"] == [
+        "patch_embedding_0",
+        "patch_embedding_1",
+        "patch_embedding_2",
+    ]
+    assert graph_payload["metadata"]["region_embedding_metadata_by_sample_id"]["sample_a"]["method"] == (
+        "pca_lifted_region_descriptors"
+    )
+    assert graph_payload["metadata"]["coordinate_mapping"]["flip_col"] is True
+    assert payload["config"]["closure_graph_mode"] == "real_micro_region_embedding"
+    assert payload["closure"]["term_names"] == ["1", "T", "g0", "g1", "g2"]

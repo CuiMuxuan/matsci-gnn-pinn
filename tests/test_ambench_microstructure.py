@@ -140,3 +140,62 @@ def test_build_graph_feature_table_writes_jsonl_and_csv(tmp_path: Path):
     assert record["region_coordinate_convention"]["row_feature"] == "center_row_norm"
     assert jsonl_output.read_text(encoding="utf-8").count("\n") == 1
     assert "image_mask_fraction" in csv_output.read_text(encoding="utf-8")
+
+
+def test_build_graph_feature_table_can_add_region_embeddings(tmp_path: Path):
+    inspection = {
+        "dataset_id": "mds2-2718",
+        "sample_id": "toy_micro",
+        "source": "toy.tif",
+        "sample_metadata": {"process": "P4"},
+        "image": {
+            "shape": [4, 4],
+            "gray_shape": [4, 4],
+            "statistics": {
+                "mean": 10.0,
+                "std": 2.0,
+                "mask_fraction": 0.25,
+            },
+            "derived_features": {},
+        },
+        "graph": {
+            "num_nodes": 4,
+            "num_edges": 4,
+            "node_feature_names": [
+                "center_row_norm",
+                "center_col_norm",
+                "mean_intensity_norm",
+                "std_intensity_norm",
+                "mask_fraction",
+            ],
+            "node_features": [
+                [0.25, 0.25, 0.1, 0.01, 0.0],
+                [0.25, 0.75, 0.2, 0.02, 0.2],
+                [0.75, 0.25, 0.3, 0.03, 0.4],
+                [0.75, 0.75, 0.4, 0.04, 0.8],
+            ],
+        },
+    }
+    inspection_path = tmp_path / "inspection.json"
+    inspection_path.write_text(__import__("json").dumps(inspection), encoding="utf-8")
+    jsonl_output = tmp_path / "features.jsonl"
+
+    report = build_graph_feature_table(
+        [inspection_path],
+        jsonl_output=jsonl_output,
+        region_embedding_dim=3,
+    )
+    record = report["records"][0]
+
+    assert report["region_embedding_dim"] == 3
+    assert record["region_embedding_feature_names"] == [
+        "patch_embedding_0",
+        "patch_embedding_1",
+        "patch_embedding_2",
+    ]
+    assert len(record["region_embedding_features"]) == 4
+    assert len(record["region_embedding_features"][0]) == 3
+    assert record["region_embedding_metadata"]["method"] == "pca_lifted_region_descriptors"
+    assert record["region_embedding_metadata"]["embedding_dim"] == 3
+    assert "cross_center_row_norm__center_col_norm" in record["region_embedding_metadata"]["lifted_feature_names"]
+    assert "region_embedding_features" in jsonl_output.read_text(encoding="utf-8")

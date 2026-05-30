@@ -166,6 +166,8 @@ def build_graph_feature_table(
     *,
     jsonl_output: str | Path | None = None,
     csv_output: str | Path | None = None,
+    region_embedding_dim: int = 0,
+    region_embedding_normalize: bool = True,
 ) -> dict[str, Any]:
     """Aggregate one or more inspection JSON files into graph-feature records."""
 
@@ -183,6 +185,14 @@ def build_graph_feature_table(
     for record in records[1:]:
         if record["feature_names"] != feature_names:
             raise ValueError("All inspection records must produce the same feature names")
+    if region_embedding_dim < 0:
+        raise ValueError("region_embedding_dim must be non-negative")
+    if region_embedding_dim > 0:
+        _add_region_embeddings(
+            records,
+            embedding_dim=region_embedding_dim,
+            normalize=region_embedding_normalize,
+        )
 
     if jsonl_output:
         jsonl_path = Path(jsonl_output)
@@ -210,10 +220,125 @@ def build_graph_feature_table(
         "dataset_id": records[0].get("dataset_id"),
         "n_records": len(records),
         "feature_names": feature_names,
+        "region_embedding_dim": region_embedding_dim,
+        "region_embedding_normalize": region_embedding_normalize if region_embedding_dim > 0 else None,
         "jsonl_output": str(jsonl_output) if jsonl_output else None,
         "csv_output": str(csv_output) if csv_output else None,
         "records": records,
     }
+
+
+def _add_region_embeddings(
+    records: list[dict[str, Any]],
+    *,
+    embedding_dim: int,
+    normalize: bool,
+) -> None:
+    """Fit deterministic PCA embeddings over lifted region descriptors."""
+
+    np = _numpy()
+    if embedding_dim <= 0:
+        raise ValueError("embedding_dim must be positive")
+    region_feature_names = list(records[0].get("region_feature_names") or [])
+    if not region_feature_names:
+        raise ValueError("region embeddings require region_feature_names")
+
+    lifted_rows: list[list[float]] = []
+    record_spans: list[tuple[int, int]] = []
+    lifted_feature_names: list[str] | None = None
+    for record in records:
+        names = list(record.get("region_feature_names") or [])
+        if names != region_feature_names:
+            raise ValueError("All records must expose the same region_feature_names for embedding generation")
+        region_features = record.get("region_features") or []
+        start = len(lifted_rows)
+        for region in region_features:
+            lifted_names, lifted_values = _lift_region_descriptor(names, [float(value) for value in region])
+            if lifted_feature_names is None:
+                lifted_feature_names = lifted_names
+            elif lifted_names != lifted_feature_names:
+                raise ValueError("Lifted region descriptor schema changed across rows")
+            lifted_rows.append(lifted_values)
+        record_spans.append((start, len(lifted_rows)))
+    if not lifted_rows:
+        raise ValueError("region embeddings require at least one region feature row")
+
+    matrix = np.asarray(lifted_rows, dtype=float)
+    center = np.mean(matrix, axis=0)
+    scale = np.std(matrix, axis=0)
+    scale = np.where(scale == 0.0, 1.0, scale)
+    standardized = (matrix - center) / scale
+    _, singular_values, vh = np.linalg.svd(standardized, full_matrices=False)
+    rank = min(embedding_dim, vh.shape[0])
+    components = vh[:rank].copy()
+    for index in range(rank):
+        anchor = int(np.argmax(np.abs(components[index])))
+        if components[index, anchor] < 0:
+            components[index] *= -1.0
+    scores = standardized @ components.T
+    if rank < embedding_dim:
+        scores = np.pad(scores, ((0, 0), (0, embedding_dim - rank)), constant_values=0.0)
+    explained_variance = (singular_values[:rank] ** 2) / max(standardized.shape[0] - 1, 1)
+    total_variance = float(np.sum(singular_values**2) / max(standardized.shape[0] - 1, 1))
+    if total_variance > 0.0:
+        explained_ratio = (explained_variance / total_variance).tolist()
+    else:
+        explained_ratio = [0.0 for _ in range(rank)]
+    if rank < embedding_dim:
+        explained_ratio.extend(0.0 for _ in range(embedding_dim - rank))
+    if normalize:
+        scores = _minmax_normalize_array_columns(scores)
+
+    embedding_feature_names = [f"patch_embedding_{index}" for index in range(embedding_dim)]
+    metadata = {
+        "method": "pca_lifted_region_descriptors",
+        "embedding_dim": embedding_dim,
+        "rank": rank,
+        "normalized": normalize,
+        "source_region_feature_names": region_feature_names,
+        "lifted_feature_names": lifted_feature_names or [],
+        "standardization_center": center.tolist(),
+        "standardization_scale": scale.tolist(),
+        "components": components.tolist(),
+        "explained_variance_ratio": explained_ratio,
+    }
+    for record, (start, stop) in zip(records, record_spans):
+        record["region_embedding_feature_names"] = embedding_feature_names
+        record["region_embedding_features"] = scores[start:stop, :].tolist()
+        record["region_embedding_metadata"] = metadata
+
+
+def _lift_region_descriptor(
+    feature_names: list[str],
+    values: list[float],
+) -> tuple[list[str], list[float]]:
+    if len(feature_names) != len(values):
+        raise ValueError("region feature names and values must have the same length")
+    lifted_names: list[str] = []
+    lifted_values: list[float] = []
+    for name, value in zip(feature_names, values):
+        lifted_names.append(f"raw_{name}")
+        lifted_values.append(float(value))
+    for name, value in zip(feature_names, values):
+        lifted_names.append(f"square_{name}")
+        lifted_values.append(float(value) * float(value))
+    for left_index, left_name in enumerate(feature_names):
+        for right_index in range(left_index + 1, len(feature_names)):
+            right_name = feature_names[right_index]
+            lifted_names.append(f"cross_{left_name}__{right_name}")
+            lifted_values.append(float(values[left_index]) * float(values[right_index]))
+    return lifted_names, lifted_values
+
+
+def _minmax_normalize_array_columns(array: Any) -> Any:
+    np = _numpy()
+    if array.size == 0:
+        return array
+    minimum = np.min(array, axis=0, keepdims=True)
+    maximum = np.max(array, axis=0, keepdims=True)
+    scale = maximum - minimum
+    scale = np.where(scale == 0.0, 1.0, scale)
+    return (array - minimum) / scale
 
 
 def parse_ambench_microstructure_filename(filename: str) -> dict[str, Any]:
@@ -479,7 +604,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--jsonl-output", type=Path, help="JSONL output path for aggregate mode.")
     parser.add_argument("--csv-output", type=Path, help="CSV output path for aggregate mode.")
+    parser.add_argument(
+        "--region-embedding-dim",
+        type=int,
+        default=0,
+        help=(
+            "Optional fixed PCA embedding dimension for aggregate-mode patch descriptors. "
+            "When positive, records include region_embedding_* fields."
+        ),
+    )
+    parser.add_argument(
+        "--no-region-embedding-normalize",
+        action="store_false",
+        dest="region_embedding_normalize",
+        help="Disable min-max normalization of aggregate-mode region embedding columns.",
+    )
     parser.add_argument("--output", type=Path, help="Optional JSON output path.")
+    parser.set_defaults(region_embedding_normalize=True)
     return parser
 
 
@@ -501,6 +642,8 @@ def main(argv: list[str] | None = None) -> int:
             args.inspections,
             jsonl_output=args.jsonl_output,
             csv_output=args.csv_output,
+            region_embedding_dim=args.region_embedding_dim,
+            region_embedding_normalize=args.region_embedding_normalize,
         )
     text = json.dumps(report, indent=2, ensure_ascii=False)
     if args.output:

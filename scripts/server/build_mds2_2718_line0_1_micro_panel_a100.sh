@@ -17,6 +17,8 @@ MANIFEST_OUTPUT="${MANIFEST_OUTPUT:-outputs/data_audits/ambench_mds2_2718_line0_
 DOWNLOAD_RETRIES="${DOWNLOAD_RETRIES:-3}"
 DOWNLOAD_TIMEOUT_SECONDS="${DOWNLOAD_TIMEOUT_SECONDS:-300}"
 DOWNLOAD_BACKEND="${DOWNLOAD_BACKEND:-wget}"
+REGION_EMBEDDING_DIM="${REGION_EMBEDDING_DIM:-0}"
+REGION_EMBEDDING_NORMALIZE="${REGION_EMBEDDING_NORMALIZE:-1}"
 
 mkdir -p "$AUDIT_ROOT"
 
@@ -68,7 +70,7 @@ inspect_one \
   "AMB2022-718-SH1-BP1-P4-L0-1" \
   "Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-1.tif"
 
-"$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.data.loaders.ambench_microstructure \
+aggregate_args=(
   --mode aggregate \
   --inspection "$AUDIT_ROOT/AMB2022-718-SH1-BP1-P3-L0-1_m_inspection.json" \
   --inspection "$AUDIT_ROOT/AMB2022-718-SH1-BP1-P3-L0-1_inspection.json" \
@@ -77,3 +79,13 @@ inspect_one \
   --jsonl-output "$PROCESSED_ROOT/${FEATURE_BASENAME}.jsonl" \
   --csv-output "$PROCESSED_ROOT/${FEATURE_BASENAME}.csv" \
   --output "$MANIFEST_OUTPUT"
+)
+
+if [[ "$REGION_EMBEDDING_DIM" != "0" ]]; then
+  aggregate_args+=(--region-embedding-dim "$REGION_EMBEDDING_DIM")
+  if [[ "$REGION_EMBEDDING_NORMALIZE" == "0" ]]; then
+    aggregate_args+=(--no-region-embedding-normalize)
+  fi
+fi
+
+"$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.data.loaders.ambench_microstructure "${aggregate_args[@]}"

@@ -55,6 +55,20 @@ class RealMicroRegionFeatureConfig:
     inverse_distance_epsilon: float = 1e-6
 
 
+@dataclass(frozen=True)
+class RealMicroRegionEmbeddingFeatureConfig:
+    graph_features: str
+    sample_id: str | None = None
+    embedding_dim: int = 4
+    normalize: bool = True
+    row_source: str = "y"
+    col_source: str = "x"
+    flip_row: bool = False
+    flip_col: bool = False
+    selection: str = "nearest"
+    inverse_distance_epsilon: float = 1e-6
+
+
 def graph_feature_names(embedding_dim: int, prefix: str = "g") -> list[str]:
     if embedding_dim <= 0:
         raise ValueError("embedding_dim must be positive")
@@ -474,6 +488,190 @@ class RealMicroRegionFeatureProvider(_torch().nn.Module):
         }
 
 
+class RealMicroRegionEmbeddingFeatureProvider(_torch().nn.Module):
+    """Select fixed low-dimensional local patch embeddings from real inspection grids."""
+
+    def __init__(self, config: RealMicroRegionEmbeddingFeatureConfig):
+        super().__init__()
+        if config.embedding_dim <= 0:
+            raise ValueError("embedding_dim must be positive")
+        if config.row_source not in {"x", "y"}:
+            raise ValueError("row_source must be 'x' or 'y'")
+        if config.col_source not in {"x", "y"}:
+            raise ValueError("col_source must be 'x' or 'y'")
+        if config.selection not in {"nearest", "inverse_distance"}:
+            raise ValueError("selection must be 'nearest' or 'inverse_distance'")
+        if config.inverse_distance_epsilon <= 0:
+            raise ValueError("inverse_distance_epsilon must be positive")
+        self.config = config
+        records = _load_real_micro_graph_records(Path(config.graph_features))
+        if config.sample_id is not None:
+            default_record = _find_real_micro_graph_record(records, config.sample_id, Path(config.graph_features))
+        else:
+            default_record = records[0]
+
+        sample_ids: list[str] = []
+        selected_feature_names: list[str] | None = None
+        selected_names_by_sample: dict[str, list[str]] = {}
+        region_embedding_names_by_sample: dict[str, list[str]] = {}
+        region_embedding_metadata_by_sample: dict[str, Any] = {}
+        region_counts_by_sample: dict[str, int] = {}
+        region_tables: list[list[list[float]]] = []
+        region_centers: list[list[list[float]]] = []
+        expected_region_count: int | None = None
+        for record in records:
+            sample_id = str(record.get("sample_id") or "")
+            if not sample_id:
+                raise ValueError("Every real micro region embedding record must contain a non-empty sample_id")
+            region_feature_names = list(record.get("region_feature_names") or [])
+            region_features = record.get("region_features") or []
+            embedding_feature_names = list(record.get("region_embedding_feature_names") or [])
+            embedding_features = record.get("region_embedding_features") or []
+            if not region_feature_names or not region_features:
+                raise ValueError(
+                    "real_micro_region_embedding requires records with region_feature_names and region_features"
+                )
+            if not embedding_feature_names or not embedding_features:
+                raise ValueError(
+                    "real_micro_region_embedding requires records with region_embedding_feature_names "
+                    "and region_embedding_features. Regenerate the JSONL aggregate with --region-embedding-dim."
+                )
+            centers = _real_micro_region_centers(region_feature_names, region_features)
+            selected_names, selected_table = _select_real_micro_region_embedding_features(
+                embedding_feature_names,
+                embedding_features,
+                config.embedding_dim,
+                normalize=config.normalize,
+            )
+            if selected_feature_names is None:
+                selected_feature_names = selected_names
+            elif selected_names != selected_feature_names:
+                raise ValueError("All real micro region embedding records must expose the same selected names")
+            if expected_region_count is None:
+                expected_region_count = len(selected_table)
+            elif len(selected_table) != expected_region_count:
+                raise ValueError("All real micro region embedding records must expose the same number of regions")
+            if len(centers) != len(selected_table):
+                raise ValueError("Region center count must match region embedding row count")
+            sample_ids.append(sample_id)
+            selected_names_by_sample[sample_id] = selected_names
+            region_embedding_names_by_sample[sample_id] = embedding_feature_names
+            region_embedding_metadata_by_sample[sample_id] = record.get("region_embedding_metadata", {})
+            region_counts_by_sample[sample_id] = len(selected_table)
+            region_tables.append(selected_table)
+            region_centers.append(centers)
+
+        torch = _torch()
+        self.records = records
+        self.record = default_record
+        self.sample_ids = sample_ids
+        self.sample_index = {sample_id: index for index, sample_id in enumerate(sample_ids)}
+        self.default_sample_id = str(default_record.get("sample_id"))
+        self.selected_feature_names = selected_feature_names or []
+        self.selected_feature_names_by_sample = selected_names_by_sample
+        self.region_embedding_names_by_sample = region_embedding_names_by_sample
+        self.region_embedding_metadata_by_sample = region_embedding_metadata_by_sample
+        self.region_counts_by_sample = region_counts_by_sample
+        self.register_buffer("region_feature_table", torch.tensor(region_tables, dtype=torch.float32))
+        self.register_buffer("region_centers", torch.tensor(region_centers, dtype=torch.float32))
+        default_index = self.sample_index[self.default_sample_id]
+        self.register_buffer("features", self.region_feature_table[default_index, 0:1, :].clone())
+
+    def forward(
+        self,
+        coords: Any | None = None,
+        time: Any | None = None,
+        sample_ids: list[str] | tuple[str, ...] | None = None,
+    ) -> Any:
+        if coords is None:
+            return self.features.reshape(-1)
+        if coords.shape[-1] < 2:
+            raise ValueError("real_micro_region_embedding requires at least two coordinate dimensions")
+        torch = _torch()
+        if sample_ids is not None:
+            if len(sample_ids) != coords.shape[0]:
+                raise ValueError("sample_ids length must match coords batch size")
+            sample_indices = torch.tensor(
+                [self._sample_index_for_id(sample_id) for sample_id in sample_ids],
+                dtype=torch.long,
+                device=coords.device,
+            )
+        else:
+            sample_indices = torch.full(
+                (coords.shape[0],),
+                self.sample_index[self.default_sample_id],
+                dtype=torch.long,
+                device=coords.device,
+            )
+        query = _real_micro_region_query(
+            coords,
+            row_source=self.config.row_source,
+            col_source=self.config.col_source,
+            flip_row=self.config.flip_row,
+            flip_col=self.config.flip_col,
+        )
+        centers = self.region_centers.to(device=coords.device, dtype=coords.dtype).index_select(0, sample_indices)
+        distances = torch.sum((query[:, None, :] - centers) ** 2, dim=-1)
+        tables = self.region_feature_table.to(device=coords.device, dtype=coords.dtype).index_select(0, sample_indices)
+        if self.config.selection == "inverse_distance":
+            weights = 1.0 / (distances + self.config.inverse_distance_epsilon)
+            weights = weights / weights.sum(dim=-1, keepdim=True).clamp_min(torch.finfo(weights.dtype).eps)
+            return torch.sum(tables * weights[:, :, None], dim=1)
+        region_indices = torch.argmin(distances, dim=-1)
+        batch_indices = torch.arange(coords.shape[0], dtype=torch.long, device=coords.device)
+        return tables[batch_indices, region_indices, :]
+
+    @property
+    def feature_names(self) -> list[str]:
+        return graph_feature_names(self.config.embedding_dim)
+
+    def _sample_index_for_id(self, sample_id: str | None) -> int:
+        resolved_sample_id = self.default_sample_id if sample_id in {None, ""} else str(sample_id)
+        try:
+            return self.sample_index[resolved_sample_id]
+        except KeyError as exc:
+            available = ", ".join(self.sample_ids)
+            raise ValueError(
+                f"Sample id {resolved_sample_id!r} not found in real micro region embedding records. "
+                f"Available sample ids: {available}"
+            ) from exc
+
+    def metadata(self) -> dict[str, Any]:
+        return {
+            "graph_features": self.config.graph_features,
+            "sample_id": self.record.get("sample_id"),
+            "requested_sample_id": self.config.sample_id,
+            "default_sample_id": self.default_sample_id,
+            "available_sample_ids": self.sample_ids,
+            "embedding_dim": self.config.embedding_dim,
+            "normalize": self.config.normalize,
+            "feature_names": self.feature_names,
+            "source_feature_names": self.selected_feature_names,
+            "source_feature_names_by_sample_id": self.selected_feature_names_by_sample,
+            "region_embedding_feature_names_by_sample_id": self.region_embedding_names_by_sample,
+            "region_embedding_metadata_by_sample_id": self.region_embedding_metadata_by_sample,
+            "region_counts_by_sample_id": self.region_counts_by_sample,
+            "coordinate_mapping": {
+                "row_source": self.config.row_source,
+                "col_source": self.config.col_source,
+                "flip_row": self.config.flip_row,
+                "flip_col": self.config.flip_col,
+                "query_row": _real_micro_region_query_description(
+                    self.config.row_source,
+                    self.config.flip_row,
+                ),
+                "query_col": _real_micro_region_query_description(
+                    self.config.col_source,
+                    self.config.flip_col,
+                ),
+                "selection": self.config.selection,
+                "inverse_distance_epsilon": self.config.inverse_distance_epsilon,
+            },
+            "sample_metadata": self.record.get("sample_metadata", {}),
+            "graph_summary": self.record.get("graph_summary", {}),
+        }
+
+
 def _load_real_micro_graph_records(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         raise FileNotFoundError(f"Real micro graph feature file not found: {path}")
@@ -652,3 +850,27 @@ def _minmax_normalize_columns(rows: list[list[float]]) -> list[list[float]]:
             normalized_row.append(0.0 if scale == 0 else (value - minimums[index]) / scale)
         normalized_rows.append(normalized_row)
     return normalized_rows
+
+
+def _select_real_micro_region_embedding_features(
+    embedding_feature_names: list[str],
+    embedding_features: list[list[float]],
+    embedding_dim: int,
+    *,
+    normalize: bool,
+) -> tuple[list[str], list[list[float]]]:
+    if not embedding_features:
+        raise ValueError("region embedding features must contain at least one row")
+    if len(embedding_feature_names) != len(embedding_features[0]):
+        raise ValueError("region_embedding_feature_names length must match embedding feature width")
+    selected_names = embedding_feature_names[:embedding_dim]
+    selected_indices = [embedding_feature_names.index(name) for name in selected_names]
+    selected_table = [[float(region[index]) for index in selected_indices] for region in embedding_features]
+    if len(selected_names) < embedding_dim:
+        padding_count = embedding_dim - len(selected_names)
+        selected_names.extend(f"padding_{index}" for index in range(padding_count))
+        for row in selected_table:
+            row.extend(0.0 for _ in range(padding_count))
+    if normalize:
+        selected_table = _minmax_normalize_columns(selected_table)
+    return selected_names, selected_table

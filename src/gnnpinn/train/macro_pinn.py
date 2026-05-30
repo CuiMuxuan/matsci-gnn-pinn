@@ -17,6 +17,8 @@ from gnnpinn.models.closure import (
     CoordinateRBFGraphFeatureProvider,
     RealMicroGraphFeatureConfig,
     RealMicroGraphFeatureProvider,
+    RealMicroRegionEmbeddingFeatureConfig,
+    RealMicroRegionEmbeddingFeatureProvider,
     RealMicroRegionFeatureConfig,
     RealMicroRegionFeatureProvider,
     SparseLibrary,
@@ -380,6 +382,34 @@ def _build_graph_conditioning(
             "metadata": provider.metadata(),
         }
         return provider, payload
+    if args.closure_graph_mode == "real_micro_region_embedding":
+        if args.closure_graph_features is None:
+            raise ValueError("--closure-graph-features is required for real_micro_region_embedding graph conditioning")
+        provider = RealMicroRegionEmbeddingFeatureProvider(
+            RealMicroRegionEmbeddingFeatureConfig(
+                graph_features=str(args.closure_graph_features),
+                sample_id=args.closure_graph_sample_id,
+                embedding_dim=args.closure_graph_embedding_dim,
+                normalize=not args.no_closure_graph_normalize,
+                row_source=args.closure_graph_region_row_source,
+                col_source=args.closure_graph_region_col_source,
+                flip_row=args.closure_graph_region_flip_row,
+                flip_col=args.closure_graph_region_flip_col,
+                selection=args.closure_graph_region_selection,
+                inverse_distance_epsilon=args.closure_graph_region_inverse_distance_epsilon,
+            )
+        ).to(device)
+        payload = {
+            "enabled": True,
+            "mode": args.closure_graph_mode,
+            "trainable": False,
+            "selection": {
+                "sample_id": args.closure_graph_sample_id,
+                "sample_id_column": args.closure_graph_sample_id_column,
+            },
+            "metadata": provider.metadata(),
+        }
+        return provider, payload
     if args.closure_graph_mode != "toy_static":
         raise ValueError(f"Unsupported closure graph mode: {args.closure_graph_mode}")
     provider = ToyStaticGraphEmbeddingProvider(
@@ -413,10 +443,14 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             if feature_name not in args.closure_features:
                 args.closure_features.append(feature_name)
     sample = load_field_table(args.table, observation_columns=[args.target])
-    if args.closure_graph_sample_id_column and args.closure_graph_mode not in {"real_micro", "real_micro_region"}:
+    if args.closure_graph_sample_id_column and args.closure_graph_mode not in {
+        "real_micro",
+        "real_micro_region",
+        "real_micro_region_embedding",
+    }:
         raise ValueError(
             "--closure-graph-sample-id-column is only supported with "
-            "--closure-graph-mode real_micro or real_micro_region"
+            "--closure-graph-mode real_micro, real_micro_region, or real_micro_region_embedding"
         )
     closure_graph_sample_ids = None
     if args.closure_graph_sample_id_column:
@@ -543,7 +577,11 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                     graph_embedding = graph_provider()
                 elif graph_provider is not None and args.closure_graph_mode == "coordinate_rbf":
                     graph_features = graph_provider(coords_residual, time_residual)
-                elif graph_provider is not None and args.closure_graph_mode in {"real_micro", "real_micro_region"}:
+                elif graph_provider is not None and args.closure_graph_mode in {
+                    "real_micro",
+                    "real_micro_region",
+                    "real_micro_region_embedding",
+                }:
                     residual_sample_ids = (
                         [closure_graph_sample_ids[index] for index in residual_indices]
                         if closure_graph_sample_ids is not None
@@ -848,11 +886,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--closure-graph-mode",
-        choices=["none", "toy_static", "coordinate_rbf", "real_micro", "real_micro_region"],
+        choices=[
+            "none",
+            "toy_static",
+            "coordinate_rbf",
+            "real_micro",
+            "real_micro_region",
+            "real_micro_region_embedding",
+        ],
         default="none",
         help=(
             "Optional graph-conditioned closure features. coordinate_rbf creates per-point anchor features; "
-            "real_micro_region selects local patch features from AM-Bench micrograph grids."
+            "real_micro_region selects local patch features from AM-Bench micrograph grids; "
+            "real_micro_region_embedding selects fixed low-dimensional patch embeddings."
         ),
     )
     parser.add_argument("--closure-graph-embedding-dim", type=int, default=2)
