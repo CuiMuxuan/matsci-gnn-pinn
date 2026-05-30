@@ -673,6 +673,15 @@ bash scripts/server/run_real_micro_exact_line0_1_a100.sh \
   > logs/ambench_real_micro_exact_line0_1_a100_v1.log 2>&1
 ```
 
+Exact-line seed-0 sweep 的最佳候选是 `P4-L0-1_m/g4`：test RMSE `67.891122`，hot q90 RMSE `42.174310`，gradient q90 RMSE `68.729519`。该单 seed 的 global test RMSE 优于 sparse closure best `70.494433`，但 hot/gradient 指标没有超过 sparse closure。随后只对该候选做 focused seed check：
+
+```bash
+bash scripts/server/run_real_micro_exact_line0_1_seed_check_a100.sh \
+  > logs/ambench_real_micro_exact_line0_1_p4_masked_g4_seedcheck_a100_v1.log 2>&1
+```
+
+Focused seed check 结果为 test RMSE `77.355537 +/- 10.649284`，hot q90 RMSE `59.851597 +/- 15.391250`，gradient q90 RMSE `80.681988 +/- 11.027500`。结论：exact-line alignment 比 same-process `L0-2` 更合理，但当前 sample-level hand-crafted real-micro feature 仍不够稳定，不能作为模型创新主结果。结果文档：`docs/results/ambench_real_micro_exact_line0_1_closure_v1.md`。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
