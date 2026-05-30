@@ -480,6 +480,49 @@ def test_download_source_manifest_can_resume_partial_file(monkeypatch, tmp_path:
     assert report["validation_failed"] is False
 
 
+def test_download_source_manifest_can_use_curl_backend(monkeypatch, tmp_path: Path):
+    import gnnpinn.data.ambench_downloads as module
+
+    def fake_which(name):
+        return "curl"
+
+    def fake_run(command, capture_output, text):
+        part_path = Path(command[command.index("-o") + 1])
+        part_path.write_bytes(b"data")
+
+        class Completed:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+
+        return Completed()
+
+    monkeypatch.setattr(module.shutil, "which", fake_which)
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    sources = {
+        "dataset_id": "toy",
+        "required_files": [
+            {
+                "id": "toy",
+                "relative_path": "toy.txt",
+                "size_bytes": 4,
+                "sha256": "3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7",
+                "download_url": "https://example.test/toy.txt",
+            }
+        ],
+    }
+
+    report = download_source_manifest(
+        tmp_path / "downloaded",
+        sources,
+        verify_hashes=True,
+        download_backend="curl",
+    )
+
+    assert report["actions"][0]["backend"] == "curl"
+    assert report["validation_failed"] is False
+
+
 def test_download_cli_rejects_unknown_file_id(tmp_path: Path):
     manifest = tmp_path / "sources.yaml"
     manifest.write_text(

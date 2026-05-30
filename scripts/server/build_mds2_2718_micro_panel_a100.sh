@@ -14,6 +14,7 @@ AUDIT_ROOT="${AUDIT_ROOT:-outputs/data_audits/mds2_2718_micro_panel}"
 PROCESSED_ROOT="${PROCESSED_ROOT:-data/processed/ambench/2022_single_track/AMB2022-03/mds2-2718}"
 DOWNLOAD_RETRIES="${DOWNLOAD_RETRIES:-3}"
 DOWNLOAD_TIMEOUT_SECONDS="${DOWNLOAD_TIMEOUT_SECONDS:-300}"
+DOWNLOAD_BACKEND="${DOWNLOAD_BACKEND:-curl}"
 
 mkdir -p "$AUDIT_ROOT"
 
@@ -26,6 +27,7 @@ mkdir -p "$AUDIT_ROOT"
   --retries "$DOWNLOAD_RETRIES" \
   --timeout-seconds "$DOWNLOAD_TIMEOUT_SECONDS" \
   --resume-partial \
+  --download-backend "$DOWNLOAD_BACKEND" \
   --output outputs/data_audits/ambench_mds2_2718_micro_panel_download_report.json
 
 inspect_one() {

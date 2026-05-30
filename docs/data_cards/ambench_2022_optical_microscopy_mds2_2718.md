@@ -91,6 +91,7 @@ python -m gnnpinn.data.ambench_downloads \
   --retries 3 \
   --timeout-seconds 300 \
   --resume-partial \
+  --download-backend curl \
   --output outputs/data_audits/ambench_mds2_2718_micro_panel_download_report.json
 ```
 

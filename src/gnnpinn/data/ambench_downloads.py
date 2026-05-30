@@ -6,6 +6,8 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import shutil
+import subprocess
 from typing import Any
 import urllib.error
 import urllib.request
@@ -97,6 +99,7 @@ def _download_url(
     overwrite: bool = False,
     timeout_seconds: int = 120,
     resume_partial: bool = False,
+    backend: str = "urllib",
 ) -> dict[str, Any]:
     if destination.exists() and not overwrite:
         return {
@@ -108,6 +111,16 @@ def _download_url(
 
     destination.parent.mkdir(parents=True, exist_ok=True)
     part_path = destination.with_name(f"{destination.name}.part")
+    if backend == "curl":
+        return _download_url_with_curl(
+            url,
+            destination,
+            part_path=part_path,
+            overwrite=overwrite,
+            timeout_seconds=timeout_seconds,
+            resume_partial=resume_partial,
+        )
+
     resume_from = part_path.stat().st_size if resume_partial and part_path.exists() else 0
     request = urllib.request.Request(
         url,
@@ -179,6 +192,67 @@ def _download_url(
     }
 
 
+def _download_url_with_curl(
+    url: str,
+    destination: Path,
+    *,
+    part_path: Path,
+    overwrite: bool,
+    timeout_seconds: int,
+    resume_partial: bool,
+) -> dict[str, Any]:
+    curl = shutil.which("curl")
+    if curl is None:
+        return {
+            "path": str(destination),
+            "partial_path": str(part_path),
+            "url": url,
+            "status": "download_error",
+            "bytes_written": 0,
+            "error": "curl executable not found",
+        }
+
+    before_size = part_path.stat().st_size if part_path.exists() else 0
+    command = [
+        curl,
+        "-L",
+        "--fail",
+        "--connect-timeout",
+        str(timeout_seconds),
+        "--max-time",
+        str(max(timeout_seconds * 3, timeout_seconds)),
+        "-o",
+        str(part_path),
+    ]
+    if resume_partial and before_size > 0:
+        command.extend(["-C", "-"])
+    command.append(url)
+    completed = subprocess.run(command, capture_output=True, text=True)
+    after_size = part_path.stat().st_size if part_path.exists() else 0
+    if completed.returncode != 0:
+        return {
+            "path": str(destination),
+            "partial_path": str(part_path),
+            "url": url,
+            "status": "download_error",
+            "bytes_written": max(after_size - before_size, 0),
+            "resume_from": before_size if resume_partial else 0,
+            "actual_size_bytes": after_size,
+            "error": completed.stderr.strip() or completed.stdout.strip(),
+            "backend": "curl",
+        }
+    part_path.replace(destination)
+    return {
+        "path": str(destination),
+        "url": url,
+        "status": "downloaded",
+        "bytes_written": max(after_size - before_size, 0),
+        "resume_from": before_size if resume_partial else 0,
+        "actual_size_bytes": destination.stat().st_size,
+        "backend": "curl",
+    }
+
+
 def _check_expected_file(root: Path, source: dict[str, Any], verify_hashes: bool) -> dict[str, Any]:
     relative_path = source["relative_path"]
     path = root / relative_path
@@ -235,6 +309,7 @@ def download_mds2_2716(
     retries: int = 0,
     timeout_seconds: int = 120,
     resume_partial: bool = False,
+    download_backend: str = "urllib",
 ) -> dict[str, Any]:
     """Download required AMB2022-03 / mds2-2716 files from the source manifest."""
 
@@ -250,6 +325,7 @@ def download_mds2_2716(
         retries=retries,
         timeout_seconds=timeout_seconds,
         resume_partial=resume_partial,
+        download_backend=download_backend,
     )
 
 
@@ -265,6 +341,7 @@ def download_mds2_2718(
     retries: int = 0,
     timeout_seconds: int = 120,
     resume_partial: bool = False,
+    download_backend: str = "urllib",
 ) -> dict[str, Any]:
     """Download selected AMB2022-03 optical microscopy files from the source manifest."""
 
@@ -280,6 +357,7 @@ def download_mds2_2718(
         retries=retries,
         timeout_seconds=timeout_seconds,
         resume_partial=resume_partial,
+        download_backend=download_backend,
     )
 
 
@@ -295,6 +373,7 @@ def download_source_manifest(
     retries: int = 0,
     timeout_seconds: int = 120,
     resume_partial: bool = False,
+    download_backend: str = "urllib",
 ) -> dict[str, Any]:
     """Download files listed in a loaded AM-Bench source manifest."""
 
@@ -346,6 +425,7 @@ def download_source_manifest(
             overwrite=True,
             timeout_seconds=timeout_seconds,
             resume_partial=resume_partial,
+            backend=download_backend,
         )
         attempts = [result]
         for _ in range(max(retries, 0)):
@@ -357,6 +437,7 @@ def download_source_manifest(
                 overwrite=True,
                 timeout_seconds=timeout_seconds,
                 resume_partial=resume_partial,
+                backend=download_backend,
             )
             attempts.append(result)
         actions.append(
@@ -394,6 +475,7 @@ def download_source_manifest(
         "retries": retries,
         "timeout_seconds": timeout_seconds,
         "resume_partial": resume_partial,
+        "download_backend": download_backend,
         "actions": actions,
         "missing_selected": missing_selected,
         "mismatched_selected": mismatched_selected,
@@ -550,6 +632,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Resume from an existing .part file with HTTP Range requests when retrying slow downloads.",
     )
     parser.add_argument(
+        "--download-backend",
+        choices=["urllib", "curl"],
+        default="urllib",
+        help="Download implementation. Use curl on Linux servers when NIST PDR urllib reads are very slow.",
+    )
+    parser.add_argument(
         "--file-id",
         action="append",
         dest="file_ids",
@@ -585,6 +673,7 @@ def main(argv: list[str] | None = None) -> int:
             retries=args.retries,
             timeout_seconds=args.timeout_seconds,
             resume_partial=args.resume_partial,
+            download_backend=args.download_backend,
         )
     else:
         sources = load_source_manifest(
