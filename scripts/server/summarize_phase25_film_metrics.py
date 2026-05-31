@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 
-SPLITS = ("line", "scan_speed", "spot_size")
+DEFAULT_SPLITS = ("line", "laser_power", "scan_speed", "spot_size", "process")
 
 PINN_SERIES = (
     ("phase24_no_process", "{split}_holdout_a100_sxm4_40gb_v1", "no_process"),
@@ -108,9 +108,18 @@ def _metric_fields(metrics: dict[str, Any]) -> dict[str, float | None]:
     }
 
 
-def collect_rows(root: Path) -> list[dict[str, Any]]:
+def _baseline_paths(root: Path, split: str, tag: str) -> list[Path]:
+    candidates = (
+        f"ambench_multiline_process_temperature_{split}_process_axis_profile_a100_sxm4_40gb_v1",
+        f"ambench_multiline_process_temperature_{split}_film_global_standard_a100_sxm4_40gb_v1",
+        f"ambench_multiline_process_temperature_{split}_holdout_a100_sxm4_40gb_v1",
+    )
+    return [root / "outputs" / "baselines" / f"{run_id}_{tag}_regions_q90.json" for run_id in candidates]
+
+
+def collect_rows(root: Path, splits: tuple[str, ...] = DEFAULT_SPLITS) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for split in SPLITS:
+    for split in splits:
         for method, run_template, tag in PINN_SERIES:
             run_id = "ambench_multiline_process_temperature_" + run_template.format(split=split)
             path = root / "outputs" / "runs" / f"{run_id}_macro_pinn_minmax_{tag}_v1" / "metrics.json"
@@ -147,8 +156,8 @@ def collect_rows(root: Path) -> list[dict[str, Any]]:
             rows.append(row)
 
         for method, tag in BASELINE_SERIES:
-            run_id = f"ambench_multiline_process_temperature_{split}_film_global_standard_a100_sxm4_40gb_v1"
-            path = root / "outputs" / "baselines" / f"{run_id}_{tag}_regions_q90.json"
+            paths = _baseline_paths(root, split, tag)
+            path = next((candidate for candidate in paths if candidate.exists()), paths[0])
             row = {"split": split, "method": method, "path": str(path)}
             if not path.exists():
                 row["missing"] = True
@@ -162,6 +171,18 @@ def collect_rows(root: Path) -> list[dict[str, Any]]:
 
 def collect_seed_rows(root: Path) -> list[dict[str, Any]]:
     specs = (
+        (
+            "laser_power",
+            "no_process",
+            "ambench_multiline_process_temperature_laser_power_process_axis_profile_a100_sxm4_40gb_v1",
+            "no_process",
+        ),
+        (
+            "laser_power",
+            "process_axis_profile",
+            "ambench_multiline_process_temperature_laser_power_process_axis_profile_a100_sxm4_40gb_v1",
+            "process_axis_profile",
+        ),
         (
             "scan_speed",
             "no_process",
@@ -277,10 +298,17 @@ def main() -> int:
     parser.add_argument("--root", default=".", help="Project root containing outputs/")
     parser.add_argument("--json-output", help="Optional path to write collected rows as JSON")
     parser.add_argument("--seed-check", action="store_true", help="Summarize focused Phase 25 seed-check runs")
+    parser.add_argument(
+        "--split",
+        action="append",
+        choices=DEFAULT_SPLITS,
+        help="Limit the regular artifact summary to one or more process-axis splits.",
+    )
     args = parser.parse_args()
 
     root = Path(args.root)
-    rows = collect_seed_rows(root) if args.seed_check else collect_rows(root)
+    splits = tuple(args.split) if args.split else DEFAULT_SPLITS
+    rows = collect_seed_rows(root) if args.seed_check else collect_rows(root, splits)
     if args.json_output:
         output = Path(args.json_output)
         output.parent.mkdir(parents=True, exist_ok=True)

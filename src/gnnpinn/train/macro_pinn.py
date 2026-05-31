@@ -136,8 +136,8 @@ def _resolve_input_conditioning_profile(
         },
         "process_condition": {
             "conditioning_mode": "concat",
-            "feature_normalization": "global_standard",
-            "reason": "full process holdout uses the conservative global-standard concat route from process-axis diagnostics.",
+            "feature_normalization": "same",
+            "reason": "full process holdout follows the line-like train-minmax concat route after Phase 28 validation.",
         },
     }
     if profile != "process_axis_v1":

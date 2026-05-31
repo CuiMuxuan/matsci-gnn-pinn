@@ -10,6 +10,7 @@ HIDDEN_DIM="${HIDDEN_DIM:-128}"
 LAYERS="${LAYERS:-4}"
 LR="${LR:-1e-3}"
 SEED="${SEED:-7}"
+PROFILE_SPLITS="${PROFILE_SPLITS:-line laser_power scan_speed spot_size process}"
 
 cd "$REPO_ROOT"
 mkdir -p logs
@@ -42,6 +43,26 @@ run_profile_holdout() {
     bash scripts/server/run_multiline_process_conditioned_thermal_a100.sh
 }
 
-run_profile_holdout line 0.6 0.2 0.2
-run_profile_holdout scan_speed 0.34 0.33 0.33
-run_profile_holdout spot_size 0.34 0.33 0.33
+for split_strategy in $PROFILE_SPLITS; do
+  case "$split_strategy" in
+    line)
+      run_profile_holdout line 0.6 0.2 0.2
+      ;;
+    laser_power)
+      run_profile_holdout laser_power 0.34 0.33 0.33
+      ;;
+    scan_speed)
+      run_profile_holdout scan_speed 0.34 0.33 0.33
+      ;;
+    spot_size)
+      run_profile_holdout spot_size 0.34 0.33 0.33
+      ;;
+    process)
+      run_profile_holdout process 0.6 0.2 0.2
+      ;;
+    *)
+      echo "Unsupported PROFILE_SPLITS entry: ${split_strategy}" >&2
+      exit 2
+      ;;
+  esac
+done

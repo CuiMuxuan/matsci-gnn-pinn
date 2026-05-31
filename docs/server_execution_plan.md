@@ -834,7 +834,14 @@ Phase 27 split/process-aware routing 已完成，结果文档为 `docs/results/a
 - `process_axis_v1` 恢复了最佳单路径结果：`line` test RMSE `157.793227`，`scan_speed` `133.430469`，`spot_size` `142.351582`。
 - `scan_speed` 与 `spot_size` 的 seed-7 profile 结果均低于 train-mean baseline；`line` 仍弱于 train-mean baseline。
 
-下一步不应继续扩大 blind mixture-of-experts。Phase 28 应把 `process_axis_v1` 扩展到 `laser_power` 与 full `process` holdout，并对 paper-facing profile routes 做 focused seed checks。该路线仍适合当前 A100-SXM4-40GB；只有引入更大多线表、learned image encoder 或大规模 mixture-of-experts 并实际超出 40GB 时，才需要向用户请求 A100-SXM4-80GB。
+Phase 28 process-axis profile validation 已完成，结果文档为 `docs/results/ambench_multiline_process_axis_profile_validation_v1.md`。关键结论：
+
+- `process_axis_v1` 已扩展到 `laser_power_W` 与 full `process_condition`。当前路线为：`laser_power_W -> concat/global_standard`，`process_condition -> concat/same`。
+- `laser_power` 是新增正向轴。focused 3-seed 结果显示 test RMSE 从 no-process `211.217281 +/- 0.443665` 改善到 `147.980699 +/- 3.456300`，hot q90 从 `391.157932 +/- 2.057337` 改善到 `260.268960 +/- 23.249762`。
+- full `process` 不应使用 `global_standard`。`concat/global_standard` 诊断 run 退化到 test RMSE `183.009876`；修正为 line-like `concat/same` 后恢复 `157.793227`。
+- `laser_power`、`scan_speed`、`spot_size` 现在都有三 seed process-conditioned gain；但 `line` 与 full `process` 仍弱于 train-mean baseline，因此不能把当前 profile 表述为 universal model。
+
+下一步不应继续扩大 blind mixture-of-experts。Phase 29 应扩大热/工艺数据覆盖或增强 baseline-facing generalization，再决定是否把 sparse closure/GNN 重新接回 process-conditioned Macro PINN。该路线仍适合当前 A100-SXM4-40GB；只有引入更大多线表、learned image encoder 或大规模 mixture-of-experts 并实际超出 40GB 时，才需要向用户请求 A100-SXM4-80GB。
 
 ## 阶段 E：方向三弱双向耦合
 

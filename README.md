@@ -248,6 +248,19 @@ bash scripts/server/run_multiline_process_axis_profile_a100.sh \
 
 The Phase 27 result is documented in [docs/results/ambench_multiline_process_axis_routing_v1.md](docs/results/ambench_multiline_process_axis_routing_v1.md). Trainable dual-expert routed conditioning degraded on `line`, `scan_speed`, and `spot_size`. The explicit `--input-conditioning-profile process_axis_v1` route records the process-axis decision in artifacts and recovers the best known per-axis choices: `line -> concat/train-minmax`, `scan_speed -> concat/global_standard`, and `spot_size -> FiLM/global_standard`.
 
+Process-axis profile validation:
+
+```bash
+PROFILE_SPLITS="laser_power process" \
+  bash scripts/server/run_multiline_process_axis_profile_a100.sh \
+  > logs/ambench_multiline_process_axis_profile_phase28_new_axes_a100_v1.log 2>&1
+
+bash scripts/server/run_phase28_laser_power_profile_seed_check_a100.sh \
+  > logs/ambench_phase28_laser_power_profile_seed_check_a100_v1.log 2>&1
+```
+
+The Phase 28 result is documented in [docs/results/ambench_multiline_process_axis_profile_validation_v1.md](docs/results/ambench_multiline_process_axis_profile_validation_v1.md). `process_axis_v1` now covers `laser_power_W` and full `process_condition`. `laser_power` shows a stable three-seed gain over no-process Macro PINN (`211.217281 +/- 0.443665 -> 147.980699 +/- 3.456300` test RMSE). Full `process` should use the line-like `concat/same` route; `concat/global_standard` was a negative diagnostic.
+
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
 ```bash
@@ -358,7 +371,8 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - 已新增 `--input-conditioning-mode concat|film`；FiLM 模式用工艺参数调制 hidden coordinate/time layers，默认仍为 concat 以兼容既有实验。
 - 已新增 `--input-feature-normalization same|none|minmax|standard|global_minmax|global_standard`，用于把工艺标量的归一化从坐标/时间归一化中解耦。
 - 已新增 `--input-conditioning-mode concat|film|concat_film` 与 `--input-film-strength`。Phase 25/26 表明工艺轴条件化是 split-sensitive：`spot_size` 的 FiLM/global-standard 分支最强，`scan_speed` 的 concat/global-standard 分支最强，简单 `concat_film` 叠加不是稳健通用解。
-- 已新增 `--input-conditioning-mode routed` 与 `--input-conditioning-profile process_axis_v1`。Phase 27 表明可训练双专家 routed 路线退化，而显式 process-axis profile 能可复现地记录并恢复最佳 per-axis conditioning；下一步应扩展到 `laser_power`/full `process` holdout 与 focused seed checks。
+- 已新增 `--input-conditioning-mode routed` 与 `--input-conditioning-profile process_axis_v1`。Phase 27 表明可训练双专家 routed 路线退化，而显式 process-axis profile 能可复现地记录并恢复最佳 per-axis conditioning。
+- Phase 28 已完成 `laser_power`/full `process` holdout 扩展与 `laser_power` focused seed check。`laser_power`、`scan_speed`、`spot_size` 均有三 seed process-conditioned gain；`line` 与 full `process` 仍弱于 train-mean baseline，下一步应扩大热/工艺数据或增强 baseline-facing 建模。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -403,6 +417,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_multiline_process_axis_holdout_v1.md](docs/results/ambench_multiline_process_axis_holdout_v1.md): process-axis grouped holdout 对比结果与 FiLM 分支决策。
 - [docs/results/ambench_multiline_process_film_conditioned_v1.md](docs/results/ambench_multiline_process_film_conditioned_v1.md): FiLM、global process-feature normalization、concat/global-standard、hybrid 条件化与 focused seed check 结果。
 - [docs/results/ambench_multiline_process_axis_routing_v1.md](docs/results/ambench_multiline_process_axis_routing_v1.md): routed dual-expert 负结果与 `process_axis_v1` 显式轴感知 profile 结果。
+- [docs/results/ambench_multiline_process_axis_profile_validation_v1.md](docs/results/ambench_multiline_process_axis_profile_validation_v1.md): `process_axis_v1` 的 `laser_power`/full `process` 扩展、强 baseline 汇总与 `laser_power` focused seed check。
 
 Real micro graph closure 对比脚本：
 
