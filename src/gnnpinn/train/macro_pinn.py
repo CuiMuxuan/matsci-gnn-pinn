@@ -427,6 +427,15 @@ def _output_affine_payload(
     }
 
 
+def _prediction_anchor_payload(args: argparse.Namespace) -> dict[str, Any]:
+    return {
+        "enabled": args.prediction_anchor_weight > 0.0,
+        "weight": args.prediction_anchor_weight,
+        "target_space": "normalized_training_target" if args.normalize_target else "training_target",
+        "loss": "mean(prediction ** 2)",
+    }
+
+
 def _resolve_input_conditioning_profile(
     args: argparse.Namespace,
     split_manifest: dict[str, Any] | None,
@@ -1457,6 +1466,9 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         data_loss = torch.sum(data_error * data_loss_weights) / data_loss_weights.sum()
         pde_loss = torch.zeros((), dtype=target.dtype, device=target.device)
         closure_loss = torch.zeros((), dtype=target.dtype, device=target.device)
+        prediction_anchor_loss = torch.zeros((), dtype=target.dtype, device=target.device)
+        if args.prediction_anchor_weight > 0.0:
+            prediction_anchor_loss = torch.mean(pred_for_loss**2)
         closure_source = None
         if args.pde_weight > 0:
             coords_residual = coords[residual_index].detach().clone().requires_grad_(True)
@@ -1531,7 +1543,12 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 source=closure_source,
             )
             pde_loss = torch.mean(residual**2)
-        loss = data_loss + args.pde_weight * pde_loss + closure_loss
+        loss = (
+            data_loss
+            + args.prediction_anchor_weight * prediction_anchor_loss
+            + args.pde_weight * pde_loss
+            + closure_loss
+        )
         loss.backward()
         optimizer.step()
         if step == 0 or step == args.steps - 1 or (args.log_every and (step + 1) % args.log_every == 0):
@@ -1540,6 +1557,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                     "step": float(step + 1),
                     "loss": float(loss.detach().cpu()),
                     "data_loss": float(data_loss.detach().cpu()),
+                    "prediction_anchor_loss": float(prediction_anchor_loss.detach().cpu()),
+                    "prediction_anchor_enabled": bool(args.prediction_anchor_weight > 0.0),
                     "pde_loss": float(pde_loss.detach().cpu()),
                     "closure_loss": float(closure_loss.detach().cpu()),
                     "residual_points": float(len(residual_indices) if needs_residual else 0),
@@ -1631,6 +1650,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         },
         "target_residual_baseline": target_residual_baseline_payload,
         "data_loss_weighting": data_loss_weighting,
+        "prediction_anchor": _prediction_anchor_payload(args),
         "input_normalization": {
             "mode": args.input_normalization,
             "coordinate_columns": sample.metadata.get("coordinate_columns"),
@@ -1715,6 +1735,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 "residual_correction": metrics_payload["residual_correction"],
                 "output_affine": metrics_payload["output_affine"],
                 "data_loss_weighting": metrics_payload["data_loss_weighting"],
+                "prediction_anchor": metrics_payload["prediction_anchor"],
                 "target_residual_baseline": metrics_payload["target_residual_baseline"],
             },
         },
@@ -1845,6 +1866,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--output-affine-lr",
         type=float,
         help="Optional learning rate for output-affine parameters; defaults to --lr.",
+    )
+    parser.add_argument(
+        "--prediction-anchor-weight",
+        type=float,
+        default=0.0,
+        help=(
+            "Optional L2 penalty on Macro PINN predictions in the training target space. "
+            "With default target normalization this anchors predictions toward the train-target mean."
+        ),
     )
     parser.add_argument("--pde-weight", type=float, default=0.0)
     parser.add_argument(

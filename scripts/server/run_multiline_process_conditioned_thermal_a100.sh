@@ -43,6 +43,7 @@ RESIDUAL_CORRECTION_START_STEP="${RESIDUAL_CORRECTION_START_STEP:-0}"
 OUTPUT_AFFINE_MODE="${OUTPUT_AFFINE_MODE:-none}"
 OUTPUT_AFFINE_SCALE="${OUTPUT_AFFINE_SCALE:-1.0}"
 OUTPUT_AFFINE_LR="${OUTPUT_AFFINE_LR:-}"
+PREDICTION_ANCHOR_WEIGHT="${PREDICTION_ANCHOR_WEIGHT:-0.0}"
 DATA_LOSS_WEIGHTING="${DATA_LOSS_WEIGHTING:-none}"
 DATA_LOSS_HOT_QUANTILE="${DATA_LOSS_HOT_QUANTILE:-0.9}"
 DATA_LOSS_GRADIENT_QUANTILE="${DATA_LOSS_GRADIENT_QUANTILE:-0.9}"
@@ -195,6 +196,10 @@ run_macro_pinn() {
       output_affine_args+=(--output-affine-lr "$OUTPUT_AFFINE_LR")
     fi
   fi
+  local prediction_anchor_args=()
+  if [[ "$PREDICTION_ANCHOR_WEIGHT" != "0" && "$PREDICTION_ANCHOR_WEIGHT" != "0.0" ]]; then
+    prediction_anchor_args+=(--prediction-anchor-weight "$PREDICTION_ANCHOR_WEIGHT")
+  fi
   local data_loss_weighting_args=()
   if [[ "$DATA_LOSS_WEIGHTING" != "none" ]]; then
     data_loss_weighting_args+=(
@@ -245,6 +250,7 @@ run_macro_pinn() {
     --spacetime-fourier-bands "$SPACETIME_FOURIER_BANDS" \
     "${residual_correction_args[@]}" \
     "${output_affine_args[@]}" \
+    "${prediction_anchor_args[@]}" \
     "${data_loss_weighting_args[@]}" \
     "${target_residual_args[@]}" \
     "${derived_process_args[@]}" \

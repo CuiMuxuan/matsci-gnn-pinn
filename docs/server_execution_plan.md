@@ -1220,7 +1220,7 @@ python scripts/server/summarize_phase42_validation_selection.py \
   --json-output outputs/reports/phase42_laser_power_validation_selection_summary.json
 ```
 
-结论：simple validation selector 不可信。broad12 val RMSE/gradient 能选 raw process，broad21 val gradient 能选 derived-only，但 broad21 val RMSE 错选 raw，broad21 val hot q90 错选 raw+derived。下一步不应添加 hand-coded validation-selected raw/derived profile，而应转向更强 baseline-facing architecture 或训练目标。
+结论：simple validation selector 不可信。broad12 val RMSE/gradient 能选 raw process，broad21 val gradient 能选 derived-only，但 broad21 val RMSE 错选 raw，broad21 val hot q90 错选 raw+derived。下一步不应添加 hand-coded validation-selected raw/derived profile，而应转向更强 baseline-facing architecture 或训练目标。当前已接入 `--prediction-anchor-weight` 作为新的 baseline-facing 训练目标；下一轮 broad12/broad21 `laser_power` focused validation 入口是 `scripts/server/run_phase42_broad_prediction_anchor_a100.sh`。
 
 ## 阶段 E：方向三弱双向耦合
 

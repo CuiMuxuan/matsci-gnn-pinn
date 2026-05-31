@@ -967,6 +967,54 @@ def test_macro_pinn_training_cli_supports_output_affine_calibration(tmp_path: Pa
     assert checkpoint["metadata"]["output_affine"] == payload["output_affine"]
 
 
+def test_macro_pinn_training_cli_supports_prediction_anchor_regularizer(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_temperature.csv"
+    table.write_text(
+        "x,y,t,T\n"
+        "0,0,0,10\n"
+        "1,0,0,11\n"
+        "0,1,1,20\n"
+        "1,1,1,21\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "prediction_anchor_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--prediction-anchor-weight",
+            "0.25",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    checkpoint = __import__("torch").load(output_dir / "checkpoint.pt", map_location="cpu")
+
+    assert status == 0
+    assert payload["config"]["prediction_anchor_weight"] == 0.25
+    assert payload["prediction_anchor"]["enabled"] is True
+    assert payload["prediction_anchor"]["weight"] == 0.25
+    assert payload["prediction_anchor"]["target_space"] == "normalized_training_target"
+    assert payload["history"][0]["prediction_anchor_enabled"] is True
+    assert payload["history"][0]["prediction_anchor_loss"] >= 0.0
+    assert checkpoint["metadata"]["prediction_anchor"] == payload["prediction_anchor"]
+
+
 def test_macro_pinn_training_cli_supports_concat_film_process_conditioning(tmp_path: Path):
     from gnnpinn.train.macro_pinn import main
 

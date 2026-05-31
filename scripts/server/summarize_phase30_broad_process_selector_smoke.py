@@ -72,6 +72,12 @@ BROAD_OUTPUT_AFFINE_SPEC = (
     DEFAULT_BROAD_OUTPUT_AFFINE_TAG,
     DEFAULT_BROAD_OUTPUT_AFFINE_TAG,
 )
+DEFAULT_BROAD_PREDICTION_ANCHOR_TAG = "pred_anchor"
+BROAD_PREDICTION_ANCHOR_SPEC = (
+    "broad_prediction_anchor",
+    DEFAULT_BROAD_PREDICTION_ANCHOR_TAG,
+    DEFAULT_BROAD_PREDICTION_ANCHOR_TAG,
+)
 DEFAULT_BROAD_DERIVED_PROCESS_TAG = "phys_proc"
 BROAD_DERIVED_PROCESS_SPEC = (
     "broad_derived_process",
@@ -244,6 +250,7 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
     target_normalization = data.get("target_normalization") or {}
     backbone = data.get("backbone") or {}
     output_affine = data.get("output_affine") or {}
+    prediction_anchor = data.get("prediction_anchor") or {}
     return {
         "input_features_enabled": features.get("enabled"),
         "input_feature_count": features.get("count"),
@@ -289,6 +296,9 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
         "output_affine_mode": output_affine.get("mode"),
         "output_affine_scale": output_affine.get("scale"),
         "output_affine_input_dim": output_affine.get("input_dim"),
+        "prediction_anchor_enabled": prediction_anchor.get("enabled"),
+        "prediction_anchor_weight": prediction_anchor.get("weight"),
+        "prediction_anchor_target_space": prediction_anchor.get("target_space"),
     }
 
 
@@ -371,9 +381,9 @@ def _fmt(value: Any) -> str:
 def print_metrics_markdown(summary: dict[str, Any]) -> None:
     print(
         "| split | method | status | test RMSE | hot q90 RMSE | gradient q90 RMSE | "
-        "spacetime | backbone | output affine | graph | target residual | selected | effective features |"
+        "spacetime | backbone | output affine | prediction anchor | graph | target residual | selected | effective features |"
     )
-    print("|---|---|---|---:|---:|---:|---|---|---|---|---|---|---|")
+    print("|---|---|---|---:|---:|---:|---|---|---|---|---|---|---|---|")
     pinn_methods = tuple(summary.get("pinn_methods") or ("no_process", "process_axis_v1", "broad_process_v1"))
     method_order = (
         "mean",
@@ -387,13 +397,15 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
         for method in method_order:
             row = split_rows["methods"].get(method, {})
             if row.get("missing"):
-                print(f"| {split} | {method} | MISSING |  |  |  |  |  |  |  |  |  | {row.get('path', '')} |")
+                print(
+                    f"| {split} | {method} | MISSING |  |  |  |  |  |  |  |  |  |  | {row.get('path', '')} |"
+                )
                 continue
             status = str(row.get("comparison_status") or "comparable")
             if status != "comparable":
                 reason = row.get("comparison_reason", "")
                 print(
-                    f"| {split} | {method} | INCOMPARABLE: {reason} |  |  |  |  |  |  |  |  |  | {row.get('path', '')} |"
+                    f"| {split} | {method} | INCOMPARABLE: {reason} |  |  |  |  |  |  |  |  |  |  | {row.get('path', '')} |"
                 )
                 continue
             selected = ""
@@ -417,6 +429,12 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
                     row.get("output_affine_input_dim"),
                     row.get("output_affine_scale"),
                 )
+            prediction_anchor = ""
+            if row.get("prediction_anchor_enabled"):
+                prediction_anchor = "{}@{}".format(
+                    _fmt(row.get("prediction_anchor_weight")),
+                    row.get("prediction_anchor_target_space"),
+                )
             graph = ""
             if row.get("process_graph_enabled"):
                 graph = "{}:{}@{}".format(
@@ -435,7 +453,7 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
             print(
                 (
                     "| {split} | {method} | {status} | {rmse} | {hot} | {grad} | "
-                    "{spacetime} | {backbone} | {output_affine} | {graph} | {target_residual} | {selected} | {features} |"
+                    "{spacetime} | {backbone} | {output_affine} | {prediction_anchor} | {graph} | {target_residual} | {selected} | {features} |"
                 ).format(
                     split=split,
                     method=method,
@@ -446,6 +464,7 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
                     spacetime=spacetime,
                     backbone=backbone,
                     output_affine=output_affine,
+                    prediction_anchor=prediction_anchor,
                     graph=graph,
                     target_residual=target_residual,
                     selected=selected,
@@ -531,6 +550,14 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--include-broad-prediction-anchor",
+        action="store_true",
+        help=(
+            "Also summarize the Phase 42 broad_prediction_anchor artifacts. "
+            "These use broad_process_v1 routing with a prediction-space anchor regularizer."
+        ),
+    )
+    parser.add_argument(
         "--include-broad-derived-process",
         action="store_true",
         help=(
@@ -564,6 +591,11 @@ def main() -> int:
         help="Run/profile tag used with --include-broad-output-affine.",
     )
     parser.add_argument(
+        "--broad-prediction-anchor-tag",
+        default=DEFAULT_BROAD_PREDICTION_ANCHOR_TAG,
+        help="Run/profile tag used with --include-broad-prediction-anchor.",
+    )
+    parser.add_argument(
         "--broad-derived-process-tag",
         default=DEFAULT_BROAD_DERIVED_PROCESS_TAG,
         help="Run/profile tag used with --include-broad-derived-process.",
@@ -593,6 +625,9 @@ def main() -> int:
     if args.include_broad_output_affine:
         tag = args.broad_output_affine_tag
         pinn_specs = (*pinn_specs, ("broad_output_affine", tag, tag))
+    if args.include_broad_prediction_anchor:
+        tag = args.broad_prediction_anchor_tag
+        pinn_specs = (*pinn_specs, ("broad_prediction_anchor", tag, tag))
     if args.include_broad_derived_process:
         tag = args.broad_derived_process_tag
         pinn_specs = (*pinn_specs, ("broad_derived_process", tag, tag))
