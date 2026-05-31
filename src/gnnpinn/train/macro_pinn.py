@@ -140,24 +140,71 @@ def _resolve_input_conditioning_profile(
             "reason": "full process holdout follows the line-like train-minmax concat route after Phase 28 validation.",
         },
     }
-    if profile != "process_axis_v1":
+    broad_process_v1 = {
+        "line_id": {
+            "conditioning_mode": "none",
+            "feature_normalization": "none",
+            "feature_columns": [],
+            "reason": "broad12 line holdout favored no-process Macro PINN over forced process conditioning.",
+        },
+        "scan_speed_mm_s": {
+            "conditioning_mode": "none",
+            "feature_normalization": "none",
+            "feature_columns": [],
+            "reason": "broad12 scan-speed holdout degraded under the old concat/global-standard profile.",
+        },
+        "spot_size_um": {
+            "conditioning_mode": "film",
+            "feature_normalization": "global_standard",
+            "reason": "broad12 spot-size holdout retained the strong FiLM/global-standard gain.",
+        },
+        "laser_power_W": {
+            "conditioning_mode": "concat",
+            "feature_normalization": "global_standard",
+            "reason": "broad12 laser-power holdout still improved no-process Macro PINN with concat/global-standard.",
+        },
+        "process_condition": {
+            "conditioning_mode": "none",
+            "feature_normalization": "none",
+            "feature_columns": [],
+            "reason": "broad12 full-process holdout degraded under the line-like concat/same profile.",
+        },
+    }
+    profiles = {
+        "process_axis_v1": profile_v1,
+        "broad_process_v1": broad_process_v1,
+    }
+    if profile not in profiles:
         raise ValueError(f"Unsupported input conditioning profile: {profile}")
-    if group_key not in profile_v1:
+    profile_routes = profiles[profile]
+    if group_key not in profile_routes:
         raise ValueError(f"Unsupported group_key {group_key!r} for input conditioning profile {profile!r}")
 
-    selected = profile_v1[group_key]
+    selected = profile_routes[group_key]
     requested = {
         "conditioning_mode": args.input_conditioning_mode,
         "feature_normalization": args.input_feature_normalization,
+        "feature_columns": list(args.input_feature_columns),
     }
-    args.input_conditioning_mode = selected["conditioning_mode"]
-    args.input_feature_normalization = selected["feature_normalization"]
+    if "feature_columns" in selected:
+        args.input_feature_columns = list(selected["feature_columns"])
+    if selected["conditioning_mode"] == "none":
+        args.input_conditioning_mode = "concat"
+        args.input_feature_normalization = "none"
+    else:
+        args.input_conditioning_mode = selected["conditioning_mode"]
+        args.input_feature_normalization = selected["feature_normalization"]
     return {
         "enabled": True,
         "profile": profile,
         "group_key": group_key,
         "requested": requested,
         "selected": selected,
+        "effective": {
+            "conditioning_mode": args.input_conditioning_mode,
+            "feature_normalization": args.input_feature_normalization,
+            "feature_columns": list(args.input_feature_columns),
+        },
     }
 
 
@@ -591,10 +638,10 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 "add a micro sample-id column or use --closure-graph-sample-id for a fixed record."
             )
         closure_graph_sample_ids = [str(value) for value in row_metadata[args.closure_graph_sample_id_column]]
-    coords, time, target = sample_to_tensors(sample, args.target, args.device)
-    input_features = _input_feature_tensor(sample, args.input_feature_columns, args.device)
     split_manifest = load_split_manifest(args.split_manifest) if args.split_manifest else None
     input_conditioning_profile = _resolve_input_conditioning_profile(args, split_manifest)
+    coords, time, target = sample_to_tensors(sample, args.target, args.device)
+    input_features = _input_feature_tensor(sample, args.input_feature_columns, args.device)
     train_indices = (
         split_indices(split_manifest, args.train_split)
         if split_manifest
@@ -1061,11 +1108,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--input-conditioning-profile",
-        choices=["none", "process_axis_v1"],
+        choices=["none", "process_axis_v1", "broad_process_v1"],
         default="none",
         help=(
             "Optional split-aware conditioning profile. process_axis_v1 reads the split manifest group_key "
-            "and selects the Phase 25 best-known route for line, scan-speed, spot-size, laser-power, or full-process holdouts."
+            "and selects the Phase 25 best-known route for line, scan-speed, spot-size, laser-power, or full-process holdouts. "
+            "broad_process_v1 can also fall back to no process features on broad-data splits where process conditioning degraded."
         ),
     )
     parser.add_argument(

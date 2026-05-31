@@ -857,6 +857,48 @@ Phase 29 broader process-dataset smoke 已完成，结果文档为 `docs/results
 
 因此下一步不应继续扩大 blind mixture-of-experts，也不应立即把 sparse closure/GNN 接回 broad process table。Phase 30 应实现 broad-data conditional route selector/profile，让每个 split 可以选择 no-process、concat 或 FiLM 路线；若 broad12 修正版 selector 成立，再扩到全部 21 条 single-track lines。该路线仍适合当前 A100-SXM4-40GB；只有引入 learned image encoder、更大多线表或大规模 mixture-of-experts 并实际超出 40GB 时，才需要向用户请求 A100-SXM4-80GB。
 
+Phase 30 broad-data selector 已完成，结果文档为 `docs/results/ambench_multiline_process_broad_selector_v1.md`。关键实现：
+
+- `MacroPINN` 新增 `--input-conditioning-profile broad_process_v1`。
+- `broad_process_v1` 可根据 split `group_key` 选择 no-process、concat/global-standard 或 FiLM/global-standard。
+- no-process route 会清空 `input_feature_columns`，并在 metrics/checkpoint 中记录 requested/selected/effective profile metadata；服务器 tiny smoke 已确认 `features_enabled=false` 且 checkpoint `param_dim=0`。
+- `scripts/server/run_phase30_broad_process_selector_smoke_a100.sh` 使用 broad12 process-balanced panel，并保留 Phase 23-29 产物。
+- `scripts/server/summarize_phase30_broad_process_selector_smoke.py` 增加 manifest/split signature check 与 `--require-comparable`，避免 tiny smoke artifact 和 full Phase 29 artifact 混比。
+
+关键结论：
+
+- full broad12 selector run 已通过 `--require-comparable` 门禁，所有五个 split 的 Phase 29/30 artifact 可比。
+- `line` 回退 no-process，避免旧 profile 退化：test RMSE `149.638162 -> 126.308616`。
+- `scan_speed` 回退 no-process，避免旧 profile 退化：`226.454041 -> 186.173938`。
+- full `process` 回退 no-process，避免旧 profile 退化：`220.019735 -> 181.091525`。
+- `laser_power` 保留 concat/global-standard，改善 no-process Macro PINN：`167.614004 -> 140.753534`。
+- `spot_size` 保留 FiLM/global-standard，是 broad12 最强正向工艺条件化轴：`206.100512 -> 136.309183`，且优于 mean baseline `151.850578`。
+
+Phase 30 关闭为 broad-data selector validation，不是最终 universal model。下一步 Phase 31 应用同一 selector 扩展到全部 21 条 single-track `ThermalData/Line_*/Signal` 数据集。为了保持 summary 的 manifest/split comparability gate 有同配置参照，需要先跑 broad21 的旧 profile counterpart，再跑新 selector：
+
+```bash
+DATASET_LIMIT=21 DATASET_ORDER=process_round_robin STEPS=500 N_ESTIMATORS=80 \
+  bash scripts/server/run_phase29_broad_process_profile_smoke_a100.sh \
+  > logs/ambench_phase31_broad21_rr_process_axis_profile_a100_v1.log 2>&1
+
+DATASET_LIMIT=21 DATASET_ORDER=process_round_robin STEPS=500 N_ESTIMATORS=80 \
+  bash scripts/server/run_phase30_broad_process_selector_smoke_a100.sh \
+  > logs/ambench_phase31_broad21_rr_selector_smoke_a100_v1.log 2>&1
+```
+
+验收：生成 broad21 manifest/split、mean/kNN/ExtraTrees baselines、no-process Macro PINN 和 `broad_process_v1` artifacts；summary 必须通过 `--require-comparable`。如果 broad21 仍保持“避免负迁移并保留 spot-size/laser-power 正向路由”的形态，再进入更强 broad-data profile 或 closure/GNN reintegration。
+
+Phase 31 broad21 all single-track selector scaling 已完成，结果文档为 `docs/results/ambench_multiline_process_broad_selector_broad21_v1.md`。关键结论：
+
+- broad21 summary 通过 `--require-comparable`，旧 profile counterpart 与新 selector 在同一 21-line dataset/split/signature 下比较。
+- `laser_power` 保留 concat/global-standard 路由，test RMSE `192.833317 -> 178.040331`，但仍弱于 mean baseline `131.741364`。
+- `spot_size` 保留 FiLM/global-standard 路由，test RMSE `210.423419 -> 147.389475`，略优于 mean baseline `149.185412`。
+- `scan_speed` 旧 profile 在 broad21 上严重退化到 `469.347549`，`broad_process_v1` 回退 no-process 到 `227.128663`。
+- full `process` 旧 profile 退化到 `229.613547`，`broad_process_v1` 回退 no-process 到 `166.231596`。
+- `line` 在 broad21 上旧 profile 略好于 conservative no-process route (`125.449323` vs `126.194921`)，提示下一步可以考虑 broad21-specific line route refinement。
+
+Phase 31 关闭为 broad21 selector scaling。下一步不需要 A100-SXM4-80GB。建议 Phase 32 在两个方向中择一推进：其一，做 broad-data profile v2，把 line route 从 no-process 修正为 concat/same 并保留 scan_speed/process fallback；其二，保留当前 conservative selector，转入更强 broad-data representation 或 closure/GNN reintegration。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
