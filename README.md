@@ -324,7 +324,7 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
   --require-comparable
 ```
 
-The Phase 35 setup is documented in [docs/results/ambench_multiline_process_region_weighted_loss_v1.md](docs/results/ambench_multiline_process_region_weighted_loss_v1.md). It keeps `broad_process_v1` and raw spacetime defaults, then applies optional train-split-only supervised loss weighting with `--data-loss-weighting hot_gradient`. Defaults remain unchanged.
+The Phase 35 setup and result are documented in [docs/results/ambench_multiline_process_region_weighted_loss_v1.md](docs/results/ambench_multiline_process_region_weighted_loss_v1.md). It keeps `broad_process_v1` and raw spacetime defaults, then applies optional train-split-only supervised loss weighting with `--data-loss-weighting hot_gradient`. Single-seed probes found promising region tradeoffs, but a paired seed check closed the branch as a negative diagnostic: `broad_process_v1` averaged `136.384782 / 162.125337 / 165.282182` for test RMSE / hot q90 / gradient q90, while `rw15` averaged `142.730123 / 163.186816 / 170.560643` and `rw125` averaged `140.638507 / 177.884187 / 177.816410`.
 
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
@@ -444,7 +444,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 32 已完成 `broad_process_v2` 诊断。v2 只把 `line_id` 改为 concat/same；它改善 broad21 line，但明显伤害 broad12 line，因此不替代 `broad_process_v1` 默认路线。下一步转向更强 broad-data representation 或 closure/GNN reintegration。
 - Phase 33 已完成 fixed Fourier spacetime representation 诊断。`--spacetime-encoding fourier` 与 `--spacetime-fourier-bands` 已实现并记录到 metrics/checkpoint；但 broad12 同口径结果在所有 split 均弱于 `broad_process_v1`，因此 Fourier 不替代 raw coordinate/time basis，下一步应转向 closure/GNN reintegration 或更结构化的数据表示。
 - Phase 34 learned residual correction 已关闭为负结果。默认 residual MLP 只带来 `0.015` 量级的全局 RMSE 改善，却明显伤害 hot q90 和 gradient q90；弱残差设置接近保持区域指标但没有收益。
-- Phase 35 已进入 train-split region-weighted data loss 分支。`--data-loss-weighting hot|gradient|hot_gradient` 只用训练 split 确定热点/梯度权重，默认关闭；首轮 A100 只验证 broad12 `spot_size` 的 `hot_gradient` 权重 2。
+- Phase 35 train-split region-weighted data loss 已关闭为负诊断。`rw15` 和 `rw125` 的单 seed 区域收益没有通过 paired seed check，下一步应转向更结构化的 process/microstructure 表示，而不是继续调 loss 权重。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 

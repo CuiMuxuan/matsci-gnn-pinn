@@ -1000,17 +1000,37 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
   --require-comparable
 ```
 
-若权重 2.0 能改善 hot q90 或 gradient q90 且不明显牺牲 global RMSE，再跑权重 4.0 focused 变体：
+首轮 focused A100 结果：
+
+| Method | Region weight | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | 判断 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `broad_process_v1` |  | 136.309183 | 165.228535 | 169.049295 | baseline |
+| `rw125` | 1.25 | 139.773470 | 160.431178 | 168.187786 | global 接近，区域收益小 |
+| `rw135` | 1.35 | 140.881887 | 199.804301 | 192.678431 | 负诊断 |
+| `rw15` | 1.50 | 143.462665 | 128.090811 | 150.283022 | 区域收益最大，global 退化中等 |
+| `rw2` | 2.00 | 153.645414 | 132.990923 | 154.642037 | 区域收益明显但 global 退化过大 |
+
+下一步不继续加大权重；改为对 `rw15` 与 `rw125` 做 paired model-seed check：
 
 ```bash
-PROFILE_SPLITS=spot_size DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
-STEPS=500 N_ESTIMATORS=80 REGION_WEIGHTED_RUN_TAG=rw4 \
-DATA_LOSS_REGION_WEIGHT=4.0 \
-  bash scripts/server/run_phase35_broad_region_weighted_loss_a100.sh \
-  > logs/phase35_broad12_spot_size_region_hotgrad_w4_a100_v1.log 2>&1
+SEEDS="1 2" REGION_WEIGHTED_TAGS="rw15 rw125" STEPS=500 \
+  bash scripts/server/run_phase35_region_weighted_seed_check_a100.sh \
+  > logs/phase35_broad12_spot_size_region_weighted_seed_check_a100_v1.log 2>&1
+
+python scripts/server/summarize_phase35_region_weighted_seed_check.py \
+  --json-output outputs/reports/phase35_broad12_spot_size_region_weighted_seed_check_summary.json \
+  --require-complete
 ```
 
-验收：只有当 region-weighted data loss 改善 hot q90 和/或 gradient q90，并且 global test RMSE 接近 `broad_process_v1` 时，才继续扩到其它 split。当前分支不需要 A100-SXM4-80GB。
+seed check 结果：
+
+| Method | Test RMSE mean +/- std | Hot q90 mean +/- std | Gradient q90 mean +/- std | 判断 |
+| --- | ---: | ---: | ---: | --- |
+| `broad_process_v1` | 136.384782 +/- 0.467526 | 162.125337 +/- 4.909788 | 165.282182 +/- 5.270236 | baseline |
+| `rw15` | 142.730123 +/- 1.890466 | 163.186816 +/- 52.968498 | 170.560643 +/- 34.779012 | 单 seed 区域收益不稳定 |
+| `rw125` | 140.638507 +/- 4.227388 | 177.884187 +/- 37.767560 | 177.816410 +/- 26.335924 | 保守权重也未稳定改善 |
+
+结论：Phase 35 关闭为负诊断。保留 data-loss weighting 作为可复现分析选项，但不扩到其它 split。下一步应转向更结构化的 process/microstructure 表示或 graph-conditioned branch，而不是继续调 scalar loss 权重。当前分支不需要 A100-SXM4-80GB。
 
 ## 阶段 E：方向三弱双向耦合
 
