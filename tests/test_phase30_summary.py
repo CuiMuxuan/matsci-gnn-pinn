@@ -143,6 +143,38 @@ def _region_weighted_metrics(rmse: float) -> dict:
     return payload
 
 
+def _group_balanced_metrics(rmse: float) -> dict:
+    payload = _metrics(rmse)
+    payload["data_loss_group_balance"] = {
+        "enabled": True,
+        "mode": "inverse_frequency",
+        "fit_scope": "train",
+        "normalization": "blend_with_uniform",
+        "column": "process_condition",
+        "strength": 1.0,
+        "train_points": 800,
+        "group_count": 2,
+        "group_sizes": {
+            "laser_power_W=245__scan_speed_mm_s=800__spot_size_um=49": 600,
+            "laser_power_W=285__scan_speed_mm_s=960__spot_size_um=67": 200,
+        },
+        "group_weights": {
+            "laser_power_W=245__scan_speed_mm_s=800__spot_size_um=49": 2 / 3,
+            "laser_power_W=285__scan_speed_mm_s=960__spot_size_um=67": 2.0,
+        },
+        "weight_sum": 800.0,
+        "mean_weight": 1.0,
+    }
+    payload["data_loss_objective"] = {
+        "enabled": True,
+        "region_component_enabled": False,
+        "group_balance_component_enabled": True,
+        "weight_sum": 800.0,
+        "mean_weight": 1.0,
+    }
+    return payload
+
+
 def _process_graph_metrics(rmse: float) -> dict:
     payload = _metrics(rmse)
     payload["input_features"].update(
@@ -588,6 +620,64 @@ def test_phase30_summary_can_include_broad_region_weighted_artifacts(tmp_path: P
     assert weighted_row["data_loss_weighting_mode"] == "hot_gradient"
     assert weighted_row["data_loss_region_weight"] == 2.0
     assert weighted_row["data_loss_weighted_points"] == 120
+
+
+def test_phase30_summary_can_include_broad_group_balance_artifacts(tmp_path: Path):
+    summary = _load_summary_module()
+    split = "laser_power"
+    tag = "group_bal"
+    baseline_id = summary._run_id(split, 12, "process_round_robin", "process_axis_profile")
+    balanced_id = summary._run_id(split, 12, "process_round_robin", tag)
+
+    manifest = _manifest(1200, 30, 96)
+    split_payload = _split(1200)
+    split_payload["group_key"] = "laser_power_W"
+    _write_json(tmp_path / "outputs/data_audits" / f"{baseline_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{baseline_id}_split.json", split_payload)
+    _write_json(tmp_path / "outputs/data_audits" / f"{balanced_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{balanced_id}_split.json", split_payload)
+    for method, baseline_tag in summary.BASELINE_TAGS:
+        _write_json(
+            tmp_path / "outputs/baselines" / f"{baseline_id}_{baseline_tag}_regions_q90.json",
+            _metrics(100.0),
+        )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_no_process_v1" / "metrics.json",
+        _metrics(90.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_process_axis_profile_v1" / "metrics.json",
+        _metrics(80.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{balanced_id}_macro_pinn_minmax_{tag}_v1" / "metrics.json",
+        _group_balanced_metrics(66.0),
+    )
+
+    payload = summary.collect_rows(
+        tmp_path,
+        (split,),
+        12,
+        "process_round_robin",
+        (*summary.DEFAULT_PINN_SPECS, (tag, tag, tag)),
+    )
+    balanced_row = payload["splits"][split]["methods"][tag]
+
+    assert payload["pinn_methods"] == [
+        "no_process",
+        "process_axis_v1",
+        "broad_process_v1",
+        tag,
+    ]
+    assert balanced_row["comparison_status"] == "comparable"
+    assert balanced_row["rmse"] == 66.0
+    assert balanced_row["data_loss_group_balance_enabled"] is True
+    assert balanced_row["data_loss_group_balance_column"] == "process_condition"
+    assert balanced_row["data_loss_group_balance_strength"] == 1.0
+    assert balanced_row["data_loss_group_balance_groups"] == 2
+    assert balanced_row["data_loss_group_balance_weight_sum"] == 800.0
+    assert balanced_row["data_loss_objective_enabled"] is True
+    assert balanced_row["data_loss_objective_weight_sum"] == 800.0
 
 
 def test_phase30_summary_can_include_broad_process_graph_rbf_artifacts(tmp_path: Path):

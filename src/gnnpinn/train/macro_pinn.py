@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import math
 import platform
@@ -90,6 +91,39 @@ def _row_metadata_float(
         raise ValueError(
             f"{label} {column!r} contains a non-numeric value at row {row_index}: {value!r}"
         ) from exc
+
+
+def _group_balance_scalar_value(
+    row_metadata: dict[str, Any],
+    column: str,
+    row_index: int,
+    label: str,
+) -> str:
+    if column not in row_metadata:
+        raise ValueError(
+            f"{label} {column!r} was not found in field-table row metadata. "
+            "Use metadata/process columns such as laser_power_W, scan_speed_mm_s, or spot_size_um."
+        )
+    value = row_metadata[column][row_index]
+    if value in {None, ""}:
+        raise ValueError(f"{label} {column!r} is empty at row {row_index}")
+    try:
+        return f"{float(value):g}"
+    except (TypeError, ValueError):
+        return str(value)
+
+
+def _group_balance_value(sample: Any, column: str, row_index: int) -> str:
+    row_metadata = sample.metadata.get("row_metadata", {})
+    if column == "process_condition":
+        return "__".join(
+            [
+                f"{source_column}="
+                f"{_group_balance_scalar_value(row_metadata, source_column, row_index, 'Process group balance source column')}"
+                for source_column in AM_ENERGY_SOURCE_COLUMNS
+            ]
+        )
+    return _group_balance_scalar_value(row_metadata, column, row_index, "Data-loss group balance column")
 
 
 def _derived_process_feature_tensor(
@@ -1139,6 +1173,61 @@ def _data_loss_weight_tensor(
     }
 
 
+def _group_balance_weight_tensor(
+    sample: Any,
+    train_indices: list[int],
+    args: argparse.Namespace,
+    device: str,
+) -> tuple[Any, dict[str, Any]]:
+    torch = _torch()
+    column = args.data_loss_group_balance_column.strip()
+    strength = args.data_loss_group_balance_strength
+    if strength < 0.0 or strength > 1.0:
+        raise ValueError("data_loss_group_balance_strength must be between 0 and 1")
+    if not column or strength == 0.0 or not train_indices:
+        weights = torch.ones((len(train_indices), 1), dtype=torch.float32, device=device)
+        return weights, {
+            "enabled": False,
+            "mode": "none",
+            "fit_scope": "train",
+            "normalization": "blend_with_uniform",
+            "column": column or None,
+            "strength": strength,
+            "train_points": len(train_indices),
+            "group_count": 0,
+            "group_sizes": {},
+            "group_weights": {},
+            "weight_sum": float(weights.sum().detach().cpu()),
+            "mean_weight": float(weights.mean().detach().cpu()) if len(train_indices) else 0.0,
+        }
+    group_values = [_group_balance_value(sample, column, index) for index in train_indices]
+    group_counts = Counter(group_values)
+    group_count = len(group_counts)
+    balanced_group_weights = {
+        group: len(train_indices) / (group_count * count)
+        for group, count in group_counts.items()
+    }
+    weights_list = [
+        (1.0 - strength) + strength * balanced_group_weights[group]
+        for group in group_values
+    ]
+    weights = torch.tensor(weights_list, dtype=torch.float32, device=device).reshape(-1, 1)
+    return weights, {
+        "enabled": True,
+        "mode": "inverse_frequency",
+        "fit_scope": "train",
+        "normalization": "blend_with_uniform",
+        "column": column,
+        "strength": strength,
+        "train_points": len(train_indices),
+        "group_count": group_count,
+        "group_sizes": dict(sorted((group, int(count)) for group, count in group_counts.items())),
+        "group_weights": dict(sorted((group, float(weight)) for group, weight in balanced_group_weights.items())),
+        "weight_sum": float(weights.sum().detach().cpu()),
+        "mean_weight": float(weights.mean().detach().cpu()) if len(train_indices) else 0.0,
+    }
+
+
 def _build_graph_conditioning(
     args: argparse.Namespace,
     device: str,
@@ -1362,13 +1451,27 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     if float(target_std.detach().cpu()) == 0.0:
         target_std = torch.ones_like(target_std)
     train_target = (target_for_training - target_mean) / target_std if args.normalize_target else target_for_training
-    data_loss_weights, data_loss_weighting = _data_loss_weight_tensor(
+    data_loss_region_weights, data_loss_weighting = _data_loss_weight_tensor(
         sample=sample,
         target=args.target,
         train_indices=train_indices,
         args=args,
         device=args.device,
     )
+    data_loss_group_balance_weights, data_loss_group_balance = _group_balance_weight_tensor(
+        sample=sample,
+        train_indices=train_indices,
+        args=args,
+        device=args.device,
+    )
+    data_loss_weights = data_loss_region_weights * data_loss_group_balance_weights
+    data_loss_objective = {
+        "enabled": bool(data_loss_weighting["enabled"] or data_loss_group_balance["enabled"]),
+        "region_component_enabled": bool(data_loss_weighting["enabled"]),
+        "group_balance_component_enabled": bool(data_loss_group_balance["enabled"]),
+        "weight_sum": float(data_loss_weights.sum().detach().cpu()),
+        "mean_weight": float(data_loss_weights.mean().detach().cpu()) if len(train_indices) else 0.0,
+    }
 
     model = MacroPINN(
         coord_dim=coords.shape[-1],
@@ -1587,6 +1690,11 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                     "data_loss_region_weighting_enabled": bool(data_loss_weighting["enabled"]),
                     "data_loss_region_weighted_points": float(data_loss_weighting["selected_points"]),
                     "data_loss_mean_weight": float(data_loss_weighting["mean_weight"]),
+                    "data_loss_group_balance_enabled": bool(data_loss_group_balance["enabled"]),
+                    "data_loss_group_balance_column": data_loss_group_balance.get("column"),
+                    "data_loss_group_balance_strength": float(data_loss_group_balance.get("strength") or 0.0),
+                    "data_loss_group_balance_groups": float(data_loss_group_balance.get("group_count") or 0),
+                    "data_loss_objective_enabled": bool(data_loss_objective["enabled"]),
                 }
             )
 
@@ -1667,6 +1775,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         },
         "target_residual_baseline": target_residual_baseline_payload,
         "data_loss_weighting": data_loss_weighting,
+        "data_loss_group_balance": data_loss_group_balance,
+        "data_loss_objective": data_loss_objective,
         "prediction_anchor": _prediction_anchor_payload(args),
         "input_normalization": {
             "mode": args.input_normalization,
@@ -1966,6 +2076,23 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=2.0,
         help="Loss multiplier applied to train points selected by --data-loss-weighting.",
+    )
+    parser.add_argument(
+        "--data-loss-group-balance-column",
+        default="",
+        help=(
+            "Optional row-metadata column used to balance the supervised data loss across process groups. "
+            "Use process_condition to balance on the full laser_power/scan_speed/spot_size combination."
+        ),
+    )
+    parser.add_argument(
+        "--data-loss-group-balance-strength",
+        type=float,
+        default=1.0,
+        help=(
+            "Blend strength for data-loss group balancing. 0 disables the group balance, 1 applies full "
+            "inverse-frequency balancing while preserving a unit mean weight."
+        ),
     )
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--seed", type=int, default=7)

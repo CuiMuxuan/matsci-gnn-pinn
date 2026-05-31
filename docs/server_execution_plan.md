@@ -1247,6 +1247,30 @@ PROCESS_FEATURE_TAG=proc_enc STEPS=500 N_ESTIMATORS=80 \
 
 结论：Phase 43 关闭为 representation diagnostic。编码器能在 broad21 上朝正确方向移动，但 broad12 退化过大，说明当前分支仍不足以处理广12/broad21 transfer split。下一步若继续，应转向更明确的过程-group balance/objective，而不是继续堆 process encoder 宽度。
 
+#### Phase 44：process-group balanced objective
+
+目标：保持 `broad_process_v1` 路由守门不变，先测试 train split 内过程组平衡的 supervised objective，而不是继续增加 process encoder 宽度或 scalar anchor。
+
+实现：
+
+- `gnnpinn.train.macro_pinn` 新增 `--data-loss-group-balance-column` 与 `--data-loss-group-balance-strength`。
+- `process_condition` 是内置组合键，来自 `(laser_power_W, scan_speed_mm_s, spot_size_um)`。
+- group balance 使用 train split 内 inverse-frequency 权重，并与已有 hot/gradient region weighting 正交相乘；metrics/checkpoint 记录 `data_loss_group_balance` 与组合后的 `data_loss_objective`。
+- summary 脚本支持 `--include-broad-process-group-balance`。
+
+focused A100 命令：
+
+```bash
+PROFILE_SPLITS=laser_power DATASET_LIMITS="12 21" DATASET_ORDER=process_round_robin \
+PROCESS_FEATURE_TAG=group_bal PROCESS_DERIVED_FEATURE_MODE=am_energy_v1 \
+DATA_LOSS_GROUP_BALANCE_COLUMN=process_condition DATA_LOSS_GROUP_BALANCE_STRENGTH=1.0 \
+STEPS=500 N_ESTIMATORS=80 \
+  bash scripts/server/run_phase44_broad_group_balance_a100.sh \
+  > logs/phase44_laser_power_group_balance_a100_v1.log 2>&1
+```
+
+验收：比较 `broad_process_group_balance` against mean/kNN/ExtraTrees、no-process、`process_axis_v1`、`broad_process_v1`、Phase 41 derived-only、Phase 42 prediction-anchor 与 Phase 43 process encoder。只有 broad12 与 broad21 `laser_power` 同时改善或保持 global RMSE 且改善 hot/gradient，才做 seed expansion；若仍是 split-local，关闭为 objective diagnostic。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

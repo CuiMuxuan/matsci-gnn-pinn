@@ -337,6 +337,74 @@ def test_macro_pinn_training_cli_supports_train_split_data_loss_weighting(tmp_pa
     assert checkpoint["metadata"]["data_loss_weighting"] == payload["data_loss_weighting"]
 
 
+def test_macro_pinn_training_cli_supports_process_group_balanced_objective(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_temperature.csv"
+    table.write_text(
+        "x,y,t,T,laser_power_W,scan_speed_mm_s,spot_size_um\n"
+        "0,0,0,0,245,800,49\n"
+        "1,0,0,1,245,800,49\n"
+        "0,1,0,10,245,800,49\n"
+        "1,1,0,11,285,960,67\n"
+        "2,0,0,12,285,960,67\n"
+        "2,1,0,13,285,960,67\n",
+        encoding="utf-8",
+    )
+    split = tmp_path / "split.json"
+    split.write_text(
+        '{"splits":{"train":[0,1,2,3],"val":[4],"test":[5]}}',
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "group_balance_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--split-manifest",
+            str(split),
+            "--data-loss-group-balance-column",
+            "process_condition",
+            "--data-loss-group-balance-strength",
+            "1.0",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    checkpoint = __import__("torch").load(output_dir / "checkpoint.pt", map_location="cpu")
+    group_a = "laser_power_W=245__scan_speed_mm_s=800__spot_size_um=49"
+    group_b = "laser_power_W=285__scan_speed_mm_s=960__spot_size_um=67"
+
+    assert status == 0
+    assert payload["data_loss_group_balance"]["enabled"] is True
+    assert payload["data_loss_group_balance"]["column"] == "process_condition"
+    assert payload["data_loss_group_balance"]["strength"] == 1.0
+    assert payload["data_loss_group_balance"]["group_count"] == 2
+    assert payload["data_loss_group_balance"]["group_sizes"][group_a] == 3
+    assert payload["data_loss_group_balance"]["group_sizes"][group_b] == 1
+    assert abs(payload["data_loss_group_balance"]["group_weights"][group_a] - (2.0 / 3.0)) < 1e-9
+    assert abs(payload["data_loss_group_balance"]["group_weights"][group_b] - 2.0) < 1e-9
+    assert payload["data_loss_objective"]["enabled"] is True
+    assert payload["data_loss_objective"]["weight_sum"] == 4.0
+    assert payload["data_loss_objective"]["mean_weight"] == 1.0
+    assert payload["history"][0]["data_loss_group_balance_enabled"] is True
+    assert payload["history"][0]["data_loss_objective_enabled"] is True
+    assert checkpoint["metadata"]["data_loss_group_balance"] == payload["data_loss_group_balance"]
+
+
 def test_macro_pinn_training_cli_supports_target_residual_baseline(tmp_path: Path):
     from gnnpinn.train.macro_pinn import main
 

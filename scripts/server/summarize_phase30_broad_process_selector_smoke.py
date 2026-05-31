@@ -84,6 +84,12 @@ BROAD_PROCESS_ENCODER_SPEC = (
     DEFAULT_BROAD_PROCESS_ENCODER_TAG,
     DEFAULT_BROAD_PROCESS_ENCODER_TAG,
 )
+DEFAULT_BROAD_PROCESS_GROUP_BALANCE_TAG = "group_bal"
+BROAD_PROCESS_GROUP_BALANCE_SPEC = (
+    "broad_process_group_balance",
+    DEFAULT_BROAD_PROCESS_GROUP_BALANCE_TAG,
+    DEFAULT_BROAD_PROCESS_GROUP_BALANCE_TAG,
+)
 DEFAULT_BROAD_DERIVED_PROCESS_TAG = "phys_proc"
 BROAD_DERIVED_PROCESS_SPEC = (
     "broad_derived_process",
@@ -252,6 +258,8 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
     spacetime_encoding = data.get("spacetime_encoding") or {}
     residual_correction = data.get("residual_correction") or {}
     data_loss_weighting = data.get("data_loss_weighting") or {}
+    data_loss_group_balance = data.get("data_loss_group_balance") or {}
+    data_loss_objective = data.get("data_loss_objective") or {}
     target_residual = data.get("target_residual_baseline") or {}
     target_normalization = data.get("target_normalization") or {}
     backbone = data.get("backbone") or {}
@@ -290,6 +298,14 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
         "data_loss_weighting_mode": data_loss_weighting.get("mode"),
         "data_loss_region_weight": data_loss_weighting.get("region_weight"),
         "data_loss_weighted_points": data_loss_weighting.get("selected_points"),
+        "data_loss_group_balance_enabled": data_loss_group_balance.get("enabled"),
+        "data_loss_group_balance_column": data_loss_group_balance.get("column"),
+        "data_loss_group_balance_strength": data_loss_group_balance.get("strength"),
+        "data_loss_group_balance_groups": data_loss_group_balance.get("group_count"),
+        "data_loss_group_balance_weight_sum": data_loss_group_balance.get("weight_sum"),
+        "data_loss_objective_enabled": data_loss_objective.get("enabled"),
+        "data_loss_objective_weight_sum": data_loss_objective.get("weight_sum"),
+        "data_loss_objective_mean_weight": data_loss_objective.get("mean_weight"),
         "target_space": target_normalization.get("target_space"),
         "target_residual_enabled": target_residual.get("enabled"),
         "target_residual_strategy": target_residual.get("strategy"),
@@ -587,6 +603,14 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--include-broad-process-group-balance",
+        action="store_true",
+        help=(
+            "Also summarize the Phase 44 broad_process_group_balance artifacts. "
+            "These use broad_process_v1 routing with a group-balanced supervised objective."
+        ),
+    )
+    parser.add_argument(
         "--include-broad-derived-process",
         action="store_true",
         help=(
@@ -630,6 +654,11 @@ def main() -> int:
         help="Run/profile tag used with --include-broad-process-encoder.",
     )
     parser.add_argument(
+        "--group-balance-tag",
+        default=DEFAULT_BROAD_PROCESS_GROUP_BALANCE_TAG,
+        help="Run/profile tag used with --include-broad-process-group-balance.",
+    )
+    parser.add_argument(
         "--broad-derived-process-tag",
         default=DEFAULT_BROAD_DERIVED_PROCESS_TAG,
         help="Run/profile tag used with --include-broad-derived-process.",
@@ -665,6 +694,9 @@ def main() -> int:
     if args.include_broad_process_encoder:
         tag = args.broad_process_encoder_tag
         pinn_specs = (*pinn_specs, ("broad_process_encoder", tag, tag))
+    if args.include_broad_process_group_balance:
+        tag = args.group_balance_tag
+        pinn_specs = (*pinn_specs, ("broad_process_group_balance", tag, tag))
     if args.include_broad_derived_process:
         tag = args.broad_derived_process_tag
         pinn_specs = (*pinn_specs, ("broad_derived_process", tag, tag))
