@@ -932,6 +932,44 @@ Phase 33 fixed Fourier spacetime representation diagnostic 已完成，结果文
 
 因此 Phase 33 关闭为 negative representation diagnostic。Fourier basis 已实现并保留为可复现实验选项，但不替代默认 raw coordinate/time basis，也没有证据支持扩到 broad21。下一步应转向更结构化的分支：closure/GNN reintegration、broad selector 下的 learned residual correction，或改变采样/对齐的数据表示，而不是继续堆固定 coordinate basis。当前 A100-SXM4-40GB 仍足够，无需请求 A100-SXM4-80GB。
 
+Phase 34 learned residual correction diagnostic 已进入实现与 focused A100 验证阶段，结果文档为 `docs/results/ambench_multiline_process_residual_correction_v1.md`。先导 sparse closure probes 在 strongest broad12 `spot_size` route 上退化：
+
+- `broad_process_v1` spot-size baseline: test RMSE `136.309183`, hot q90 `165.228535`, gradient q90 `169.049295`。
+- `pde_weight=1e-4`, `closure_start_step=100`: test RMSE `151.152357`, hot q90 `197.625638`, gradient q90 `191.064629`。
+- lite closure: test RMSE `158.792203`, hot q90 `258.922260`, gradient q90 `237.740336`。
+
+因此本轮不继续加强 PDE/closure residual，而是在 base Macro PINN 输出上加一个弱 residual MLP correction：
+
+```text
+prediction = MacroPINN(coords, time, process?) + scale * ResidualMLP([coords, time, process?])
+```
+
+关键实现：
+
+- CLI 新增 `--residual-correction-mode none|mlp`、hidden dim/layers/scale/lr/start-step 控制；默认 `none`，不改变旧实验。
+- residual MLP 使用归一化后的 coordinate/time 与已选择的 process features，最后一层零初始化，初始预测等于 base Macro PINN。
+- metrics/checkpoint 记录 `residual_correction` metadata；summary 脚本新增 `--include-broad-process-residual` 并继续执行 manifest/split comparability gate。
+- `scripts/server/run_phase34_broad_residual_correction_a100.sh` 默认只跑 broad12 `spot_size`，不覆盖 Phase 30/33 artifact。
+
+首轮 focused A100 命令：
+
+```bash
+PROFILE_SPLITS=spot_size DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 \
+  bash scripts/server/run_phase34_broad_residual_correction_a100.sh \
+  > logs/phase34_broad12_spot_size_residual_mlp_a100_v1.log 2>&1
+
+python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
+  --dataset-limit 12 \
+  --dataset-order process_round_robin \
+  --split spot_size \
+  --include-broad-process-residual \
+  --json-output outputs/reports/phase34_broad12_spot_size_residual_mlp_summary.json \
+  --require-comparable
+```
+
+验收：如果 `broad_residual_mlp` 改善 `spot_size` test RMSE 且不牺牲 hot/gradient q90，再扩到 `laser_power` 和全 broad12 split；如果仍弱于 `broad_process_v1`，关闭 learned residual correction，转向弱 closure/GNN coupling 或采样/对齐数据表示变更。当前分支不需要 A100-SXM4-80GB。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

@@ -185,6 +185,90 @@ def test_macro_pinn_training_cli_supports_fourier_spacetime_encoding(tmp_path: P
     assert checkpoint["metadata"]["spacetime_encoding"] == payload["spacetime_encoding"]
 
 
+def test_macro_pinn_training_cli_supports_learned_residual_correction(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_process_temperature.csv"
+    table.write_text(
+        "x,y,t,T,line_id,laser_power_W,scan_speed_mm_s,spot_size_um\n"
+        "0,0,0,10,Line_0_1,285,960,67\n"
+        "1,0,0,11,Line_0_1,285,960,67\n"
+        "0,1,1,20,Line_3_1,325,960,82\n"
+        "1,1,1,21,Line_3_1,325,960,82\n",
+        encoding="utf-8",
+    )
+    split = tmp_path / "split.json"
+    split.write_text(
+        '{"splits":{"train":[0,1],"val":[2],"test":[3]}}',
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "residual_correction_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "3",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--split-manifest",
+            str(split),
+            "--input-normalization",
+            "standard",
+            "--input-feature-normalization",
+            "global_standard",
+            "--input-feature-column",
+            "laser_power_W",
+            "--input-feature-column",
+            "scan_speed_mm_s",
+            "--input-feature-column",
+            "spot_size_um",
+            "--residual-correction-mode",
+            "mlp",
+            "--residual-correction-hidden-dim",
+            "6",
+            "--residual-correction-layers",
+            "1",
+            "--residual-correction-scale",
+            "0.2",
+            "--residual-correction-lr",
+            "5e-4",
+            "--residual-correction-start-step",
+            "1",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    checkpoint = __import__("torch").load(output_dir / "checkpoint.pt", map_location="cpu")
+
+    assert status == 0
+    assert payload["config"]["residual_correction_mode"] == "mlp"
+    assert payload["residual_correction"]["enabled"] is True
+    assert payload["residual_correction"]["mode"] == "mlp"
+    assert payload["residual_correction"]["input_dim"] == 6
+    assert payload["residual_correction"]["hidden_dim"] == 6
+    assert payload["residual_correction"]["layers"] == 1
+    assert payload["residual_correction"]["scale"] == 0.2
+    assert payload["residual_correction"]["start_step"] == 1
+    assert payload["residual_correction"]["lr"] == 5e-4
+    assert payload["residual_correction"]["parameter_count"] > 0
+    assert payload["history"][0]["residual_correction_active"] is False
+    assert payload["history"][-1]["residual_correction_active"] is True
+    assert payload["optimizer"]["residual_correction_lr"] == 5e-4
+    assert payload["optimizer"]["residual_correction_lr_overridden"] is True
+    assert checkpoint["residual_correction_state_dict"] is not None
+    assert checkpoint["metadata"]["residual_correction"] == payload["residual_correction"]
+
+
 def test_macro_pinn_training_cli_records_process_conditioning_columns(tmp_path: Path):
     from gnnpinn.train.macro_pinn import main
 

@@ -43,6 +43,11 @@ BROAD_PROCESS_FOURIER_SPEC = (
     "broad_process_fourier",
     "broad_process_fourier",
 )
+BROAD_PROCESS_RESIDUAL_SPEC = (
+    "broad_residual_mlp",
+    "broad_residual_mlp",
+    "broad_residual_mlp",
+)
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -200,6 +205,7 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
     selected = profile.get("selected") or {}
     effective = profile.get("effective") or {}
     spacetime_encoding = data.get("spacetime_encoding") or {}
+    residual_correction = data.get("residual_correction") or {}
     return {
         "input_features_enabled": features.get("enabled"),
         "input_feature_count": features.get("count"),
@@ -214,6 +220,10 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
         "selected_feature_normalization": selected.get("feature_normalization"),
         "effective_conditioning_mode": effective.get("conditioning_mode"),
         "effective_feature_columns": effective.get("feature_columns"),
+        "residual_correction_enabled": residual_correction.get("enabled"),
+        "residual_correction_mode": residual_correction.get("mode"),
+        "residual_correction_scale": residual_correction.get("scale"),
+        "residual_correction_start_step": residual_correction.get("start_step"),
     }
 
 
@@ -376,6 +386,14 @@ def main() -> int:
             "These use broad_process_v1 routing with fixed Fourier spacetime features."
         ),
     )
+    parser.add_argument(
+        "--include-broad-process-residual",
+        action="store_true",
+        help=(
+            "Also summarize the Phase 34 broad_residual_mlp artifacts. "
+            "These use broad_process_v1 routing plus a weak learned residual correction head."
+        ),
+    )
     args = parser.parse_args()
 
     splits = tuple(args.split) if args.split else DEFAULT_SPLITS
@@ -384,6 +402,8 @@ def main() -> int:
         pinn_specs = (*pinn_specs, BROAD_PROCESS_V2_SPEC)
     if args.include_broad_process_fourier:
         pinn_specs = (*pinn_specs, BROAD_PROCESS_FOURIER_SPEC)
+    if args.include_broad_process_residual:
+        pinn_specs = (*pinn_specs, BROAD_PROCESS_RESIDUAL_SPEC)
     summary = collect_rows(Path(args.root), splits, args.dataset_limit, args.dataset_order, pinn_specs)
     if args.json_output:
         output = Path(args.json_output)

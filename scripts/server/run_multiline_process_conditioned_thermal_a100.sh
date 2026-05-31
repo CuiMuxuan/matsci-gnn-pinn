@@ -15,6 +15,7 @@ SPLIT_STRATEGY="${SPLIT_STRATEGY:-line}"
 TRAIN_FRACTION="${TRAIN_FRACTION:-0.6}"
 VAL_FRACTION="${VAL_FRACTION:-0.2}"
 TEST_FRACTION="${TEST_FRACTION:-0.2}"
+RUN_NO_PROCESS="${RUN_NO_PROCESS:-1}"
 PROCESS_FEATURE_TAG="${PROCESS_FEATURE_TAG:-process_features}"
 PROCESS_CONDITIONING_MODE="${PROCESS_CONDITIONING_MODE:-concat}"
 PROCESS_FEATURE_NORMALIZATION="${PROCESS_FEATURE_NORMALIZATION:-same}"
@@ -24,6 +25,12 @@ FREEZE_PROCESS_ROUTE="${FREEZE_PROCESS_ROUTE:-0}"
 PROCESS_CONDITIONING_PROFILE="${PROCESS_CONDITIONING_PROFILE:-none}"
 SPACETIME_ENCODING="${SPACETIME_ENCODING:-raw}"
 SPACETIME_FOURIER_BANDS="${SPACETIME_FOURIER_BANDS:-4}"
+RESIDUAL_CORRECTION_MODE="${RESIDUAL_CORRECTION_MODE:-none}"
+RESIDUAL_CORRECTION_HIDDEN_DIM="${RESIDUAL_CORRECTION_HIDDEN_DIM:-32}"
+RESIDUAL_CORRECTION_LAYERS="${RESIDUAL_CORRECTION_LAYERS:-1}"
+RESIDUAL_CORRECTION_SCALE="${RESIDUAL_CORRECTION_SCALE:-0.1}"
+RESIDUAL_CORRECTION_LR="${RESIDUAL_CORRECTION_LR:-}"
+RESIDUAL_CORRECTION_START_STEP="${RESIDUAL_CORRECTION_START_STEP:-0}"
 DATASET_SELECTION="${DATASET_SELECTION:-representative7}"
 DATASET_REGEX="${DATASET_REGEX:-}"
 DATASET_LIMIT="${DATASET_LIMIT:-}"
@@ -134,6 +141,19 @@ run_macro_pinn() {
   if [[ "$PROCESS_CONDITIONING_PROFILE" != "none" && "$tag" != "no_process" ]]; then
     profile_args+=(--input-conditioning-profile "$PROCESS_CONDITIONING_PROFILE")
   fi
+  local residual_correction_args=()
+  if [[ "$RESIDUAL_CORRECTION_MODE" != "none" ]]; then
+    residual_correction_args+=(
+      --residual-correction-mode "$RESIDUAL_CORRECTION_MODE"
+      --residual-correction-hidden-dim "$RESIDUAL_CORRECTION_HIDDEN_DIM"
+      --residual-correction-layers "$RESIDUAL_CORRECTION_LAYERS"
+      --residual-correction-scale "$RESIDUAL_CORRECTION_SCALE"
+      --residual-correction-start-step "$RESIDUAL_CORRECTION_START_STEP"
+    )
+    if [[ -n "$RESIDUAL_CORRECTION_LR" ]]; then
+      residual_correction_args+=(--residual-correction-lr "$RESIDUAL_CORRECTION_LR")
+    fi
+  fi
   "$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.train.macro_pinn \
     --table "$TABLE" \
     --target temperature_C \
@@ -147,6 +167,7 @@ run_macro_pinn() {
     --device "$DEVICE" \
     --spacetime-encoding "$SPACETIME_ENCODING" \
     --spacetime-fourier-bands "$SPACETIME_FOURIER_BANDS" \
+    "${residual_correction_args[@]}" \
     --input-normalization minmax \
     "${route_args[@]}" \
     "${profile_args[@]}" \
@@ -156,7 +177,9 @@ run_macro_pinn() {
     --log-every 100
 }
 
-run_macro_pinn no_process
+if [[ "$RUN_NO_PROCESS" == "1" ]]; then
+  run_macro_pinn no_process
+fi
 run_macro_pinn "$PROCESS_FEATURE_TAG" \
   --input-conditioning-mode "$PROCESS_CONDITIONING_MODE" \
   --input-film-strength "$PROCESS_FILM_STRENGTH" \

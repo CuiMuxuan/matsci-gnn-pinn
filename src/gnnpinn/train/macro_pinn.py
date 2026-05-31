@@ -30,7 +30,7 @@ from gnnpinn.models.closure import (
     graph_feature_names,
     l1_sparsity,
 )
-from gnnpinn.models.pinn import MacroPINN
+from gnnpinn.models.pinn import MLP, MLPConfig, MacroPINN
 from gnnpinn.physics.heat import HeatEquationParams, transient_heat_residual
 
 
@@ -105,6 +105,94 @@ def _spacetime_encoding_payload(args: argparse.Namespace, model: Any) -> dict[st
         "encoding": args.spacetime_encoding,
         "fourier_bands": args.spacetime_fourier_bands,
         "input_dim": int(model.spacetime_dim),
+    }
+
+
+def _residual_correction_input(coords: Any, time: Any, params: Any | None = None) -> Any:
+    torch = _torch()
+    if time.ndim == 1:
+        time = time[:, None]
+    tensors = [coords, time]
+    if params is not None:
+        tensors.append(params)
+    return torch.cat(tensors, dim=-1)
+
+
+def _zero_initialize_last_linear(module: Any) -> None:
+    torch = _torch()
+    for layer in reversed(list(module.modules())):
+        if isinstance(layer, torch.nn.Linear):
+            torch.nn.init.zeros_(layer.weight)
+            torch.nn.init.zeros_(layer.bias)
+            return
+    raise ValueError("Residual correction module has no Linear layer to initialize")
+
+
+def _build_residual_correction(args: argparse.Namespace, input_dim: int) -> Any | None:
+    if args.residual_correction_mode == "none":
+        return None
+    if args.residual_correction_mode != "mlp":
+        raise ValueError(f"Unsupported residual correction mode: {args.residual_correction_mode}")
+    if args.residual_correction_hidden_dim <= 0:
+        raise ValueError("residual_correction_hidden_dim must be positive")
+    if args.residual_correction_layers < 1:
+        raise ValueError("residual_correction_layers must be >= 1")
+    if args.residual_correction_scale < 0.0:
+        raise ValueError("residual_correction_scale must be non-negative")
+    if args.residual_correction_start_step < 0:
+        raise ValueError("residual_correction_start_step must be non-negative")
+    module = MLP(
+        MLPConfig(
+            input_dim=input_dim,
+            output_dim=1,
+            hidden_dim=args.residual_correction_hidden_dim,
+            num_hidden_layers=args.residual_correction_layers,
+            activation=args.activation,
+        )
+    )
+    _zero_initialize_last_linear(module)
+    return module.to(args.device)
+
+
+def _apply_residual_correction(
+    base_prediction: Any,
+    residual_correction: Any | None,
+    args: argparse.Namespace,
+    coords: Any,
+    time: Any,
+    params: Any | None = None,
+    *,
+    active: bool,
+) -> Any:
+    if residual_correction is None or not active:
+        return base_prediction
+    residual_input = _residual_correction_input(coords, time, params)
+    return base_prediction + args.residual_correction_scale * residual_correction(residual_input)
+
+
+def _residual_correction_payload(
+    args: argparse.Namespace,
+    residual_correction: Any | None,
+    input_dim: int,
+) -> dict[str, Any]:
+    enabled = residual_correction is not None
+    lr = args.residual_correction_lr if args.residual_correction_lr is not None else args.lr
+    parameter_count = (
+        int(sum(parameter.numel() for parameter in residual_correction.parameters()))
+        if residual_correction is not None
+        else 0
+    )
+    return {
+        "enabled": enabled,
+        "mode": args.residual_correction_mode,
+        "input_dim": input_dim if enabled else None,
+        "hidden_dim": args.residual_correction_hidden_dim if enabled else None,
+        "layers": args.residual_correction_layers if enabled else None,
+        "scale": args.residual_correction_scale if enabled else None,
+        "start_step": args.residual_correction_start_step if enabled else None,
+        "lr": lr if enabled else None,
+        "parameter_count": parameter_count,
+        "last_layer_zero_initialized": enabled,
     }
 
 
@@ -305,12 +393,19 @@ def _jsonable_config(args: argparse.Namespace) -> dict[str, Any]:
     return config
 
 
-def _optimizer_payload(args: argparse.Namespace, closure_coefficients: Any | None) -> dict[str, Any]:
+def _optimizer_payload(
+    args: argparse.Namespace,
+    closure_coefficients: Any | None,
+    residual_correction: Any | None = None,
+) -> dict[str, Any]:
     closure_lr = args.closure_lr if args.closure_lr is not None else args.lr
+    residual_lr = args.residual_correction_lr if args.residual_correction_lr is not None else args.lr
     return {
         "backbone_lr": args.lr,
         "closure_lr": closure_lr if closure_coefficients is not None else None,
         "closure_lr_overridden": args.closure_lr is not None,
+        "residual_correction_lr": residual_lr if residual_correction is not None else None,
+        "residual_correction_lr_overridden": args.residual_correction_lr is not None,
         "freeze_backbone_after_closure_start": args.freeze_backbone_after_closure_start,
         "closure_graph_lr": args.closure_graph_lr,
     }
@@ -707,6 +802,10 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         spacetime_encoding=args.spacetime_encoding,
         spacetime_fourier_bands=args.spacetime_fourier_bands,
     ).to(args.device)
+    residual_correction_input_dim = coords.shape[-1] + time.reshape(time.shape[0], -1).shape[-1]
+    if input_features is not None:
+        residual_correction_input_dim += input_features.shape[-1]
+    residual_correction = _build_residual_correction(args, residual_correction_input_dim)
     closure_library = None
     closure_coefficients = None
     graph_state_dim = coords.shape[-1] + time.reshape(time.shape[0], -1).shape[-1]
@@ -729,6 +828,9 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     closure_lr = args.closure_lr if args.closure_lr is not None else args.lr
     model_parameters = list(model.parameters())
     parameter_groups: list[dict[str, Any]] = [{"params": model_parameters, "lr": args.lr}]
+    if residual_correction is not None:
+        residual_lr = args.residual_correction_lr if args.residual_correction_lr is not None else args.lr
+        parameter_groups.append({"params": list(residual_correction.parameters()), "lr": residual_lr})
     graph_parameters = (
         [parameter for parameter in graph_provider.parameters() if parameter.requires_grad]
         if graph_provider is not None
@@ -768,6 +870,16 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         time_data = time[train_index].detach().clone()
         input_features_data = input_features[train_index].detach().clone() if input_features is not None else None
         pred = _model_forward(model, coords_data, time_data, input_features_data)
+        residual_correction_active = step >= args.residual_correction_start_step
+        pred = _apply_residual_correction(
+            pred,
+            residual_correction,
+            args,
+            coords_data,
+            time_data,
+            input_features_data,
+            active=residual_correction_active,
+        )
         pred_for_loss = pred
         if args.normalize_target:
             pred_physical = pred * target_std + target_mean
@@ -784,6 +896,15 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 input_features[residual_index].detach().clone() if input_features is not None else None
             )
             pred_residual = _model_forward(model, coords_residual, time_residual, input_features_residual)
+            pred_residual = _apply_residual_correction(
+                pred_residual,
+                residual_correction,
+                args,
+                coords_residual,
+                time_residual,
+                input_features_residual,
+                active=residual_correction_active,
+            )
             if args.normalize_target:
                 pred_residual_physical = pred_residual * target_std + target_mean
             else:
@@ -854,11 +975,21 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                     "residual_candidates": float(len(residual_candidate_indices) if needs_residual else 0),
                     "closure_stage_active": bool(closure_stage_active),
                     "backbone_frozen": bool(backbone_frozen),
+                    "residual_correction_active": bool(residual_correction is not None and residual_correction_active),
                 }
             )
 
     with torch.no_grad():
         pred_tensor = _model_forward(model, coords, time, input_features)
+        pred_tensor = _apply_residual_correction(
+            pred_tensor,
+            residual_correction,
+            args,
+            coords,
+            time,
+            input_features,
+            active=True,
+        )
         if args.normalize_target:
             pred_tensor = pred_tensor * target_std + target_mean
         pred = pred_tensor.detach().cpu().reshape(-1).tolist()
@@ -934,6 +1065,11 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             input_conditioning_profile,
         ),
         "spacetime_encoding": _spacetime_encoding_payload(args, model),
+        "residual_correction": _residual_correction_payload(
+            args,
+            residual_correction,
+            residual_correction_input_dim,
+        ),
         "pde": {
             "field": args.pde_field,
             "weight": args.pde_weight,
@@ -948,7 +1084,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "residual_gradient_quantile": args.residual_gradient_quantile,
             "residual_candidate_points": len(residual_candidate_indices),
         },
-        "optimizer": _optimizer_payload(args, closure_coefficients),
+        "optimizer": _optimizer_payload(args, closure_coefficients, residual_correction),
         "closure": _closure_payload(
             closure_mode=args.closure_mode,
             closure_library=closure_library,
@@ -967,6 +1103,9 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     torch.save(
         {
             "model_state_dict": model.state_dict(),
+            "residual_correction_state_dict": (
+                residual_correction.state_dict() if residual_correction is not None else None
+            ),
             "metadata": {
                 "coord_dim": coords.shape[-1],
                 "target": args.target,
@@ -976,6 +1115,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 "param_dim": int(input_features.shape[-1]) if input_features is not None else 0,
                 "input_features": metrics_payload["input_features"],
                 "spacetime_encoding": metrics_payload["spacetime_encoding"],
+                "residual_correction": metrics_payload["residual_correction"],
             },
         },
         checkpoint_path,
@@ -1032,6 +1172,44 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=4,
         help="Number of power-of-two Fourier bands used when --spacetime-encoding=fourier.",
+    )
+    parser.add_argument(
+        "--residual-correction-mode",
+        choices=["none", "mlp"],
+        default="none",
+        help=(
+            "Optional weak learned correction added to the Macro PINN output. "
+            "mlp uses normalized coordinates/time and any process features as residual inputs."
+        ),
+    )
+    parser.add_argument(
+        "--residual-correction-hidden-dim",
+        type=int,
+        default=32,
+        help="Hidden width for --residual-correction-mode=mlp.",
+    )
+    parser.add_argument(
+        "--residual-correction-layers",
+        type=int,
+        default=1,
+        help="Number of hidden layers for --residual-correction-mode=mlp.",
+    )
+    parser.add_argument(
+        "--residual-correction-scale",
+        type=float,
+        default=0.1,
+        help="Multiplier for the learned residual correction before it is added to the base Macro PINN output.",
+    )
+    parser.add_argument(
+        "--residual-correction-lr",
+        type=float,
+        help="Optional learning rate for residual-correction parameters; defaults to --lr.",
+    )
+    parser.add_argument(
+        "--residual-correction-start-step",
+        type=int,
+        default=0,
+        help="Training step at which the learned residual correction starts contributing to predictions.",
     )
     parser.add_argument("--pde-weight", type=float, default=0.0)
     parser.add_argument(
