@@ -76,12 +76,14 @@ def _input_feature_tensor(sample: Any, feature_columns: list[str], device: str) 
 def _input_feature_payload(
     feature_columns: list[str],
     normalization: dict[str, Any] | None,
+    conditioning_mode: str,
 ) -> dict[str, Any]:
     return {
         "enabled": bool(feature_columns),
         "columns": feature_columns,
         "count": len(feature_columns),
         "normalization": normalization,
+        "conditioning_mode": conditioning_mode,
     }
 
 
@@ -543,6 +545,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         hidden_dim=args.hidden_dim,
         num_hidden_layers=args.layers,
         activation=args.activation,
+        conditioning_mode=args.input_conditioning_mode,
     ).to(args.device)
     closure_library = None
     closure_coefficients = None
@@ -755,7 +758,11 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "coordinates": coord_normalization,
             "time": time_normalization,
         },
-        "input_features": _input_feature_payload(args.input_feature_columns, input_feature_normalization),
+        "input_features": _input_feature_payload(
+            args.input_feature_columns,
+            input_feature_normalization,
+            args.input_conditioning_mode,
+        ),
         "pde": {
             "field": args.pde_field,
             "weight": args.pde_weight,
@@ -903,6 +910,15 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Additional numeric row-metadata column to append to Macro PINN inputs. "
             "Use this for process conditioning such as laser_power_W, scan_speed_mm_s, or spot_size_um."
+        ),
+    )
+    parser.add_argument(
+        "--input-conditioning-mode",
+        choices=["concat", "film"],
+        default="concat",
+        help=(
+            "How additional input-feature columns condition Macro PINN. "
+            "concat appends them to coordinates/time; film uses them to modulate hidden coordinate/time layers."
         ),
     )
     parser.add_argument(

@@ -783,6 +783,19 @@ bash scripts/server/run_multiline_process_holdout_splits_a100.sh \
 
 该脚本会分别生成 `line / laser_power / scan_speed / spot_size / process` grouped split 的多线温度表，并沿用相同 baseline 与 Macro PINN no-process/process-feature 对照。验收重点不是单个 split 的偶然胜负，而是 process-conditioned Macro PINN 是否在多个工艺轴 holdout 上稳定改善 no-process 版本，并是否开始接近或超过 mean/strong baseline。
 
+Phase 24 A100 run 已完成，结果文档为 `docs/results/ambench_multiline_process_axis_holdout_v1.md`。process features 在 `line`、`laser_power`、`scan_speed`、`process` 四个 grouped holdout 上改善 Macro PINN；其中 scan-speed test RMSE 从 `186.921887` 降到 `140.459979`。但 `spot_size` holdout 变差，test RMSE 从 `208.741300` 升到 `227.573411`，hot q90 和 gradient q90 也同步退化。所有 Macro PINN 结果仍未超过 train-mean baseline。
+
+因此 Phase 24 关闭为“模型创新入口确认”，不是最终性能 claim。下一步进入 FiLM-style process-conditioned Macro PINN：保持 concat 作为默认基线，新增由 `laser_power_W / scan_speed_mm_s / spot_size_um` 调制 hidden coordinate/time layers 的结构化条件化模式。首轮 A100 对比应至少覆盖 `line`、`scan_speed`、`spot_size` 三个 split，分别代表原始正向 split、最强正向 process-axis split 和当前失败 split。
+
+Phase 25 FiLM 首轮服务器命令：
+
+```bash
+bash scripts/server/run_multiline_process_film_conditioned_a100.sh \
+  > logs/ambench_multiline_process_film_conditioned_a100_v1.log 2>&1
+```
+
+验收：metrics/checkpoint 中 `input_features.conditioning_mode` 应为 `film`；产物 run id 使用 `*_film_a100_sxm4_40gb_v1_macro_pinn_minmax_process_film_v1`，不得覆盖 Phase 23/24 的 concat 结果。若 FiLM 至少修复 `spot_size` 退化并保持 `line`/`scan_speed` 改善，再做 seed check；否则下一步考虑 process embedding/hypernetwork 或 mixture-of-experts，而不是直接把 sparse closure/GNN 接回多线表。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

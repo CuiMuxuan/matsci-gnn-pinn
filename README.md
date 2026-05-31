@@ -204,6 +204,16 @@ bash scripts/server/run_multiline_process_holdout_splits_a100.sh \
 ```
 
 This runs the same seven-line table through `line`, `laser_power`, `scan_speed`, `spot_size`, and full process-condition grouped splits, so the next result can separate line memorization from true process-axis generalization.
+The A100 holdout run is now documented in [docs/results/ambench_multiline_process_axis_holdout_v1.md](docs/results/ambench_multiline_process_axis_holdout_v1.md). Process features improve Macro PINN test RMSE on `line`, `laser_power`, `scan_speed`, and full `process` holdouts, with the largest gain on scan speed (`186.921887 -> 140.459979`), but they hurt the `spot_size` holdout (`208.741300 -> 227.573411`) and still do not beat the train-mean baseline. The next model-innovation branch is therefore structured process conditioning, starting with FiLM modulation rather than only concatenating process scalars.
+
+FiLM process-conditioned Macro PINN comparison:
+
+```bash
+bash scripts/server/run_multiline_process_film_conditioned_a100.sh \
+  > logs/ambench_multiline_process_film_conditioned_a100_v1.log 2>&1
+```
+
+This focused Phase 25 route compares the new `--input-conditioning-mode film` path on `line`, `scan_speed`, and `spot_size` holdouts.
 
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
@@ -311,6 +321,8 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - staged closure 起步有效但仍未超过 data-only；closure optimizer ablation 表明 `closure_lr=1e-5` 明显改善 hot/gradient 指标，但仍未超过 active data-only，下一步进入 GNN-conditioned closure 接口。
 - 已完成 graph-L1 sensitivity；synthetic coordinate/RBF graph terms 一旦保留就会损害 hot/gradient 指标，下一步转向真实/半真实 microstructure conditioning。
 - multi-line/process-conditioned thermal run 已完成；工艺特征让 Macro PINN 的 held-out-line test RMSE 从 `175.127058` 改善到 `157.793227`，hot q90 RMSE 从 `351.525048` 改善到 `316.794319`。该分支比继续扩展小规模 exact-line TIFF 手工特征更适合作为下一条主线，但仍需容量、split 和 seed 检查。
+- process-axis holdout run 已完成；工艺特征在 `line`、`laser_power`、`scan_speed`、`process` 四类 holdout 上改善 Macro PINN，但在 `spot_size` holdout 上变差，且整体仍未超过 train-mean baseline。下一步进入 FiLM process-conditioned Macro PINN。
+- 已新增 `--input-conditioning-mode concat|film`；FiLM 模式用工艺参数调制 hidden coordinate/time layers，默认仍为 concat 以兼容既有实验。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -352,6 +364,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_real_micro_exact_line0_1_region_registration_v1.md](docs/results/ambench_real_micro_exact_line0_1_region_registration_v1.md): exact `Line_0_1` region coordinate-registration 消融与 `col_flip` focused seed check 结果。
 - [docs/results/ambench_real_micro_exact_line0_1_region_embedding_v1.md](docs/results/ambench_real_micro_exact_line0_1_region_embedding_v1.md): exact `Line_0_1` fixed patch embedding 结果与 focused seed check 结果。
 - [docs/results/ambench_multiline_process_conditioned_thermal_v1.md](docs/results/ambench_multiline_process_conditioned_thermal_v1.md): multi-line/process-conditioned thermal modeling 的首轮 A100 对比结果。
+- [docs/results/ambench_multiline_process_axis_holdout_v1.md](docs/results/ambench_multiline_process_axis_holdout_v1.md): process-axis grouped holdout 对比结果与 FiLM 分支决策。
 
 Real micro graph closure 对比脚本：
 

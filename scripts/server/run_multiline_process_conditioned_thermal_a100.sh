@@ -15,6 +15,8 @@ SPLIT_STRATEGY="${SPLIT_STRATEGY:-line}"
 TRAIN_FRACTION="${TRAIN_FRACTION:-0.6}"
 VAL_FRACTION="${VAL_FRACTION:-0.2}"
 TEST_FRACTION="${TEST_FRACTION:-0.2}"
+PROCESS_FEATURE_TAG="${PROCESS_FEATURE_TAG:-process_features}"
+PROCESS_CONDITIONING_MODE="${PROCESS_CONDITIONING_MODE:-concat}"
 
 cd "$REPO_ROOT"
 mkdir -p logs outputs/baselines outputs/data_audits outputs/data_splits outputs/runs
@@ -113,7 +115,8 @@ run_macro_pinn() {
 }
 
 run_macro_pinn no_process
-run_macro_pinn process_features \
+run_macro_pinn "$PROCESS_FEATURE_TAG" \
+  --input-conditioning-mode "$PROCESS_CONDITIONING_MODE" \
   --input-feature-column laser_power_W \
   --input-feature-column scan_speed_mm_s \
   --input-feature-column spot_size_um
