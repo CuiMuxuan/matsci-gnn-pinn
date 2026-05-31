@@ -301,6 +301,8 @@ DATASET_LIMIT=21 DATASET_ORDER=process_round_robin STEPS=500 N_ESTIMATORS=80 \
 
 The Phase 31 result is documented in [docs/results/ambench_multiline_process_broad_selector_broad21_v1.md](docs/results/ambench_multiline_process_broad_selector_broad21_v1.md). Broad21 confirms the selector story at all single-track lines: it preserves `laser_power` and `spot_size` positive routes, avoids the severe old-profile `scan_speed` regression (`469.347549 -> 227.128663`), and avoids full-process regression (`229.613547 -> 166.231596`). The selector is a conservative route guard; the next branch should either refine the line route or pivot to stronger broad-data model/data representation.
 
+The Phase 32 refinement is documented in [docs/results/ambench_multiline_process_broad_selector_v2.md](docs/results/ambench_multiline_process_broad_selector_v2.md). `broad_process_v2` keeps the conservative `broad_process_v1` routes but changes `line_id` to concat/same. It recovers the small broad21 line gain (`126.194921 -> 125.449323`) but repeats the broad12 line regression (`126.308616 -> 149.638162`), so it is retained only as a diagnostic profile. The default broad-data route guard remains `broad_process_v1`; the next branch should move to stronger broad-data representation or closure/GNN reintegration.
+
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
 ```bash
@@ -416,6 +418,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 29 已完成 broad12 process-balanced smoke。`process_round_robin` 选线覆盖多个功率、扫描速度和光斑尺寸；`spot_size` 的 FiLM/global-standard profile 仍强于 no-process 和 mean baseline，但 `scan_speed` 与 full `process` 在更宽数据面退化，下一步应做可回退 no-process 的 broad-data route selector/profile，再决定是否扩到 21 条 single-track lines。
 - Phase 30 已完成 broad12 broad-data selector。`broad_process_v1` 把 `line`、`scan_speed` 和 full `process` 回退到 no-process，保留 `laser_power` concat/global-standard 与 `spot_size` FiLM/global-standard；summary 脚本会检查 manifest/split 签名，避免 tiny smoke 与 full run 混比。下一步扩到 21 条 single-track lines。
 - Phase 31 已完成 broad21 all single-track selector scaling。all-21 结果确认 `broad_process_v1` 能保留 `laser_power`/`spot_size` 正向路由并避免 `scan_speed`/full `process` 负迁移；当前 A100-SXM4-40GB 仍足够。
+- Phase 32 已完成 `broad_process_v2` 诊断。v2 只把 `line_id` 改为 concat/same；它改善 broad21 line，但明显伤害 broad12 line，因此不替代 `broad_process_v1` 默认路线。下一步转向更强 broad-data representation 或 closure/GNN reintegration。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -464,6 +467,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_multiline_process_broader_profile_smoke_v1.md](docs/results/ambench_multiline_process_broader_profile_smoke_v1.md): Phase 29 broad12 process-balanced dataset smoke、baseline-facing profile transfer 诊断与下一步 route-selector 决策。
 - [docs/results/ambench_multiline_process_broad_selector_v1.md](docs/results/ambench_multiline_process_broad_selector_v1.md): Phase 30 broad-data selector、no-process fallback 元数据验证与 broad12 可比性门禁结果。
 - [docs/results/ambench_multiline_process_broad_selector_broad21_v1.md](docs/results/ambench_multiline_process_broad_selector_broad21_v1.md): Phase 31 all-21 single-track selector scaling 与 broad21 可比性门禁结果。
+- [docs/results/ambench_multiline_process_broad_selector_v2.md](docs/results/ambench_multiline_process_broad_selector_v2.md): Phase 32 `broad_process_v2` line-route diagnostic 与 broad12/broad21 可比性门禁结果。
 
 Real micro graph closure 对比脚本：
 

@@ -167,3 +167,68 @@ def test_phase30_summary_accepts_matching_full_profile_artifacts(tmp_path: Path)
     assert payload["splits"][split]["all_methods_comparable"] is True
     assert broad_row["comparison_status"] == "comparable"
     assert broad_row["rmse"] == 70.0
+
+
+def test_phase30_summary_can_include_broad_process_v2_artifacts(tmp_path: Path):
+    summary = _load_summary_module()
+    split = "line"
+    baseline_id = summary._run_id(split, 21, "process_round_robin", "process_axis_profile")
+    broad_v2_id = summary._run_id(split, 21, "process_round_robin", "broad_process_profile_v2")
+
+    manifest = _manifest(2100, 30, 96)
+    split_payload = _split(2100)
+    split_payload["group_key"] = "line_id"
+    _write_json(tmp_path / "outputs/data_audits" / f"{baseline_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{baseline_id}_split.json", split_payload)
+    _write_json(tmp_path / "outputs/data_audits" / f"{broad_v2_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{broad_v2_id}_split.json", split_payload)
+    for method, tag in summary.BASELINE_TAGS:
+        _write_json(
+            tmp_path / "outputs/baselines" / f"{baseline_id}_{tag}_regions_q90.json",
+            _metrics(100.0),
+        )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_no_process_v1" / "metrics.json",
+        _metrics(90.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_process_axis_profile_v1" / "metrics.json",
+        _metrics(80.0),
+    )
+    broad_v2_metrics = _metrics(69.0)
+    broad_v2_metrics["input_features"]["conditioning_profile"]["profile"] = "broad_process_v2"
+    broad_v2_metrics["input_features"]["conditioning_profile"]["group_key"] = "line_id"
+    broad_v2_metrics["input_features"]["conditioning_profile"]["selected"] = {
+        "conditioning_mode": "concat",
+        "feature_normalization": "same",
+    }
+    broad_v2_metrics["input_features"]["conditioning_profile"]["effective"] = {
+        "conditioning_mode": "concat",
+        "feature_columns": ["laser_power_W", "scan_speed_mm_s", "spot_size_um"],
+    }
+    _write_json(
+        tmp_path / "outputs/runs" / f"{broad_v2_id}_macro_pinn_minmax_broad_process_profile_v2_v1" / "metrics.json",
+        broad_v2_metrics,
+    )
+
+    payload = summary.collect_rows(
+        tmp_path,
+        (split,),
+        21,
+        "process_round_robin",
+        (*summary.DEFAULT_PINN_SPECS, summary.BROAD_PROCESS_V2_SPEC),
+    )
+    broad_v2_row = payload["splits"][split]["methods"]["broad_process_v2"]
+
+    assert payload["splits"][split]["all_methods_comparable"] is False
+    assert payload["pinn_methods"] == [
+        "no_process",
+        "process_axis_v1",
+        "broad_process_v1",
+        "broad_process_v2",
+    ]
+    assert broad_v2_row["comparison_status"] == "comparable"
+    assert broad_v2_row["rmse"] == 69.0
+    assert broad_v2_row["selected_conditioning_mode"] == "concat"
+    assert broad_v2_row["selected_feature_normalization"] == "same"
+    assert broad_v2_row["effective_feature_columns"] == ["laser_power_W", "scan_speed_mm_s", "spot_size_um"]

@@ -170,9 +170,18 @@ def _resolve_input_conditioning_profile(
             "reason": "broad12 full-process holdout degraded under the line-like concat/same profile.",
         },
     }
+    broad_process_v2 = {
+        **broad_process_v1,
+        "line_id": {
+            "conditioning_mode": "concat",
+            "feature_normalization": "same",
+            "reason": "broad21 line holdout slightly favored the old concat/same route over conservative no-process.",
+        },
+    }
     profiles = {
         "process_axis_v1": profile_v1,
         "broad_process_v1": broad_process_v1,
+        "broad_process_v2": broad_process_v2,
     }
     if profile not in profiles:
         raise ValueError(f"Unsupported input conditioning profile: {profile}")
@@ -1108,12 +1117,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--input-conditioning-profile",
-        choices=["none", "process_axis_v1", "broad_process_v1"],
+        choices=["none", "process_axis_v1", "broad_process_v1", "broad_process_v2"],
         default="none",
         help=(
             "Optional split-aware conditioning profile. process_axis_v1 reads the split manifest group_key "
             "and selects the Phase 25 best-known route for line, scan-speed, spot-size, laser-power, or full-process holdouts. "
-            "broad_process_v1 can also fall back to no process features on broad-data splits where process conditioning degraded."
+            "broad_process_v1 can also fall back to no process features on broad-data splits where process conditioning degraded. "
+            "broad_process_v2 is the same conservative broad-data profile except line_id uses concat/same."
         ),
     )
     parser.add_argument(

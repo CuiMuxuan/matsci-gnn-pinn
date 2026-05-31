@@ -16,7 +16,7 @@ BASELINE_TAGS = (
     ("extra_trees_coords", "extra_trees_coords"),
     ("extra_trees_process", "extra_trees_process"),
 )
-PINN_SPECS = (
+DEFAULT_PINN_SPECS = (
     (
         "no_process",
         "process_axis_profile",
@@ -32,6 +32,11 @@ PINN_SPECS = (
         "broad_process_profile",
         "broad_process_profile",
     ),
+)
+BROAD_PROCESS_V2_SPEC = (
+    "broad_process_v2",
+    "broad_process_profile_v2",
+    "broad_process_profile_v2",
 )
 
 
@@ -208,10 +213,12 @@ def collect_rows(
     splits: tuple[str, ...],
     dataset_limit: int,
     dataset_order: str,
+    pinn_specs: tuple[tuple[str, str, str], ...] = DEFAULT_PINN_SPECS,
 ) -> dict[str, Any]:
     summary: dict[str, Any] = {
         "dataset_limit": dataset_limit,
         "dataset_order": dataset_order,
+        "pinn_methods": [method for method, _, _ in pinn_specs],
         "splits": {},
     }
     for split in splits:
@@ -241,7 +248,7 @@ def collect_rows(
                 row["missing"] = True
                 rows["all_methods_comparable"] = False
             rows["methods"][method] = row
-        for method, profile_tag, run_tag in PINN_SPECS:
+        for method, profile_tag, run_tag in pinn_specs:
             run_id = _run_id(split, dataset_limit, dataset_order, profile_tag)
             path = root / "outputs" / "runs" / f"{run_id}_macro_pinn_minmax_{run_tag}_v1" / "metrics.json"
             candidate_signature = _comparison_signature(root, run_id)
@@ -280,17 +287,17 @@ def _fmt(value: Any) -> str:
 def print_metrics_markdown(summary: dict[str, Any]) -> None:
     print("| split | method | status | test RMSE | hot q90 RMSE | gradient q90 RMSE | selected | effective features |")
     print("|---|---|---|---:|---:|---:|---|---|")
+    pinn_methods = tuple(summary.get("pinn_methods") or ("no_process", "process_axis_v1", "broad_process_v1"))
+    method_order = (
+        "mean",
+        *pinn_methods,
+        "extra_trees_process",
+        "knn_process",
+        "extra_trees_coords",
+        "knn_coords",
+    )
     for split, split_rows in summary["splits"].items():
-        for method in (
-            "mean",
-            "no_process",
-            "process_axis_v1",
-            "broad_process_v1",
-            "extra_trees_process",
-            "knn_process",
-            "extra_trees_coords",
-            "knn_coords",
-        ):
+        for method in method_order:
             row = split_rows["methods"].get(method, {})
             if row.get("missing"):
                 print(f"| {split} | {method} | MISSING |  |  |  |  | {row.get('path', '')} |")
@@ -335,10 +342,21 @@ def main() -> int:
         action="store_true",
         help="Exit non-zero if any requested method has a missing or mismatched manifest/split signature.",
     )
+    parser.add_argument(
+        "--include-broad-process-v2",
+        action="store_true",
+        help=(
+            "Also summarize the Phase 32 broad_process_v2 artifacts. "
+            "Expected run/profile tag is broad_process_profile_v2."
+        ),
+    )
     args = parser.parse_args()
 
     splits = tuple(args.split) if args.split else DEFAULT_SPLITS
-    summary = collect_rows(Path(args.root), splits, args.dataset_limit, args.dataset_order)
+    pinn_specs = DEFAULT_PINN_SPECS
+    if args.include_broad_process_v2:
+        pinn_specs = (*pinn_specs, BROAD_PROCESS_V2_SPEC)
+    summary = collect_rows(Path(args.root), splits, args.dataset_limit, args.dataset_order, pinn_specs)
     if args.json_output:
         output = Path(args.json_output)
         output.parent.mkdir(parents=True, exist_ok=True)

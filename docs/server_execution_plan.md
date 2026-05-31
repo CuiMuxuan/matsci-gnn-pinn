@@ -899,6 +899,22 @@ Phase 31 broad21 all single-track selector scaling 已完成，结果文档为 `
 
 Phase 31 关闭为 broad21 selector scaling。下一步不需要 A100-SXM4-80GB。建议 Phase 32 在两个方向中择一推进：其一，做 broad-data profile v2，把 line route 从 no-process 修正为 concat/same 并保留 scan_speed/process fallback；其二，保留当前 conservative selector，转入更强 broad-data representation 或 closure/GNN reintegration。
 
+Phase 32 broad-data profile v2 diagnostic 已完成，结果文档为 `docs/results/ambench_multiline_process_broad_selector_v2.md`。关键实现：
+
+- `MacroPINN` 新增 `--input-conditioning-profile broad_process_v2`。
+- `broad_process_v2` 相比 `broad_process_v1` 只把 `line_id` route 改为 `concat/same`；`scan_speed_mm_s` 与 full `process_condition` 仍回退 no-process，`laser_power_W` 与 `spot_size_um` 保持正向路线。
+- `scripts/server/run_phase30_broad_process_selector_smoke_a100.sh` 新增 `PROCESS_CONDITIONING_PROFILE`、`PROCESS_FEATURE_TAG`、`PROCESS_PROFILE_RUN_TAG` 环境变量，v2 使用 `broad_process_profile_v2`，不覆盖 Phase 30/31 artifact。
+- `scripts/server/summarize_phase30_broad_process_selector_smoke.py --include-broad-process-v2` 可在同一可比性门禁中汇总 v1/v2。
+
+验收结果：
+
+- broad12 和 broad21 v2 summary 均通过 `--require-comparable`。
+- broad21 `line` 从 `broad_process_v1`/no-process `126.194921` 改善到 v2 `125.449323`。
+- broad12 `line` 从 `broad_process_v1`/no-process `126.308616` 退化到 v2 `149.638162`。
+- 其它 split 与 v1 一致：`laser_power` 和 `spot_size` 保留正向路线，`scan_speed` 和 full `process` 保留 no-process fallback。
+
+因此 Phase 32 关闭为 diagnostic refinement，不更换默认 selector。`broad_process_v1` 仍是更稳的 broad-data route guard；`broad_process_v2` 仅保留为 broad21 line-specific diagnostic。下一步 Phase 33 应转向更强 broad-data representation 或 closure/GNN reintegration，而不是继续手动调 selector。当前 A100-SXM4-40GB 仍足够，无需请求 A100-SXM4-80GB。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

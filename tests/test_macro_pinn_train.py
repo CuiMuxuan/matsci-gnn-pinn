@@ -643,6 +643,97 @@ def test_macro_pinn_training_cli_broad_profile_can_fall_back_to_no_process(tmp_p
     assert profile["effective"]["feature_columns"] == []
 
 
+def test_macro_pinn_training_cli_broad_profile_v2_uses_line_concat_route(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_process_temperature.csv"
+    table.write_text(
+        "x,y,t,T,line_id,laser_power_W,scan_speed_mm_s,spot_size_um\n"
+        "0,0,0,10,Line_0_1,285,960,67\n"
+        "1,0,0,11,Line_0_1,285,960,67\n"
+        "0,1,1,20,Line_3_1,325,960,82\n"
+        "1,1,1,21,Line_3_1,325,960,82\n",
+        encoding="utf-8",
+    )
+    split = tmp_path / "split.json"
+    split.write_text(
+        json.dumps(
+            {
+                "sample_id": "toy",
+                "n_rows": 4,
+                "group_key": "line_id",
+                "splits": {"train": [0, 1], "val": [2], "test": [3]},
+            }
+        ),
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "broad_profile_v2_line_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--split-manifest",
+            str(split),
+            "--input-normalization",
+            "minmax",
+            "--input-conditioning-mode",
+            "film",
+            "--input-feature-normalization",
+            "global_standard",
+            "--input-conditioning-profile",
+            "broad_process_v2",
+            "--input-feature-column",
+            "laser_power_W",
+            "--input-feature-column",
+            "scan_speed_mm_s",
+            "--input-feature-column",
+            "spot_size_um",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    checkpoint = __import__("torch").load(output_dir / "checkpoint.pt", map_location="cpu")
+    profile = payload["input_features"]["conditioning_profile"]
+
+    assert status == 0
+    assert payload["config"]["input_conditioning_mode"] == "concat"
+    assert payload["config"]["input_feature_normalization"] == "same"
+    assert payload["config"]["input_feature_columns"] == [
+        "laser_power_W",
+        "scan_speed_mm_s",
+        "spot_size_um",
+    ]
+    assert payload["input_features"]["enabled"] is True
+    assert payload["input_features"]["count"] == 3
+    assert checkpoint["metadata"]["param_dim"] == 3
+    assert profile["enabled"] is True
+    assert profile["profile"] == "broad_process_v2"
+    assert profile["group_key"] == "line_id"
+    assert profile["requested"]["conditioning_mode"] == "film"
+    assert profile["requested"]["feature_normalization"] == "global_standard"
+    assert profile["selected"]["conditioning_mode"] == "concat"
+    assert profile["selected"]["feature_normalization"] == "same"
+    assert profile["effective"]["conditioning_mode"] == "concat"
+    assert profile["effective"]["feature_columns"] == [
+        "laser_power_W",
+        "scan_speed_mm_s",
+        "spot_size_um",
+    ]
+
+
 def test_macro_pinn_training_cli_with_sparse_closure_writes_expression(tmp_path: Path):
     from gnnpinn.train.macro_pinn import main
 

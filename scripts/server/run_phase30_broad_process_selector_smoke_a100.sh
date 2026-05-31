@@ -13,6 +13,9 @@ SEED="${SEED:-7}"
 DATASET_LIMIT="${DATASET_LIMIT:-12}"
 DATASET_ORDER="${DATASET_ORDER:-process_round_robin}"
 PROFILE_SPLITS="${PROFILE_SPLITS:-line laser_power scan_speed spot_size process}"
+PROCESS_CONDITIONING_PROFILE="${PROCESS_CONDITIONING_PROFILE:-broad_process_v1}"
+PROCESS_FEATURE_TAG="${PROCESS_FEATURE_TAG:-broad_process_profile}"
+PROCESS_PROFILE_RUN_TAG="${PROCESS_PROFILE_RUN_TAG:-broad_process_profile}"
 
 cd "$REPO_ROOT"
 mkdir -p logs
@@ -22,7 +25,7 @@ run_broad_selector_holdout() {
   local train_fraction="$2"
   local val_fraction="$3"
   local test_fraction="$4"
-  local run_id="ambench_multiline_process_temperature_broad${DATASET_LIMIT}_${DATASET_ORDER}_${split_strategy}_broad_process_profile_smoke_a100_sxm4_40gb_v1"
+  local run_id="ambench_multiline_process_temperature_broad${DATASET_LIMIT}_${DATASET_ORDER}_${split_strategy}_${PROCESS_PROFILE_RUN_TAG}_smoke_a100_sxm4_40gb_v1"
 
   echo "=== ${run_id} ==="
   RUN_ID="$run_id" \
@@ -30,10 +33,10 @@ run_broad_selector_holdout() {
   TRAIN_FRACTION="$train_fraction" \
   VAL_FRACTION="$val_fraction" \
   TEST_FRACTION="$test_fraction" \
-  PROCESS_FEATURE_TAG="broad_process_profile" \
+  PROCESS_FEATURE_TAG="$PROCESS_FEATURE_TAG" \
   PROCESS_CONDITIONING_MODE="concat" \
   PROCESS_FEATURE_NORMALIZATION="same" \
-  PROCESS_CONDITIONING_PROFILE="broad_process_v1" \
+  PROCESS_CONDITIONING_PROFILE="$PROCESS_CONDITIONING_PROFILE" \
   DATASET_SELECTION="all_single_track" \
   DATASET_LIMIT="$DATASET_LIMIT" \
   DATASET_ORDER="$DATASET_ORDER" \
