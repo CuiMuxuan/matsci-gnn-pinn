@@ -27,6 +27,8 @@ FREEZE_PROCESS_ROUTE="${FREEZE_PROCESS_ROUTE:-0}"
 PROCESS_CONDITIONING_PROFILE="${PROCESS_CONDITIONING_PROFILE:-none}"
 PROCESS_FEATURE_COLUMNS="${PROCESS_FEATURE_COLUMNS-laser_power_W scan_speed_mm_s spot_size_um}"
 PROCESS_DERIVED_FEATURE_MODE="${PROCESS_DERIVED_FEATURE_MODE:-none}"
+PROCESS_ENCODER_MODE="${PROCESS_ENCODER_MODE:-none}"
+PROCESS_ENCODER_DIM="${PROCESS_ENCODER_DIM:-0}"
 PROCESS_GRAPH_FEATURE_MODE="${PROCESS_GRAPH_FEATURE_MODE:-none}"
 PROCESS_GRAPH_FEATURE_COUNT="${PROCESS_GRAPH_FEATURE_COUNT:-4}"
 PROCESS_GRAPH_LENGTH_SCALE="${PROCESS_GRAPH_LENGTH_SCALE:-1.0}"
@@ -167,6 +169,13 @@ run_macro_pinn() {
   if [[ "$PROCESS_DERIVED_FEATURE_MODE" != "none" && "$tag" != "no_process" ]]; then
     derived_process_args+=(--input-derived-process-features "$PROCESS_DERIVED_FEATURE_MODE")
   fi
+  local process_encoder_args=()
+  if [[ "$PROCESS_ENCODER_MODE" != "none" && "$tag" != "no_process" ]]; then
+    process_encoder_args+=(
+      --input-process-encoder-mode "$PROCESS_ENCODER_MODE"
+      --input-process-encoder-dim "$PROCESS_ENCODER_DIM"
+    )
+  fi
   local input_feature_args=()
   if [[ "$tag" != "no_process" ]]; then
     for column in $PROCESS_FEATURE_COLUMNS; do
@@ -254,6 +263,7 @@ run_macro_pinn() {
     "${data_loss_weighting_args[@]}" \
     "${target_residual_args[@]}" \
     "${derived_process_args[@]}" \
+    "${process_encoder_args[@]}" \
     "${process_graph_args[@]}" \
     --input-normalization minmax \
     "${route_args[@]}" \

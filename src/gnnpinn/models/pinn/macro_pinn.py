@@ -38,6 +38,8 @@ class MacroPINN(_torch().nn.Module):
         spacetime_fourier_bands: int = 4,
         backbone_mode: str = "mlp",
         backbone_residual_scale: float = 1.0,
+        process_encoder_mode: str = "none",
+        process_encoder_dim: int = 0,
     ):
         super().__init__()
         torch = _torch()
@@ -60,9 +62,22 @@ class MacroPINN(_torch().nn.Module):
             raise ValueError("backbone_residual_scale must be non-negative")
         if normalized_backbone_mode == "residual" and num_hidden_layers < 1:
             raise ValueError("residual backbone requires num_hidden_layers >= 1")
+        normalized_process_encoder_mode = process_encoder_mode.lower()
+        if normalized_process_encoder_mode not in {"none", "linear"}:
+            raise ValueError(f"Unsupported process_encoder_mode: {process_encoder_mode}")
+        if normalized_process_encoder_mode != "none" and param_dim <= 0:
+            raise ValueError("process encoder requires param_dim > 0")
+        encoded_param_dim = param_dim
+        if normalized_process_encoder_mode != "none":
+            if process_encoder_dim < 0:
+                raise ValueError("process_encoder_dim must be non-negative")
+            encoded_param_dim = process_encoder_dim or param_dim
+            if encoded_param_dim <= 0:
+                raise ValueError("process_encoder_dim must be positive when process encoder is enabled")
         self.coord_dim = coord_dim
         self.field_dim = field_dim
-        self.param_dim = param_dim
+        self.raw_param_dim = param_dim
+        self.param_dim = encoded_param_dim
         self.hidden_dim = hidden_dim
         self.num_hidden_layers = num_hidden_layers
         self.conditioning_mode = normalized_mode
@@ -73,11 +88,24 @@ class MacroPINN(_torch().nn.Module):
         self.spacetime_fourier_bands = int(spacetime_fourier_bands)
         self.backbone_mode = normalized_backbone_mode
         self.backbone_residual_scale = float(backbone_residual_scale)
+        self.process_encoder_mode = normalized_process_encoder_mode
+        self.process_encoder_dim = int(encoded_param_dim)
+        self.process_encoder_identity_initialized = False
+        self.process_encoder = None
+        if self.process_encoder_mode == "linear":
+            self.process_encoder = torch.nn.Linear(param_dim, encoded_param_dim)
+            torch.nn.init.zeros_(self.process_encoder.weight)
+            torch.nn.init.zeros_(self.process_encoder.bias)
+            copy_dim = min(param_dim, encoded_param_dim)
+            with torch.no_grad():
+                for index in range(copy_dim):
+                    self.process_encoder.weight[index, index] = 1.0
+            self.process_encoder_identity_initialized = True
         spacetime_dim = self._spacetime_feature_dim()
         self.spacetime_dim = spacetime_dim
         if self.conditioning_mode == "concat":
             self.backbone = self._build_backbone(
-                input_dim=spacetime_dim + param_dim,
+                input_dim=spacetime_dim + encoded_param_dim,
                 field_dim=field_dim,
                 hidden_dim=hidden_dim,
                 num_hidden_layers=num_hidden_layers,
@@ -87,13 +115,13 @@ class MacroPINN(_torch().nn.Module):
 
         if self.conditioning_mode == "routed":
             self.concat_expert = self._build_backbone(
-                input_dim=spacetime_dim + param_dim,
+                input_dim=spacetime_dim + encoded_param_dim,
                 field_dim=field_dim,
                 hidden_dim=hidden_dim,
                 num_hidden_layers=num_hidden_layers,
                 activation=activation,
             )
-            self.route_gate = torch.nn.Linear(param_dim, 1)
+            self.route_gate = torch.nn.Linear(encoded_param_dim, 1)
             torch.nn.init.zeros_(self.route_gate.weight)
             torch.nn.init.constant_(self.route_gate.bias, math.log(route_film_prior / (1.0 - route_film_prior)))
             if not self.route_trainable:
@@ -105,10 +133,10 @@ class MacroPINN(_torch().nn.Module):
         self.film_generators = torch.nn.ModuleList()
         in_dim = spacetime_dim
         if self.conditioning_mode == "concat_film":
-            in_dim += param_dim
+            in_dim += encoded_param_dim
         for _ in range(num_hidden_layers):
             self.hidden_layers.append(torch.nn.Linear(in_dim, hidden_dim))
-            generator = torch.nn.Linear(param_dim, 2 * hidden_dim)
+            generator = torch.nn.Linear(encoded_param_dim, 2 * hidden_dim)
             torch.nn.init.zeros_(generator.weight)
             torch.nn.init.zeros_(generator.bias)
             self.film_generators.append(generator)
@@ -155,23 +183,31 @@ class MacroPINN(_torch().nn.Module):
             features.append(torch.cos(angle))
         return torch.cat(features, dim=-1)
 
+    def _encode_params(self, params: Any | None) -> Any | None:
+        if params is None:
+            return None
+        if self.process_encoder is None:
+            return params
+        return self.process_encoder(params)
+
     def forward(self, coords: Any, time: Any, params: Any | None = None) -> Any:
         torch = _torch()
         spacetime = self._spacetime_features(coords, time)
+        encoded_params = self._encode_params(params)
         if self.conditioning_mode in {"film", "concat_film", "routed"}:
-            if params is None:
+            if encoded_params is None:
                 raise ValueError(f"params are required when conditioning_mode={self.conditioning_mode!r}")
             concat_output = None
             if self.conditioning_mode == "routed":
-                concat_output = self.concat_expert(torch.cat([spacetime, params], dim=-1))
+                concat_output = self.concat_expert(torch.cat([spacetime, encoded_params], dim=-1))
             hidden_inputs = [spacetime]
             if self.conditioning_mode == "concat_film":
-                hidden_inputs.append(params)
+                hidden_inputs.append(encoded_params)
             hidden = torch.cat(hidden_inputs, dim=-1)
             for layer_index, (layer, generator) in enumerate(zip(self.hidden_layers, self.film_generators)):
                 previous_hidden = hidden
                 hidden = self.activation(layer(hidden))
-                gamma, beta = generator(params).chunk(2, dim=-1)
+                gamma, beta = generator(encoded_params).chunk(2, dim=-1)
                 hidden = hidden * (1.0 + self.film_strength * gamma) + self.film_strength * beta
                 if self.backbone_mode == "residual" and layer_index > 0:
                     hidden = previous_hidden + self.backbone_residual_scale * hidden
@@ -181,9 +217,9 @@ class MacroPINN(_torch().nn.Module):
                 return (1.0 - gate) * concat_output + gate * film_output
             return film_output
         if self.param_dim:
-            if params is None:
+            if encoded_params is None:
                 raise ValueError("params are required when param_dim > 0")
-            return self.backbone(torch.cat([spacetime, params], dim=-1))
+            return self.backbone(torch.cat([spacetime, encoded_params], dim=-1))
         return self.backbone(spacetime)
 
     def routing_gate(self, params: Any) -> Any:
@@ -192,7 +228,8 @@ class MacroPINN(_torch().nn.Module):
         if self.conditioning_mode != "routed":
             raise ValueError("routing_gate is only available for conditioning_mode='routed'")
         torch = _torch()
-        return torch.sigmoid(self.route_gate(params))
+        encoded_params = self._encode_params(params)
+        return torch.sigmoid(self.route_gate(encoded_params))
 
     def routing_summary(self, params: Any) -> dict[str, Any] | None:
         """Summarize routed conditioning gate values for run metadata."""

@@ -247,6 +247,19 @@ def _prediction_anchor_metrics(rmse: float) -> dict:
     return payload
 
 
+def _process_encoder_metrics(rmse: float) -> dict:
+    payload = _derived_process_metrics(rmse)
+    payload["process_encoder"] = {
+        "enabled": True,
+        "mode": "linear",
+        "input_dim": 7,
+        "output_dim": 3,
+        "identity_initialized": True,
+        "parameter_count": 24,
+    }
+    return payload
+
+
 def _derived_process_metrics(rmse: float) -> dict:
     payload = _metrics(rmse)
     feature_names = [
@@ -848,6 +861,61 @@ def test_phase30_summary_can_include_broad_prediction_anchor_artifacts(tmp_path:
     assert row["prediction_anchor_enabled"] is True
     assert row["prediction_anchor_weight"] == 0.05
     assert row["prediction_anchor_target_space"] == "normalized_training_target"
+
+
+def test_phase30_summary_can_include_broad_process_encoder_artifacts(tmp_path: Path):
+    summary = _load_summary_module()
+    split = "laser_power"
+    baseline_id = summary._run_id(split, 12, "process_round_robin", "process_axis_profile")
+    encoder_id = summary._run_id(split, 12, "process_round_robin", "proc_enc")
+
+    manifest = _manifest(1200, 30, 96)
+    split_payload = _split(1200)
+    split_payload["group_key"] = "laser_power_W"
+    _write_json(tmp_path / "outputs/data_audits" / f"{baseline_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{baseline_id}_split.json", split_payload)
+    _write_json(tmp_path / "outputs/data_audits" / f"{encoder_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{encoder_id}_split.json", split_payload)
+    for method, baseline_tag in summary.BASELINE_TAGS:
+        _write_json(
+            tmp_path / "outputs/baselines" / f"{baseline_id}_{baseline_tag}_regions_q90.json",
+            _metrics(100.0),
+        )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_no_process_v1" / "metrics.json",
+        _metrics(90.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_process_axis_profile_v1" / "metrics.json",
+        _metrics(80.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{encoder_id}_macro_pinn_minmax_proc_enc_v1" / "metrics.json",
+        _process_encoder_metrics(61.0),
+    )
+
+    payload = summary.collect_rows(
+        tmp_path,
+        (split,),
+        12,
+        "process_round_robin",
+        (*summary.DEFAULT_PINN_SPECS, summary.BROAD_PROCESS_ENCODER_SPEC),
+    )
+    row = payload["splits"][split]["methods"]["broad_process_encoder"]
+
+    assert payload["pinn_methods"] == [
+        "no_process",
+        "process_axis_v1",
+        "broad_process_v1",
+        "broad_process_encoder",
+    ]
+    assert row["comparison_status"] == "comparable"
+    assert row["rmse"] == 61.0
+    assert row["process_encoder_enabled"] is True
+    assert row["process_encoder_mode"] == "linear"
+    assert row["process_encoder_input_dim"] == 7
+    assert row["process_encoder_output_dim"] == 3
+    assert row["process_encoder_identity_initialized"] is True
 
 
 def test_phase30_summary_can_include_broad_derived_process_artifacts(tmp_path: Path):

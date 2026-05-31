@@ -78,6 +78,12 @@ BROAD_PREDICTION_ANCHOR_SPEC = (
     DEFAULT_BROAD_PREDICTION_ANCHOR_TAG,
     DEFAULT_BROAD_PREDICTION_ANCHOR_TAG,
 )
+DEFAULT_BROAD_PROCESS_ENCODER_TAG = "proc_enc"
+BROAD_PROCESS_ENCODER_SPEC = (
+    "broad_process_encoder",
+    DEFAULT_BROAD_PROCESS_ENCODER_TAG,
+    DEFAULT_BROAD_PROCESS_ENCODER_TAG,
+)
 DEFAULT_BROAD_DERIVED_PROCESS_TAG = "phys_proc"
 BROAD_DERIVED_PROCESS_SPEC = (
     "broad_derived_process",
@@ -249,6 +255,7 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
     target_residual = data.get("target_residual_baseline") or {}
     target_normalization = data.get("target_normalization") or {}
     backbone = data.get("backbone") or {}
+    process_encoder = data.get("process_encoder") or {}
     output_affine = data.get("output_affine") or {}
     prediction_anchor = data.get("prediction_anchor") or {}
     return {
@@ -292,6 +299,12 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
         "backbone_mode": backbone.get("mode"),
         "backbone_residual_scale": backbone.get("residual_scale"),
         "backbone_parameter_count": backbone.get("parameter_count"),
+        "process_encoder_enabled": process_encoder.get("enabled"),
+        "process_encoder_mode": process_encoder.get("mode"),
+        "process_encoder_input_dim": process_encoder.get("input_dim"),
+        "process_encoder_output_dim": process_encoder.get("output_dim"),
+        "process_encoder_identity_initialized": process_encoder.get("identity_initialized"),
+        "process_encoder_parameter_count": process_encoder.get("parameter_count"),
         "output_affine_enabled": output_affine.get("enabled"),
         "output_affine_mode": output_affine.get("mode"),
         "output_affine_scale": output_affine.get("scale"),
@@ -381,9 +394,9 @@ def _fmt(value: Any) -> str:
 def print_metrics_markdown(summary: dict[str, Any]) -> None:
     print(
         "| split | method | status | test RMSE | hot q90 RMSE | gradient q90 RMSE | "
-        "spacetime | backbone | output affine | prediction anchor | graph | target residual | selected | effective features |"
+        "spacetime | backbone | process encoder | output affine | prediction anchor | graph | target residual | selected | effective features |"
     )
-    print("|---|---|---|---:|---:|---:|---|---|---|---|---|---|---|---|")
+    print("|---|---|---|---:|---:|---:|---|---|---|---|---|---|---|---|---|")
     pinn_methods = tuple(summary.get("pinn_methods") or ("no_process", "process_axis_v1", "broad_process_v1"))
     method_order = (
         "mean",
@@ -398,14 +411,14 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
             row = split_rows["methods"].get(method, {})
             if row.get("missing"):
                 print(
-                    f"| {split} | {method} | MISSING |  |  |  |  |  |  |  |  |  |  | {row.get('path', '')} |"
+                    f"| {split} | {method} | MISSING |  |  |  |  |  |  |  |  |  |  |  | {row.get('path', '')} |"
                 )
                 continue
             status = str(row.get("comparison_status") or "comparable")
             if status != "comparable":
                 reason = row.get("comparison_reason", "")
                 print(
-                    f"| {split} | {method} | INCOMPARABLE: {reason} |  |  |  |  |  |  |  |  |  |  | {row.get('path', '')} |"
+                    f"| {split} | {method} | INCOMPARABLE: {reason} |  |  |  |  |  |  |  |  |  |  |  | {row.get('path', '')} |"
                 )
                 continue
             selected = ""
@@ -422,6 +435,13 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
                 backbone = str(row.get("backbone_mode"))
                 if row.get("backbone_residual_scale") is not None:
                     backbone = f"{backbone}@{row.get('backbone_residual_scale')}"
+            process_encoder = ""
+            if row.get("process_encoder_enabled"):
+                process_encoder = "{}:{}->{}".format(
+                    row.get("process_encoder_mode"),
+                    row.get("process_encoder_input_dim"),
+                    row.get("process_encoder_output_dim"),
+                )
             output_affine = ""
             if row.get("output_affine_enabled"):
                 output_affine = "{}:{}@{}".format(
@@ -453,7 +473,7 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
             print(
                 (
                     "| {split} | {method} | {status} | {rmse} | {hot} | {grad} | "
-                    "{spacetime} | {backbone} | {output_affine} | {prediction_anchor} | {graph} | {target_residual} | {selected} | {features} |"
+                    "{spacetime} | {backbone} | {process_encoder} | {output_affine} | {prediction_anchor} | {graph} | {target_residual} | {selected} | {features} |"
                 ).format(
                     split=split,
                     method=method,
@@ -463,6 +483,7 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
                     grad=_fmt(row.get("gradient_q90_rmse")),
                     spacetime=spacetime,
                     backbone=backbone,
+                    process_encoder=process_encoder,
                     output_affine=output_affine,
                     prediction_anchor=prediction_anchor,
                     graph=graph,
@@ -558,6 +579,14 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--include-broad-process-encoder",
+        action="store_true",
+        help=(
+            "Also summarize the Phase 43 broad_process_encoder artifacts. "
+            "These use broad_process_v1 routing with a learned low-dimensional process encoder."
+        ),
+    )
+    parser.add_argument(
         "--include-broad-derived-process",
         action="store_true",
         help=(
@@ -596,6 +625,11 @@ def main() -> int:
         help="Run/profile tag used with --include-broad-prediction-anchor.",
     )
     parser.add_argument(
+        "--broad-process-encoder-tag",
+        default=DEFAULT_BROAD_PROCESS_ENCODER_TAG,
+        help="Run/profile tag used with --include-broad-process-encoder.",
+    )
+    parser.add_argument(
         "--broad-derived-process-tag",
         default=DEFAULT_BROAD_DERIVED_PROCESS_TAG,
         help="Run/profile tag used with --include-broad-derived-process.",
@@ -628,6 +662,9 @@ def main() -> int:
     if args.include_broad_prediction_anchor:
         tag = args.broad_prediction_anchor_tag
         pinn_specs = (*pinn_specs, ("broad_prediction_anchor", tag, tag))
+    if args.include_broad_process_encoder:
+        tag = args.broad_process_encoder_tag
+        pinn_specs = (*pinn_specs, ("broad_process_encoder", tag, tag))
     if args.include_broad_derived_process:
         tag = args.broad_derived_process_tag
         pinn_specs = (*pinn_specs, ("broad_derived_process", tag, tag))

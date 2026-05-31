@@ -286,6 +286,20 @@ def _backbone_payload(args: argparse.Namespace, model: Any) -> dict[str, Any]:
     }
 
 
+def _process_encoder_payload(args: argparse.Namespace, model: Any, input_dim: int) -> dict[str, Any]:
+    enabled = args.input_process_encoder_mode != "none"
+    encoder = getattr(model, "process_encoder", None)
+    parameter_count = int(sum(parameter.numel() for parameter in encoder.parameters())) if encoder is not None else 0
+    return {
+        "enabled": enabled,
+        "mode": args.input_process_encoder_mode,
+        "input_dim": input_dim if enabled else None,
+        "output_dim": int(getattr(model, "process_encoder_dim", 0)) if enabled else None,
+        "identity_initialized": bool(getattr(model, "process_encoder_identity_initialized", False)) if enabled else False,
+        "parameter_count": parameter_count,
+    }
+
+
 def _residual_correction_input(coords: Any, time: Any, params: Any | None = None) -> Any:
     torch = _torch()
     if time.ndim == 1:
@@ -1371,7 +1385,10 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         spacetime_fourier_bands=args.spacetime_fourier_bands,
         backbone_mode=args.backbone_mode,
         backbone_residual_scale=args.backbone_residual_scale,
+        process_encoder_mode=args.input_process_encoder_mode,
+        process_encoder_dim=args.input_process_encoder_dim,
     ).to(args.device)
+    process_encoder_input_dim = int(input_features.shape[-1]) if input_features is not None else 0
     residual_correction_input_dim = coords.shape[-1] + time.reshape(time.shape[0], -1).shape[-1]
     if input_features is not None:
         residual_correction_input_dim += input_features.shape[-1]
@@ -1673,6 +1690,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         ),
         "spacetime_encoding": _spacetime_encoding_payload(args, model),
         "backbone": _backbone_payload(args, model),
+        "process_encoder": _process_encoder_payload(args, model, process_encoder_input_dim),
         "residual_correction": _residual_correction_payload(
             args,
             residual_correction,
@@ -1732,6 +1750,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 "input_features": metrics_payload["input_features"],
                 "spacetime_encoding": metrics_payload["spacetime_encoding"],
                 "backbone": metrics_payload["backbone"],
+                "process_encoder": metrics_payload["process_encoder"],
                 "residual_correction": metrics_payload["residual_correction"],
                 "output_affine": metrics_payload["output_affine"],
                 "data_loss_weighting": metrics_payload["data_loss_weighting"],
@@ -2014,6 +2033,24 @@ def build_parser() -> argparse.ArgumentParser:
             "Append deterministic AM process features derived from laser_power_W, scan_speed_mm_s, "
             "and spot_size_um. am_energy_v1 adds line-energy, energy-density proxy, "
             "area-normalized energy proxy, and dwell-time features."
+        ),
+    )
+    parser.add_argument(
+        "--input-process-encoder-mode",
+        choices=["none", "linear"],
+        default="none",
+        help=(
+            "Optional trainable encoder applied to active input/process features before Macro PINN conditioning. "
+            "linear is identity-initialized on the leading features so it starts near the route-guard representation."
+        ),
+    )
+    parser.add_argument(
+        "--input-process-encoder-dim",
+        type=int,
+        default=0,
+        help=(
+            "Output dimension for --input-process-encoder-mode. "
+            "The default 0 preserves the active input/process feature count."
         ),
     )
     parser.add_argument(

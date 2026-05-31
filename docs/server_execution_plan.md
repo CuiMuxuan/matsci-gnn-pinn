@@ -1224,6 +1224,25 @@ python scripts/server/summarize_phase42_validation_selection.py \
 
 Prediction-anchor focused validation 结果记录在 `docs/results/ambench_multiline_process_prediction_anchor_v1.md`。`weight=0.05` 与 `0.01` 都改善 broad12 `laser_power`，但 broad21 global RMSE 退化：`0.05` 为 `192.755869 / 320.927695 / 275.299993`，`0.01` 为 `200.097570 / 292.510967 / 267.746425`，均弱于 `broad_process_v1` 的 `178.040331 / 296.909567 / 254.954359`。结论：prediction anchor 关闭为 split-local 诊断，不做 seed expansion；下一步应转向更强 process representation 或 architecture，而不是继续调 scalar output shrinkage。
 
+Phase 43 当前分支为 `process_encoder_v1`，结果文档为 `docs/results/ambench_multiline_process_process_encoder_v1.md`。关键实现：
+
+- `MacroPINN` 新增 `process_encoder_mode=none|linear` 与 `process_encoder_dim`。
+- `linear` encoder 对 leading input features identity 初始化，用于从 raw process route guard 起步。
+- 首轮 focused validation 使用 raw process scalars + `am_energy_v1`，再压缩到 3 维 latent 后进入 `broad_process_v1` route。
+- metrics/checkpoint 记录 `process_encoder` metadata；summary 脚本支持 `--include-broad-process-encoder`。
+
+focused A100 命令：
+
+```bash
+PROFILE_SPLITS=laser_power DATASET_LIMITS="12 21" DATASET_ORDER=process_round_robin \
+PROCESS_DERIVED_FEATURE_MODE=am_energy_v1 PROCESS_ENCODER_MODE=linear PROCESS_ENCODER_DIM=3 \
+PROCESS_FEATURE_TAG=proc_enc STEPS=500 N_ESTIMATORS=80 \
+  bash scripts/server/run_phase43_broad_process_encoder_a100.sh \
+  > logs/phase43_laser_power_process_encoder_a100_v1.log 2>&1
+```
+
+验收：先比较 `broad_process_encoder` against mean/kNN/ExtraTrees、no-process、`process_axis_v1`、`broad_process_v1`、derived-only `am_energy_v1` 和 Phase 42 prediction-anchor diagnostics。若 broad12 与 broad21 `laser_power` 同时改善或保持 global RMSE 且改善 hot/gradient，再做 seed expansion；若仍是 split-local，则关闭为 representation diagnostic。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

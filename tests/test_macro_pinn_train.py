@@ -543,6 +543,73 @@ def test_macro_pinn_training_cli_supports_derived_process_features(tmp_path: Pat
     assert checkpoint["metadata"]["input_features"] == payload["input_features"]
 
 
+def test_macro_pinn_training_cli_supports_process_encoder(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_process_temperature.csv"
+    table.write_text(
+        "x,y,t,T,line_id,laser_power_W,scan_speed_mm_s,spot_size_um\n"
+        "0,0,0,10,Line_0_1,285,960,67\n"
+        "1,0,0,11,Line_0_1,285,960,67\n"
+        "0,1,1,20,Line_3_1,325,1200,82\n"
+        "1,1,1,21,Line_3_1,325,1200,82\n"
+        "2,1,1,30,Line_4_1,245,800,49\n"
+        "2,2,1,31,Line_4_1,245,800,49\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "process_encoder_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "3",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--input-normalization",
+            "standard",
+            "--input-feature-normalization",
+            "standard",
+            "--input-feature-column",
+            "laser_power_W",
+            "--input-feature-column",
+            "scan_speed_mm_s",
+            "--input-feature-column",
+            "spot_size_um",
+            "--input-derived-process-features",
+            "am_energy_v1",
+            "--input-process-encoder-mode",
+            "linear",
+            "--input-process-encoder-dim",
+            "3",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    checkpoint = __import__("torch").load(output_dir / "checkpoint.pt", map_location="cpu")
+
+    assert status == 0
+    assert payload["config"]["input_process_encoder_mode"] == "linear"
+    assert payload["config"]["input_process_encoder_dim"] == 3
+    assert payload["input_features"]["count"] == 7
+    assert payload["process_encoder"]["enabled"] is True
+    assert payload["process_encoder"]["mode"] == "linear"
+    assert payload["process_encoder"]["input_dim"] == 7
+    assert payload["process_encoder"]["output_dim"] == 3
+    assert payload["process_encoder"]["identity_initialized"] is True
+    assert payload["process_encoder"]["parameter_count"] == 24
+    assert checkpoint["metadata"]["process_encoder"] == payload["process_encoder"]
+
+
 def test_macro_pinn_training_cli_supports_process_graph_rbf_features(tmp_path: Path):
     from gnnpinn.train.macro_pinn import main
 
