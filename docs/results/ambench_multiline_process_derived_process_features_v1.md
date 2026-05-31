@@ -42,6 +42,14 @@ The training CLI now supports:
 
 Default behavior is unchanged with `none`. Metrics and checkpoints record `derived_process_features` metadata and include these names in `input_features.effective_columns`.
 
+The server runner also accepts `PROCESS_FEATURE_COLUMNS`. By default it uses the raw process scalars:
+
+```text
+laser_power_W scan_speed_mm_s spot_size_um
+```
+
+Set `PROCESS_FEATURE_COLUMNS=""` to test a derived-only process representation without the raw scalar columns.
+
 ## Commands
 
 Focused broad21 A100 validation:
@@ -63,6 +71,15 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
   --include-broad-derived-process \
   --json-output outputs/reports/phase41_broad21_laser_power_derived_process_summary.json \
   --require-comparable
+```
+
+Derived-only diagnostic if raw plus derived features over-trade global RMSE:
+
+```bash
+PROFILE_SPLITS=laser_power DATASET_LIMIT=21 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 PROCESS_FEATURE_COLUMNS="" PROCESS_FEATURE_TAG=phys_only \
+  bash scripts/server/run_phase41_broad_derived_process_features_a100.sh \
+  > logs/phase41_broad21_laser_power_derived_only_a100_v1.log 2>&1
 ```
 
 ## Decision Gate

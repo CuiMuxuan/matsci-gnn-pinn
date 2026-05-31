@@ -25,6 +25,7 @@ PROCESS_FILM_STRENGTH="${PROCESS_FILM_STRENGTH:-1.0}"
 PROCESS_ROUTE_FILM_PRIOR="${PROCESS_ROUTE_FILM_PRIOR:-0.5}"
 FREEZE_PROCESS_ROUTE="${FREEZE_PROCESS_ROUTE:-0}"
 PROCESS_CONDITIONING_PROFILE="${PROCESS_CONDITIONING_PROFILE:-none}"
+PROCESS_FEATURE_COLUMNS="${PROCESS_FEATURE_COLUMNS:-laser_power_W scan_speed_mm_s spot_size_um}"
 PROCESS_DERIVED_FEATURE_MODE="${PROCESS_DERIVED_FEATURE_MODE:-none}"
 PROCESS_GRAPH_FEATURE_MODE="${PROCESS_GRAPH_FEATURE_MODE:-none}"
 PROCESS_GRAPH_FEATURE_COUNT="${PROCESS_GRAPH_FEATURE_COUNT:-4}"
@@ -165,6 +166,12 @@ run_macro_pinn() {
   if [[ "$PROCESS_DERIVED_FEATURE_MODE" != "none" && "$tag" != "no_process" ]]; then
     derived_process_args+=(--input-derived-process-features "$PROCESS_DERIVED_FEATURE_MODE")
   fi
+  local input_feature_args=()
+  if [[ "$tag" != "no_process" ]]; then
+    for column in $PROCESS_FEATURE_COLUMNS; do
+      input_feature_args+=(--input-feature-column "$column")
+    done
+  fi
   local residual_correction_args=()
   if [[ "$RESIDUAL_CORRECTION_MODE" != "none" ]]; then
     residual_correction_args+=(
@@ -245,6 +252,7 @@ run_macro_pinn() {
     --input-normalization minmax \
     "${route_args[@]}" \
     "${profile_args[@]}" \
+    "${input_feature_args[@]}" \
     "$@" \
     --hot-quantile 0.9 \
     --gradient-quantile 0.9 \
@@ -257,7 +265,4 @@ fi
 run_macro_pinn "$PROCESS_FEATURE_TAG" \
   --input-conditioning-mode "$PROCESS_CONDITIONING_MODE" \
   --input-film-strength "$PROCESS_FILM_STRENGTH" \
-  --input-feature-normalization "$PROCESS_FEATURE_NORMALIZATION" \
-  --input-feature-column laser_power_W \
-  --input-feature-column scan_speed_mm_s \
-  --input-feature-column spot_size_um
+  --input-feature-normalization "$PROCESS_FEATURE_NORMALIZATION"

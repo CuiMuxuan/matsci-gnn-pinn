@@ -1188,6 +1188,7 @@ Phase 40 进一步测试更小 output-affine scale 是否能修复 broad21 trans
 - CLI 新增 `--input-derived-process-features none|am_energy_v1`；默认 `none`，不改变旧实验。
 - `am_energy_v1` 从 `laser_power_W`、`scan_speed_mm_s`、`spot_size_um` 派生 `P/v`、`P/(v*d)`、`P/(v*d^2)` 与 `d/v` 形式的 AM 工艺特征，并加入 `input_features.effective_columns`。
 - `scripts/server/run_multiline_process_conditioned_thermal_a100.sh` 新增 `PROCESS_DERIVED_FEATURE_MODE` 环境变量。
+- `scripts/server/run_multiline_process_conditioned_thermal_a100.sh` 新增 `PROCESS_FEATURE_COLUMNS`，可用 `PROCESS_FEATURE_COLUMNS=""` 跑 derived-only 诊断。
 - `scripts/server/run_phase41_broad_derived_process_features_a100.sh` 默认 focused 跑 broad21 `laser_power`，run tag 使用 `phys_proc`。
 - `scripts/server/summarize_phase30_broad_process_selector_smoke.py --include-broad-derived-process` 可在 manifest/split comparability gate 中纳入 Phase 41 artifacts，并显示 derived-process metadata。
 

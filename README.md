@@ -383,7 +383,7 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
   --require-comparable
 ```
 
-The Phase 39 setup and result are documented in [docs/results/ambench_multiline_process_output_affine_v1.md](docs/results/ambench_multiline_process_output_affine_v1.md). Phase 40/41 is documented in [docs/results/ambench_multiline_process_derived_process_features_v1.md](docs/results/ambench_multiline_process_derived_process_features_v1.md). The new CLI option is `--input-derived-process-features none|am_energy_v1`; default behavior remains unchanged with `none`.
+The Phase 39 setup and result are documented in [docs/results/ambench_multiline_process_output_affine_v1.md](docs/results/ambench_multiline_process_output_affine_v1.md). Phase 40/41 is documented in [docs/results/ambench_multiline_process_derived_process_features_v1.md](docs/results/ambench_multiline_process_derived_process_features_v1.md). The new CLI option is `--input-derived-process-features none|am_energy_v1`; default behavior remains unchanged with `none`. Server runs can set `PROCESS_FEATURE_COLUMNS=""` to test derived-only process representation.
 
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
