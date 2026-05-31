@@ -383,7 +383,7 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
   --require-comparable
 ```
 
-The Phase 39 setup and result are documented in [docs/results/ambench_multiline_process_output_affine_v1.md](docs/results/ambench_multiline_process_output_affine_v1.md). Phase 40/41 is documented in [docs/results/ambench_multiline_process_derived_process_features_v1.md](docs/results/ambench_multiline_process_derived_process_features_v1.md). Phase 42 has a new `--prediction-anchor-weight` objective for baseline-facing regularization. The new CLI option is `--input-derived-process-features none|am_energy_v1`; default behavior remains unchanged with `none`. Server runs can set `PROCESS_FEATURE_COLUMNS=""` to test derived-only process representation.
+The Phase 39 setup and result are documented in [docs/results/ambench_multiline_process_output_affine_v1.md](docs/results/ambench_multiline_process_output_affine_v1.md). Phase 40/41 is documented in [docs/results/ambench_multiline_process_derived_process_features_v1.md](docs/results/ambench_multiline_process_derived_process_features_v1.md). Phase 42 validation selection and prediction anchoring are documented in [docs/results/ambench_multiline_process_validation_selection_v1.md](docs/results/ambench_multiline_process_validation_selection_v1.md) and [docs/results/ambench_multiline_process_prediction_anchor_v1.md](docs/results/ambench_multiline_process_prediction_anchor_v1.md). The new CLI option is `--input-derived-process-features none|am_energy_v1`; default behavior remains unchanged with `none`. Server runs can set `PROCESS_FEATURE_COLUMNS=""` to test derived-only process representation.
 
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
@@ -511,7 +511,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 40 output-affine 小尺度 sweep 已关闭为负诊断。broad21 `laser_power` 的 `scale=0.25` 与 `0.10` 仍弱于 `broad_process_v1`，说明问题不只是校准幅度过大。
 - Phase 41 physics-derived process representation 已关闭为 broad21 正向但 broad12 不迁移的诊断。derived-only `am_energy_v1` 在 broad21 `laser_power` 上将 `broad_process_v1` 的 `178.040331 / 296.909567 / 254.954359` 改到 `171.892969 / 211.624381 / 207.270255`，但 broad12 `laser_power` 退化到 `162.766699 / 303.019663 / 254.346542`，因此不做 seed expansion。
 - Phase 42 validation-selection 检查已关闭简单 selector 路线。validation RMSE/hot/gradient 不能一致预测 raw vs derived-only 的 test-best 表示，下一步转向更强 baseline-facing architecture 或训练目标。
-- Phase 42 当前实现 baseline-facing `--prediction-anchor-weight` 训练目标，默认关闭；服务器 wrapper `run_phase42_broad_prediction_anchor_a100.sh` 将先做 broad12/broad21 `laser_power` focused validation。
+- Phase 42 prediction-anchor 训练目标已关闭为 broad12-local positive、broad21 negative 诊断。`--prediction-anchor-weight=0.01/0.05` 都改善 broad12 `laser_power`，但 broad21 global RMSE 退化，因此不做 seed expansion。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 

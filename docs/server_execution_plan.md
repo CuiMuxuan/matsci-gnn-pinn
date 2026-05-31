@@ -1222,6 +1222,8 @@ python scripts/server/summarize_phase42_validation_selection.py \
 
 结论：simple validation selector 不可信。broad12 val RMSE/gradient 能选 raw process，broad21 val gradient 能选 derived-only，但 broad21 val RMSE 错选 raw，broad21 val hot q90 错选 raw+derived。下一步不应添加 hand-coded validation-selected raw/derived profile，而应转向更强 baseline-facing architecture 或训练目标。当前已接入 `--prediction-anchor-weight` 作为新的 baseline-facing 训练目标；下一轮 broad12/broad21 `laser_power` focused validation 入口是 `scripts/server/run_phase42_broad_prediction_anchor_a100.sh`。
 
+Prediction-anchor focused validation 结果记录在 `docs/results/ambench_multiline_process_prediction_anchor_v1.md`。`weight=0.05` 与 `0.01` 都改善 broad12 `laser_power`，但 broad21 global RMSE 退化：`0.05` 为 `192.755869 / 320.927695 / 275.299993`，`0.01` 为 `200.097570 / 292.510967 / 267.746425`，均弱于 `broad_process_v1` 的 `178.040331 / 296.909567 / 254.954359`。结论：prediction anchor 关闭为 split-local 诊断，不做 seed expansion；下一步应转向更强 process representation 或 architecture，而不是继续调 scalar output shrinkage。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
