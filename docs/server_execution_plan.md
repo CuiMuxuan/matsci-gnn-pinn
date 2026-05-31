@@ -915,6 +915,23 @@ Phase 32 broad-data profile v2 diagnostic 已完成，结果文档为 `docs/resu
 
 因此 Phase 32 关闭为 diagnostic refinement，不更换默认 selector。`broad_process_v1` 仍是更稳的 broad-data route guard；`broad_process_v2` 仅保留为 broad21 line-specific diagnostic。下一步 Phase 33 应转向更强 broad-data representation 或 closure/GNN reintegration，而不是继续手动调 selector。当前 A100-SXM4-40GB 仍足够，无需请求 A100-SXM4-80GB。
 
+Phase 33 fixed Fourier spacetime representation diagnostic 已完成，结果文档为 `docs/results/ambench_multiline_process_fourier_spacetime_v1.md`。关键实现：
+
+- `MacroPINN` 新增 `spacetime_encoding=raw|fourier` 和 `spacetime_fourier_bands`。
+- CLI 新增 `--spacetime-encoding raw|fourier` 与 `--spacetime-fourier-bands`，metrics/checkpoint 记录 encoding、band 数和实际 spacetime input dimension。
+- `scripts/server/run_multiline_process_conditioned_thermal_a100.sh` 新增 `SPACETIME_ENCODING` 与 `SPACETIME_FOURIER_BANDS`。
+- 新增 `scripts/server/run_phase33_broad_fourier_selector_smoke_a100.sh`，使用 `broad_process_v1` 路由并以 non-overwriting run tag 写入 Fourier artifact。
+- `scripts/server/summarize_phase30_broad_process_selector_smoke.py --include-broad-process-fourier` 可在 manifest/split comparability gate 中纳入 Phase 33 artifact。
+
+验收结果：
+
+- 服务器 targeted torch suite 通过：`29 passed, 9 warnings`；bash/py_compile 通过。
+- full broad12 Fourier/4 summary 通过 `--require-comparable`。
+- Fourier/4 在所有 broad12 split 上均弱于 `broad_process_v1`：`line` `126.308616 -> 168.277643`，`laser_power` `140.753534 -> 189.900869`，`scan_speed` `186.173938 -> 199.328381`，`spot_size` `136.309183 -> 213.024115`，full `process` `181.091525 -> 243.410025`。
+- `SPACETIME_FOURIER_BANDS=1` 的 spot-size 低成本检查仍未追上既有 `broad_process_v1`：test RMSE `153.271041` vs `136.309183`。
+
+因此 Phase 33 关闭为 negative representation diagnostic。Fourier basis 已实现并保留为可复现实验选项，但不替代默认 raw coordinate/time basis，也没有证据支持扩到 broad21。下一步应转向更结构化的分支：closure/GNN reintegration、broad selector 下的 learned residual correction，或改变采样/对齐的数据表示，而不是继续堆固定 coordinate basis。当前 A100-SXM4-40GB 仍足够，无需请求 A100-SXM4-80GB。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

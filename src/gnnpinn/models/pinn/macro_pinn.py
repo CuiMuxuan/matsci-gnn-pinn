@@ -34,6 +34,8 @@ class MacroPINN(_torch().nn.Module):
         film_strength: float = 1.0,
         route_film_prior: float = 0.5,
         route_trainable: bool = True,
+        spacetime_encoding: str = "raw",
+        spacetime_fourier_bands: int = 4,
     ):
         super().__init__()
         torch = _torch()
@@ -44,6 +46,11 @@ class MacroPINN(_torch().nn.Module):
             raise ValueError(f"{normalized_mode} conditioning requires param_dim > 0")
         if normalized_mode == "routed" and not 0.0 < route_film_prior < 1.0:
             raise ValueError("route_film_prior must be between 0 and 1")
+        normalized_spacetime_encoding = spacetime_encoding.lower()
+        if normalized_spacetime_encoding not in {"raw", "fourier"}:
+            raise ValueError(f"Unsupported spacetime encoding: {spacetime_encoding}")
+        if spacetime_fourier_bands < 1:
+            raise ValueError("spacetime_fourier_bands must be >= 1")
         self.coord_dim = coord_dim
         self.field_dim = field_dim
         self.param_dim = param_dim
@@ -53,10 +60,14 @@ class MacroPINN(_torch().nn.Module):
         self.film_strength = float(film_strength)
         self.route_film_prior = float(route_film_prior)
         self.route_trainable = bool(route_trainable)
+        self.spacetime_encoding = normalized_spacetime_encoding
+        self.spacetime_fourier_bands = int(spacetime_fourier_bands)
+        spacetime_dim = self._spacetime_feature_dim()
+        self.spacetime_dim = spacetime_dim
         if self.conditioning_mode == "concat":
             self.backbone = MLP(
                 MLPConfig(
-                    input_dim=coord_dim + 1 + param_dim,
+                    input_dim=spacetime_dim + param_dim,
                     output_dim=field_dim,
                     hidden_dim=hidden_dim,
                     num_hidden_layers=num_hidden_layers,
@@ -68,7 +79,7 @@ class MacroPINN(_torch().nn.Module):
         if self.conditioning_mode == "routed":
             self.concat_expert = MLP(
                 MLPConfig(
-                    input_dim=coord_dim + 1 + param_dim,
+                    input_dim=spacetime_dim + param_dim,
                     output_dim=field_dim,
                     hidden_dim=hidden_dim,
                     num_hidden_layers=num_hidden_layers,
@@ -85,7 +96,7 @@ class MacroPINN(_torch().nn.Module):
         self.activation = _activation(activation)
         self.hidden_layers = torch.nn.ModuleList()
         self.film_generators = torch.nn.ModuleList()
-        in_dim = coord_dim + 1
+        in_dim = spacetime_dim
         if self.conditioning_mode == "concat_film":
             in_dim += param_dim
         for _ in range(num_hidden_layers):
@@ -97,17 +108,36 @@ class MacroPINN(_torch().nn.Module):
             in_dim = hidden_dim
         self.output_layer = torch.nn.Linear(in_dim, field_dim)
 
-    def forward(self, coords: Any, time: Any, params: Any | None = None) -> Any:
+    def _spacetime_feature_dim(self) -> int:
+        base_dim = self.coord_dim + 1
+        if self.spacetime_encoding == "raw":
+            return base_dim
+        return base_dim * (1 + 2 * self.spacetime_fourier_bands)
+
+    def _spacetime_features(self, coords: Any, time: Any) -> Any:
         torch = _torch()
         if time.ndim == 1:
             time = time[:, None]
+        base = torch.cat([coords, time], dim=-1)
+        if self.spacetime_encoding == "raw":
+            return base
+        features = [base]
+        for band in range(self.spacetime_fourier_bands):
+            angle = math.pi * (2.0**band) * base
+            features.append(torch.sin(angle))
+            features.append(torch.cos(angle))
+        return torch.cat(features, dim=-1)
+
+    def forward(self, coords: Any, time: Any, params: Any | None = None) -> Any:
+        torch = _torch()
+        spacetime = self._spacetime_features(coords, time)
         if self.conditioning_mode in {"film", "concat_film", "routed"}:
             if params is None:
                 raise ValueError(f"params are required when conditioning_mode={self.conditioning_mode!r}")
             concat_output = None
             if self.conditioning_mode == "routed":
-                concat_output = self.concat_expert(torch.cat([coords, time, params], dim=-1))
-            hidden_inputs = [coords, time]
+                concat_output = self.concat_expert(torch.cat([spacetime, params], dim=-1))
+            hidden_inputs = [spacetime]
             if self.conditioning_mode == "concat_film":
                 hidden_inputs.append(params)
             hidden = torch.cat(hidden_inputs, dim=-1)
@@ -120,12 +150,11 @@ class MacroPINN(_torch().nn.Module):
                 gate = self.routing_gate(params)
                 return (1.0 - gate) * concat_output + gate * film_output
             return film_output
-        inputs = [coords, time]
         if self.param_dim:
             if params is None:
                 raise ValueError("params are required when param_dim > 0")
-            inputs.append(params)
-        return self.backbone(torch.cat(inputs, dim=-1))
+            return self.backbone(torch.cat([spacetime, params], dim=-1))
+        return self.backbone(spacetime)
 
     def routing_gate(self, params: Any) -> Any:
         """Return the FiLM-expert weight for routed conditioning."""

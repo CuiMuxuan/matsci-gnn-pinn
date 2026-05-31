@@ -22,6 +22,8 @@ PROCESS_FILM_STRENGTH="${PROCESS_FILM_STRENGTH:-1.0}"
 PROCESS_ROUTE_FILM_PRIOR="${PROCESS_ROUTE_FILM_PRIOR:-0.5}"
 FREEZE_PROCESS_ROUTE="${FREEZE_PROCESS_ROUTE:-0}"
 PROCESS_CONDITIONING_PROFILE="${PROCESS_CONDITIONING_PROFILE:-none}"
+SPACETIME_ENCODING="${SPACETIME_ENCODING:-raw}"
+SPACETIME_FOURIER_BANDS="${SPACETIME_FOURIER_BANDS:-4}"
 DATASET_SELECTION="${DATASET_SELECTION:-representative7}"
 DATASET_REGEX="${DATASET_REGEX:-}"
 DATASET_LIMIT="${DATASET_LIMIT:-}"
@@ -143,6 +145,8 @@ run_macro_pinn() {
     --lr "$LR" \
     --seed "$SEED" \
     --device "$DEVICE" \
+    --spacetime-encoding "$SPACETIME_ENCODING" \
+    --spacetime-fourier-bands "$SPACETIME_FOURIER_BANDS" \
     --input-normalization minmax \
     "${route_args[@]}" \
     "${profile_args[@]}" \

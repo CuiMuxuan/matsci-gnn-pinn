@@ -38,6 +38,11 @@ BROAD_PROCESS_V2_SPEC = (
     "broad_process_profile_v2",
     "broad_process_profile_v2",
 )
+BROAD_PROCESS_FOURIER_SPEC = (
+    "broad_process_fourier",
+    "broad_process_fourier",
+    "broad_process_fourier",
+)
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -194,11 +199,15 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
     profile = features.get("conditioning_profile") or {}
     selected = profile.get("selected") or {}
     effective = profile.get("effective") or {}
+    spacetime_encoding = data.get("spacetime_encoding") or {}
     return {
         "input_features_enabled": features.get("enabled"),
         "input_feature_count": features.get("count"),
         "conditioning_mode": features.get("conditioning_mode"),
         "feature_normalization": (features.get("normalization") or {}).get("mode"),
+        "spacetime_encoding": spacetime_encoding.get("encoding"),
+        "spacetime_fourier_bands": spacetime_encoding.get("fourier_bands"),
+        "spacetime_input_dim": spacetime_encoding.get("input_dim"),
         "conditioning_profile": profile.get("profile"),
         "conditioning_profile_group_key": profile.get("group_key"),
         "selected_conditioning_mode": selected.get("conditioning_mode"),
@@ -285,8 +294,11 @@ def _fmt(value: Any) -> str:
 
 
 def print_metrics_markdown(summary: dict[str, Any]) -> None:
-    print("| split | method | status | test RMSE | hot q90 RMSE | gradient q90 RMSE | selected | effective features |")
-    print("|---|---|---|---:|---:|---:|---|---|")
+    print(
+        "| split | method | status | test RMSE | hot q90 RMSE | gradient q90 RMSE | "
+        "spacetime | selected | effective features |"
+    )
+    print("|---|---|---|---:|---:|---:|---|---|---|")
     pinn_methods = tuple(summary.get("pinn_methods") or ("no_process", "process_axis_v1", "broad_process_v1"))
     method_order = (
         "mean",
@@ -300,12 +312,14 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
         for method in method_order:
             row = split_rows["methods"].get(method, {})
             if row.get("missing"):
-                print(f"| {split} | {method} | MISSING |  |  |  |  | {row.get('path', '')} |")
+                print(f"| {split} | {method} | MISSING |  |  |  |  |  | {row.get('path', '')} |")
                 continue
             status = str(row.get("comparison_status") or "comparable")
             if status != "comparable":
                 reason = row.get("comparison_reason", "")
-                print(f"| {split} | {method} | INCOMPARABLE: {reason} |  |  |  |  | {row.get('path', '')} |")
+                print(
+                    f"| {split} | {method} | INCOMPARABLE: {reason} |  |  |  |  |  | {row.get('path', '')} |"
+                )
                 continue
             selected = ""
             if row.get("selected_conditioning_mode"):
@@ -313,10 +327,13 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
                     row.get("selected_conditioning_mode"),
                     row.get("selected_feature_normalization"),
                 )
+            spacetime = row.get("spacetime_encoding") or ""
+            if row.get("spacetime_fourier_bands"):
+                spacetime = f"{spacetime}/{row.get('spacetime_fourier_bands')}"
             print(
                 (
                     "| {split} | {method} | {status} | {rmse} | {hot} | {grad} | "
-                    "{selected} | {features} |"
+                    "{spacetime} | {selected} | {features} |"
                 ).format(
                     split=split,
                     method=method,
@@ -324,6 +341,7 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
                     rmse=_fmt(row.get("rmse")),
                     hot=_fmt(row.get("hot_q90_rmse")),
                     grad=_fmt(row.get("gradient_q90_rmse")),
+                    spacetime=spacetime,
                     selected=selected,
                     features=_fmt(row.get("effective_feature_columns")),
                 )
@@ -350,12 +368,22 @@ def main() -> int:
             "Expected run/profile tag is broad_process_profile_v2."
         ),
     )
+    parser.add_argument(
+        "--include-broad-process-fourier",
+        action="store_true",
+        help=(
+            "Also summarize the Phase 33 broad_process_fourier artifacts. "
+            "These use broad_process_v1 routing with fixed Fourier spacetime features."
+        ),
+    )
     args = parser.parse_args()
 
     splits = tuple(args.split) if args.split else DEFAULT_SPLITS
     pinn_specs = DEFAULT_PINN_SPECS
     if args.include_broad_process_v2:
         pinn_specs = (*pinn_specs, BROAD_PROCESS_V2_SPEC)
+    if args.include_broad_process_fourier:
+        pinn_specs = (*pinn_specs, BROAD_PROCESS_FOURIER_SPEC)
     summary = collect_rows(Path(args.root), splits, args.dataset_limit, args.dataset_order, pinn_specs)
     if args.json_output:
         output = Path(args.json_output)

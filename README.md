@@ -379,7 +379,7 @@ $env:CONDA_NO_PLUGINS="true"
 conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 ```
 
-最近一次本地验证状态：`58 passed, 2 skipped`。
+最近一次本地验证状态：`54 passed, 39 skipped`。
 
 ## Server Stage
 
@@ -419,6 +419,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 30 已完成 broad12 broad-data selector。`broad_process_v1` 把 `line`、`scan_speed` 和 full `process` 回退到 no-process，保留 `laser_power` concat/global-standard 与 `spot_size` FiLM/global-standard；summary 脚本会检查 manifest/split 签名，避免 tiny smoke 与 full run 混比。下一步扩到 21 条 single-track lines。
 - Phase 31 已完成 broad21 all single-track selector scaling。all-21 结果确认 `broad_process_v1` 能保留 `laser_power`/`spot_size` 正向路由并避免 `scan_speed`/full `process` 负迁移；当前 A100-SXM4-40GB 仍足够。
 - Phase 32 已完成 `broad_process_v2` 诊断。v2 只把 `line_id` 改为 concat/same；它改善 broad21 line，但明显伤害 broad12 line，因此不替代 `broad_process_v1` 默认路线。下一步转向更强 broad-data representation 或 closure/GNN reintegration。
+- Phase 33 已完成 fixed Fourier spacetime representation 诊断。`--spacetime-encoding fourier` 与 `--spacetime-fourier-bands` 已实现并记录到 metrics/checkpoint；但 broad12 同口径结果在所有 split 均弱于 `broad_process_v1`，因此 Fourier 不替代 raw coordinate/time basis，下一步应转向 closure/GNN reintegration 或更结构化的数据表示。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -468,6 +469,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_multiline_process_broad_selector_v1.md](docs/results/ambench_multiline_process_broad_selector_v1.md): Phase 30 broad-data selector、no-process fallback 元数据验证与 broad12 可比性门禁结果。
 - [docs/results/ambench_multiline_process_broad_selector_broad21_v1.md](docs/results/ambench_multiline_process_broad_selector_broad21_v1.md): Phase 31 all-21 single-track selector scaling 与 broad21 可比性门禁结果。
 - [docs/results/ambench_multiline_process_broad_selector_v2.md](docs/results/ambench_multiline_process_broad_selector_v2.md): Phase 32 `broad_process_v2` line-route diagnostic 与 broad12/broad21 可比性门禁结果。
+- [docs/results/ambench_multiline_process_fourier_spacetime_v1.md](docs/results/ambench_multiline_process_fourier_spacetime_v1.md): Phase 33 fixed Fourier spacetime representation 诊断、broad12 可比性门禁结果与不扩到 broad21 的决策。
 
 Real micro graph closure 对比脚本：
 

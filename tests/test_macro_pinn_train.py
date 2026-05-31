@@ -125,6 +125,66 @@ def test_macro_pinn_training_cli_with_split_manifest(tmp_path: Path):
     assert "gradient_q50" in payload["split_metrics"]["train"]["region_metrics"]
 
 
+def test_macro_pinn_training_cli_supports_fourier_spacetime_encoding(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_temperature.csv"
+    table.write_text(
+        "x,y,t,T\n"
+        "0,0,0,0\n"
+        "1,0,0,1\n"
+        "0,1,0,1\n"
+        "1,1,1,3\n"
+        "2,1,1,4\n"
+        "1,2,1,4\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "fourier_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--spacetime-encoding",
+            "fourier",
+            "--spacetime-fourier-bands",
+            "2",
+            "--pde-weight",
+            "1e-4",
+            "--pde-field",
+            "normalized",
+            "--residual-sample-size",
+            "2",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    checkpoint = __import__("torch").load(output_dir / "checkpoint.pt", map_location="cpu")
+
+    assert status == 0
+    assert payload["config"]["spacetime_encoding"] == "fourier"
+    assert payload["config"]["spacetime_fourier_bands"] == 2
+    assert payload["spacetime_encoding"] == {
+        "encoding": "fourier",
+        "fourier_bands": 2,
+        "input_dim": 15,
+    }
+    assert payload["history"][0]["residual_points"] == 2.0
+    assert checkpoint["metadata"]["spacetime_encoding"] == payload["spacetime_encoding"]
+
+
 def test_macro_pinn_training_cli_records_process_conditioning_columns(tmp_path: Path):
     from gnnpinn.train.macro_pinn import main
 

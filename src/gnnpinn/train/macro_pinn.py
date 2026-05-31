@@ -100,6 +100,14 @@ def _input_feature_payload(
     }
 
 
+def _spacetime_encoding_payload(args: argparse.Namespace, model: Any) -> dict[str, Any]:
+    return {
+        "encoding": args.spacetime_encoding,
+        "fourier_bands": args.spacetime_fourier_bands,
+        "input_dim": int(model.spacetime_dim),
+    }
+
+
 def _resolve_input_conditioning_profile(
     args: argparse.Namespace,
     split_manifest: dict[str, Any] | None,
@@ -696,6 +704,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         film_strength=args.input_film_strength,
         route_film_prior=args.input_route_film_prior,
         route_trainable=args.input_route_trainable,
+        spacetime_encoding=args.spacetime_encoding,
+        spacetime_fourier_bands=args.spacetime_fourier_bands,
     ).to(args.device)
     closure_library = None
     closure_coefficients = None
@@ -923,6 +933,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             input_route_summary,
             input_conditioning_profile,
         ),
+        "spacetime_encoding": _spacetime_encoding_payload(args, model),
         "pde": {
             "field": args.pde_field,
             "weight": args.pde_weight,
@@ -964,6 +975,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 "optimizer": metrics_payload["optimizer"],
                 "param_dim": int(input_features.shape[-1]) if input_features is not None else 0,
                 "input_features": metrics_payload["input_features"],
+                "spacetime_encoding": metrics_payload["spacetime_encoding"],
             },
         },
         checkpoint_path,
@@ -1006,6 +1018,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--layers", type=int, default=3)
     parser.add_argument("--activation", default="tanh")
+    parser.add_argument(
+        "--spacetime-encoding",
+        choices=["raw", "fourier"],
+        default="raw",
+        help=(
+            "Coordinate/time representation used by Macro PINN. raw preserves the original x/y[/z]/t inputs; "
+            "fourier appends fixed multi-scale sin/cos features."
+        ),
+    )
+    parser.add_argument(
+        "--spacetime-fourier-bands",
+        type=int,
+        default=4,
+        help="Number of power-of-two Fourier bands used when --spacetime-encoding=fourier.",
+    )
     parser.add_argument("--pde-weight", type=float, default=0.0)
     parser.add_argument(
         "--pde-field",
