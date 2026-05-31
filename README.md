@@ -261,6 +261,16 @@ bash scripts/server/run_phase28_laser_power_profile_seed_check_a100.sh \
 
 The Phase 28 result is documented in [docs/results/ambench_multiline_process_axis_profile_validation_v1.md](docs/results/ambench_multiline_process_axis_profile_validation_v1.md). `process_axis_v1` now covers `laser_power_W` and full `process_condition`. `laser_power` shows a stable three-seed gain over no-process Macro PINN (`211.217281 +/- 0.443665 -> 147.980699 +/- 3.456300` test RMSE). Full `process` should use the line-like `concat/same` route; `concat/global_standard` was a negative diagnostic.
 
+Broader process-dataset smoke:
+
+```bash
+DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
+  bash scripts/server/run_phase29_broad_process_profile_smoke_a100.sh \
+  > logs/ambench_phase29_broad12_rr_profile_smoke_a100_v1.log 2>&1
+```
+
+The Phase 29 result is documented in [docs/results/ambench_multiline_process_broader_profile_smoke_v1.md](docs/results/ambench_multiline_process_broader_profile_smoke_v1.md). The new `process_round_robin` dataset ordering verifies a balanced broad12 panel across `245/285/325 W`, `800/960/1200 mm/s`, and `49/67/82 um`. The old `process_axis_v1` profile transfers only partially: `spot_size` remains positive (`206.100512 -> 136.309183` test RMSE), but `scan_speed` and full `process` degrade. The next route should let the broad-data profile fall back to no-process modeling when process conditioning hurts.
+
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
 ```bash
@@ -373,6 +383,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - 已新增 `--input-conditioning-mode concat|film|concat_film` 与 `--input-film-strength`。Phase 25/26 表明工艺轴条件化是 split-sensitive：`spot_size` 的 FiLM/global-standard 分支最强，`scan_speed` 的 concat/global-standard 分支最强，简单 `concat_film` 叠加不是稳健通用解。
 - 已新增 `--input-conditioning-mode routed` 与 `--input-conditioning-profile process_axis_v1`。Phase 27 表明可训练双专家 routed 路线退化，而显式 process-axis profile 能可复现地记录并恢复最佳 per-axis conditioning。
 - Phase 28 已完成 `laser_power`/full `process` holdout 扩展与 `laser_power` focused seed check。`laser_power`、`scan_speed`、`spot_size` 均有三 seed process-conditioned gain；`line` 与 full `process` 仍弱于 train-mean baseline，下一步应扩大热/工艺数据或增强 baseline-facing 建模。
+- Phase 29 已完成 broad12 process-balanced smoke。`process_round_robin` 选线覆盖多个功率、扫描速度和光斑尺寸；`spot_size` 的 FiLM/global-standard profile 仍强于 no-process 和 mean baseline，但 `scan_speed` 与 full `process` 在更宽数据面退化，下一步应做可回退 no-process 的 broad-data route selector/profile，再决定是否扩到 21 条 single-track lines。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -418,6 +429,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_multiline_process_film_conditioned_v1.md](docs/results/ambench_multiline_process_film_conditioned_v1.md): FiLM、global process-feature normalization、concat/global-standard、hybrid 条件化与 focused seed check 结果。
 - [docs/results/ambench_multiline_process_axis_routing_v1.md](docs/results/ambench_multiline_process_axis_routing_v1.md): routed dual-expert 负结果与 `process_axis_v1` 显式轴感知 profile 结果。
 - [docs/results/ambench_multiline_process_axis_profile_validation_v1.md](docs/results/ambench_multiline_process_axis_profile_validation_v1.md): `process_axis_v1` 的 `laser_power`/full `process` 扩展、强 baseline 汇总与 `laser_power` focused seed check。
+- [docs/results/ambench_multiline_process_broader_profile_smoke_v1.md](docs/results/ambench_multiline_process_broader_profile_smoke_v1.md): Phase 29 broad12 process-balanced dataset smoke、baseline-facing profile transfer 诊断与下一步 route-selector 决策。
 
 Real micro graph closure 对比脚本：
 

@@ -841,7 +841,21 @@ Phase 28 process-axis profile validation 已完成，结果文档为 `docs/resul
 - full `process` 不应使用 `global_standard`。`concat/global_standard` 诊断 run 退化到 test RMSE `183.009876`；修正为 line-like `concat/same` 后恢复 `157.793227`。
 - `laser_power`、`scan_speed`、`spot_size` 现在都有三 seed process-conditioned gain；但 `line` 与 full `process` 仍弱于 train-mean baseline，因此不能把当前 profile 表述为 universal model。
 
-下一步不应继续扩大 blind mixture-of-experts。Phase 29 应扩大热/工艺数据覆盖或增强 baseline-facing generalization，再决定是否把 sparse closure/GNN 重新接回 process-conditioned Macro PINN。该路线仍适合当前 A100-SXM4-40GB；只有引入更大多线表、learned image encoder 或大规模 mixture-of-experts 并实际超出 40GB 时，才需要向用户请求 A100-SXM4-80GB。
+Phase 29 broader process-dataset smoke 已完成，结果文档为 `docs/results/ambench_multiline_process_broader_profile_smoke_v1.md`。关键实现：
+
+- `gnnpinn.data.loaders.ambench_hdf5` 支持 `--dataset-regex`、`--dataset-limit` 和 `--dataset-order sorted|process_round_robin`。
+- `process_round_robin` 会按 `(laser_power, scan_speed, spot_size)` 分组轮询，再应用 `--dataset-limit`，避免简单 lexicographic first-N 只覆盖一个工艺组合。
+- `scripts/server/run_phase29_broad_process_profile_smoke_a100.sh` 使用 broad12 process-balanced panel，并保留 Phase 23-28 产物。
+- `scripts/server/summarize_phase29_broad_process_profile_smoke.py` 汇总 broad smoke 的 manifest、baseline 和 Macro PINN profile 指标。
+
+关键结论：
+
+- naive first-9 sorted smoke 只覆盖 `285 W / 960 mm/s`，不能作为 process-generalization 证据。
+- broad12 process-balanced panel 覆盖 `245/285/325 W`、`800/960/1200 mm/s`、`49/67/82 um` 和 7 个 full-process tuples。
+- 旧 `process_axis_v1` 只在 `spot_size` 上稳定转移：test RMSE `206.100512 -> 136.309183`，且强于 mean baseline `151.850578`。
+- `line` 在 broad12 上更偏向 no-process Macro PINN；`scan_speed` 和 full `process` 在旧 profile 下退化。
+
+因此下一步不应继续扩大 blind mixture-of-experts，也不应立即把 sparse closure/GNN 接回 broad process table。Phase 30 应实现 broad-data conditional route selector/profile，让每个 split 可以选择 no-process、concat 或 FiLM 路线；若 broad12 修正版 selector 成立，再扩到全部 21 条 single-track lines。该路线仍适合当前 A100-SXM4-40GB；只有引入 learned image encoder、更大多线表或大规模 mixture-of-experts 并实际超出 40GB 时，才需要向用户请求 A100-SXM4-80GB。
 
 ## 阶段 E：方向三弱双向耦合
 

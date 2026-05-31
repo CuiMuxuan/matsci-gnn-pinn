@@ -8,6 +8,7 @@ from gnnpinn.data.loaders.ambench_hdf5 import (
     build_frame_split_manifest,
     calibrate_signal_to_temperature_c,
     convert_thermography_hdf5,
+    resolve_hdf5_dataset_paths,
 )
 from gnnpinn.data.loaders.field_table import load_field_table
 
@@ -334,6 +335,109 @@ def test_convert_thermography_hdf5_can_merge_multiple_lines_and_split_by_line(tm
     assert len(train_line_ids) == 1
     assert len(test_line_ids) == 1
     assert train_line_ids.isdisjoint(test_line_ids)
+
+
+def test_convert_thermography_hdf5_can_select_datasets_by_regex(tmp_path: Path):
+    source = tmp_path / "thermal.h5"
+    with h5py.File(source, "w") as handle:
+        thermal = handle.create_group("ThermalData")
+        thermal.attrs["frame_rate"] = [5.0]
+        for line_name, value in [
+            ("Line_0_1", 10),
+            ("Line_0_2", 20),
+            ("Pad_1", 30),
+        ]:
+            line = thermal.create_group(line_name)
+            line.attrs["laser_power"] = [285.0]
+            line.attrs["scan_speed"] = [960.0]
+            line.attrs["spot_size"] = [67.0]
+            data = line.create_dataset("Signal", shape=(1, 1, 1), dtype="uint16")
+            data[...] = value
+
+        paths = resolve_hdf5_dataset_paths(
+            handle=handle,
+            datasets=[],
+            dataset_regex=r"ThermalData/Line_.*?/Signal$",
+        )
+
+    assert paths == [
+        "ThermalData/Line_0_1/Signal",
+        "ThermalData/Line_0_2/Signal",
+    ]
+
+    output = tmp_path / "regex.csv"
+    args = Namespace(
+        thermal_hdf5=source,
+        dataset=[],
+        dataset_regex=r"ThermalData/Line_.*?/Signal$",
+        dataset_limit=1,
+        sample_id="regex_lines",
+        output=output,
+        manifest=None,
+        split_manifest=None,
+        frame_start=0,
+        frame_step=1,
+        max_frames=1,
+        row_start=0,
+        row_step=1,
+        max_rows=1,
+        col_start=0,
+        col_step=1,
+        max_cols=1,
+        calibrate_temperature=False,
+        min_signal=None,
+        sampling_mode="uniform",
+        hot_quantile=0.9,
+        gradient_quantile=0.9,
+        background_fraction=0.1,
+        max_points_per_frame=None,
+        split_strategy="random_row",
+        train_fraction=0.7,
+        val_fraction=0.15,
+        test_fraction=0.15,
+        seed=3,
+    )
+
+    manifest = convert_thermography_hdf5(args)
+
+    assert manifest["dataset_paths"] == ["ThermalData/Line_0_1/Signal"]
+    assert manifest["n_rows"] == 1
+
+
+def test_resolve_hdf5_dataset_paths_can_round_robin_process_groups_before_limit(tmp_path: Path):
+    source = tmp_path / "thermal.h5"
+    with h5py.File(source, "w") as handle:
+        thermal = handle.create_group("ThermalData")
+        thermal.attrs["frame_rate"] = [5.0]
+        for line_name, power, speed, spot in [
+            ("Line_0_1", 285.0, 960.0, 67.0),
+            ("Line_0_2", 285.0, 960.0, 67.0),
+            ("Line_0_3", 285.0, 960.0, 67.0),
+            ("Line_1_1", 245.0, 800.0, 49.0),
+            ("Line_1_2", 245.0, 800.0, 49.0),
+            ("Line_2_1", 325.0, 1200.0, 82.0),
+        ]:
+            line = thermal.create_group(line_name)
+            line.attrs["laser_power"] = [power]
+            line.attrs["scan_speed"] = [speed]
+            line.attrs["spot_size"] = [spot]
+            line.create_dataset("Signal", shape=(1, 1, 1), dtype="uint16")
+
+        paths = resolve_hdf5_dataset_paths(
+            handle=handle,
+            datasets=[],
+            dataset_regex=r"ThermalData/Line_.*?/Signal$",
+            dataset_order="process_round_robin",
+            dataset_limit=5,
+        )
+
+    assert paths == [
+        "ThermalData/Line_1_1/Signal",
+        "ThermalData/Line_0_1/Signal",
+        "ThermalData/Line_2_1/Signal",
+        "ThermalData/Line_1_2/Signal",
+        "ThermalData/Line_0_2/Signal",
+    ]
 
 
 def test_convert_thermography_hdf5_can_split_by_process_axis(tmp_path: Path):

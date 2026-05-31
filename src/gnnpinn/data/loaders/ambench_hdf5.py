@@ -45,10 +45,16 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
     h5py = _h5py()
     source = Path(args.thermal_hdf5)
     output = Path(args.output)
-    dataset_paths = _dataset_paths(args.dataset)
     output.parent.mkdir(parents=True, exist_ok=True)
 
     with h5py.File(source, "r") as handle:
+        dataset_paths = resolve_hdf5_dataset_paths(
+            handle=handle,
+            datasets=args.dataset,
+            dataset_regex=getattr(args, "dataset_regex", None),
+            dataset_limit=getattr(args, "dataset_limit", None),
+            dataset_order=getattr(args, "dataset_order", "sorted"),
+        )
         thermal_data = handle["ThermalData"]
         thermal_cal = handle.get("Calibration/ThermalCal")
         frame_rate_hz = _float_attr(thermal_data.attrs.get("frame_rate"), default=1.0)
@@ -198,6 +204,12 @@ def convert_thermography_hdf5(args: argparse.Namespace) -> dict[str, Any]:
             "metadata": {
                 "source_units": str(dataset.attrs.get("units", "digital levels")),
                 "calibration": calibration if args.calibrate_temperature else None,
+                "dataset_selection": {
+                    "explicit_datasets": list(args.dataset) if not isinstance(args.dataset, str) else [args.dataset],
+                    "dataset_regex": getattr(args, "dataset_regex", None),
+                    "dataset_limit": getattr(args, "dataset_limit", None),
+                    "dataset_order": getattr(args, "dataset_order", "sorted"),
+                },
                 "sampling": {
                     "frame_start": args.frame_start,
                     "frame_step": args.frame_step,
@@ -715,6 +727,64 @@ def _dataset_paths(value: str | list[str]) -> list[str]:
     return paths
 
 
+def resolve_hdf5_dataset_paths(
+    handle: Any,
+    datasets: str | list[str],
+    dataset_regex: str | None = None,
+    dataset_limit: int | None = None,
+    dataset_order: str = "sorted",
+) -> list[str]:
+    """Resolve explicit and regex-selected thermography dataset paths."""
+
+    paths = _dataset_paths(datasets) if datasets else []
+    if dataset_regex:
+        pattern = re.compile(dataset_regex)
+        for line_name in sorted(handle["ThermalData"].keys()):
+            signal_path = f"ThermalData/{line_name}/Signal"
+            if signal_path in handle and pattern.search(signal_path):
+                paths.append(signal_path)
+    deduped = list(dict.fromkeys(paths))
+    if dataset_order == "process_round_robin":
+        deduped = _order_dataset_paths_by_process_round_robin(handle, deduped)
+    elif dataset_order != "sorted":
+        raise ValueError(f"Unsupported dataset_order: {dataset_order}")
+    if dataset_limit is not None:
+        if dataset_limit <= 0:
+            raise ValueError("dataset_limit must be positive when provided")
+        deduped = deduped[:dataset_limit]
+    if not deduped:
+        raise ValueError("At least one HDF5 dataset path is required")
+    return deduped
+
+
+def _order_dataset_paths_by_process_round_robin(handle: Any, dataset_paths: list[str]) -> list[str]:
+    groups: dict[tuple[float | None, float | None, float | None], list[str]] = {}
+    for dataset_path in dataset_paths:
+        parent = handle[_parent_path(dataset_path)]
+        process_key = (
+            _float_attr(parent.attrs.get("laser_power")),
+            _float_attr(parent.attrs.get("scan_speed")),
+            _float_attr(parent.attrs.get("spot_size")),
+        )
+        groups.setdefault(process_key, []).append(dataset_path)
+
+    for paths in groups.values():
+        paths.sort()
+
+    ordered: list[str] = []
+    group_keys = sorted(groups, key=lambda key: tuple(float("inf") if item is None else item for item in key))
+    remaining = True
+    while remaining:
+        remaining = False
+        for group_key in group_keys:
+            paths = groups[group_key]
+            if not paths:
+                continue
+            ordered.append(paths.pop(0))
+            remaining = True
+    return ordered
+
+
 def _line_id_from_dataset_path(dataset_path: str) -> str:
     parts = dataset_path.split("/")
     if len(parts) < 3:
@@ -787,6 +857,27 @@ def build_parser() -> argparse.ArgumentParser:
             "ThermalData/*/Signal datasets into one field table."
         ),
     )
+    parser.add_argument(
+        "--dataset-regex",
+        help=(
+            "Optional regex over full HDF5 dataset paths. Matching ThermalData/*/Signal "
+            "datasets are appended after explicit --dataset entries."
+        ),
+    )
+    parser.add_argument(
+        "--dataset-limit",
+        type=int,
+        help="Optional cap after explicit and regex-selected dataset paths are deduplicated.",
+    )
+    parser.add_argument(
+        "--dataset-order",
+        choices=["sorted", "process_round_robin"],
+        default="sorted",
+        help=(
+            "Ordering applied before --dataset-limit. sorted preserves lexicographic HDF5 line order; "
+            "process_round_robin alternates process-parameter groups to make small broad panels balanced."
+        ),
+    )
     parser.add_argument("--sample-id", default="amb2022_03_line_0_1_signal_subset")
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--manifest", type=Path)
@@ -854,7 +945,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    if not args.dataset:
+    if not args.dataset and not args.dataset_regex:
         args.dataset = [DEFAULT_DATASET]
     manifest = convert_thermography_hdf5(args)
     text = json.dumps(manifest, indent=2, ensure_ascii=False)

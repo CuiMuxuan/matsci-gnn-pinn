@@ -22,6 +22,10 @@ PROCESS_FILM_STRENGTH="${PROCESS_FILM_STRENGTH:-1.0}"
 PROCESS_ROUTE_FILM_PRIOR="${PROCESS_ROUTE_FILM_PRIOR:-0.5}"
 FREEZE_PROCESS_ROUTE="${FREEZE_PROCESS_ROUTE:-0}"
 PROCESS_CONDITIONING_PROFILE="${PROCESS_CONDITIONING_PROFILE:-none}"
+DATASET_SELECTION="${DATASET_SELECTION:-representative7}"
+DATASET_REGEX="${DATASET_REGEX:-}"
+DATASET_LIMIT="${DATASET_LIMIT:-}"
+DATASET_ORDER="${DATASET_ORDER:-sorted}"
 
 cd "$REPO_ROOT"
 mkdir -p logs outputs/baselines outputs/data_audits outputs/data_splits outputs/runs
@@ -42,6 +46,22 @@ DATASET_ARGS=(
   --dataset ThermalData/Line_3_1_1/Signal
   --dataset ThermalData/Line_3_2_1/Signal
 )
+if [[ "$DATASET_SELECTION" == "all_single_track" ]]; then
+  DATASET_ARGS=(--dataset-regex 'ThermalData/Line_.*?/Signal$')
+elif [[ "$DATASET_SELECTION" == "regex" ]]; then
+  if [[ -z "$DATASET_REGEX" ]]; then
+    echo "DATASET_REGEX is required when DATASET_SELECTION=regex" >&2
+    exit 2
+  fi
+  DATASET_ARGS=(--dataset-regex "$DATASET_REGEX")
+elif [[ "$DATASET_SELECTION" != "representative7" ]]; then
+  echo "Unsupported DATASET_SELECTION: ${DATASET_SELECTION}" >&2
+  exit 2
+fi
+if [[ -n "$DATASET_LIMIT" ]]; then
+  DATASET_ARGS+=(--dataset-limit "$DATASET_LIMIT")
+fi
+DATASET_ARGS+=(--dataset-order "$DATASET_ORDER")
 
 "$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.data.loaders.ambench_hdf5 \
   --sample-id "$RUN_ID" \
