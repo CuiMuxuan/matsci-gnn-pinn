@@ -796,6 +796,19 @@ bash scripts/server/run_multiline_process_film_conditioned_a100.sh \
 
 验收：metrics/checkpoint 中 `input_features.conditioning_mode` 应为 `film`；产物 run id 使用 `*_film_a100_sxm4_40gb_v1_macro_pinn_minmax_process_film_v1`，不得覆盖 Phase 23/24 的 concat 结果。若 FiLM 至少修复 `spot_size` 退化并保持 `line`/`scan_speed` 改善，再做 seed check；否则下一步考虑 process embedding/hypernetwork 或 mixture-of-experts，而不是直接把 sparse closure/GNN 接回多线表。
 
+FiLM v1 首轮结果是负向诊断：它没有保留 concat 在 `line` 和 `scan_speed` 上的收益，只避免了 `spot_size` 的大幅退化。一个直接原因是单轴 holdout 中 train-fitted minmax 会让某些工艺特征在训练集上变成常数，FiLM 生成器难以学习有效调制。已新增独立 feature normalization：
+
+```text
+--input-feature-normalization same|none|minmax|standard|global_minmax|global_standard
+```
+
+下一轮先跑全表工艺特征标准化的 FiLM：
+
+```bash
+bash scripts/server/run_multiline_process_film_global_feature_norm_a100.sh \
+  > logs/ambench_multiline_process_film_global_feature_norm_a100_v1.log 2>&1
+```
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

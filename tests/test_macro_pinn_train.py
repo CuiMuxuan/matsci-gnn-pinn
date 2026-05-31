@@ -235,6 +235,8 @@ def test_macro_pinn_training_cli_supports_film_process_conditioning(tmp_path: Pa
             "standard",
             "--input-conditioning-mode",
             "film",
+            "--input-feature-normalization",
+            "global_standard",
             "--input-feature-column",
             "laser_power_W",
             "--input-feature-column",
@@ -251,8 +253,11 @@ def test_macro_pinn_training_cli_supports_film_process_conditioning(tmp_path: Pa
 
     assert status == 0
     assert payload["config"]["input_conditioning_mode"] == "film"
+    assert payload["config"]["input_feature_normalization"] == "global_standard"
     assert payload["input_features"]["enabled"] is True
     assert payload["input_features"]["conditioning_mode"] == "film"
+    assert payload["input_features"]["normalization"]["mode"] == "global_standard"
+    assert payload["input_features"]["normalization"]["fit_scope"] == "global"
     assert checkpoint["metadata"]["param_dim"] == 3
     assert checkpoint["metadata"]["input_features"]["conditioning_mode"] == "film"
 

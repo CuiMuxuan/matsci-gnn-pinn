@@ -214,6 +214,12 @@ bash scripts/server/run_multiline_process_film_conditioned_a100.sh \
 ```
 
 This focused Phase 25 route compares the new `--input-conditioning-mode film` path on `line`, `scan_speed`, and `spot_size` holdouts.
+If train-fitted feature normalization is too weak for single-axis holdouts, run the global process-feature normalization variant:
+
+```bash
+bash scripts/server/run_multiline_process_film_global_feature_norm_a100.sh \
+  > logs/ambench_multiline_process_film_global_feature_norm_a100_v1.log 2>&1
+```
 
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
@@ -323,6 +329,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - multi-line/process-conditioned thermal run 已完成；工艺特征让 Macro PINN 的 held-out-line test RMSE 从 `175.127058` 改善到 `157.793227`，hot q90 RMSE 从 `351.525048` 改善到 `316.794319`。该分支比继续扩展小规模 exact-line TIFF 手工特征更适合作为下一条主线，但仍需容量、split 和 seed 检查。
 - process-axis holdout run 已完成；工艺特征在 `line`、`laser_power`、`scan_speed`、`process` 四类 holdout 上改善 Macro PINN，但在 `spot_size` holdout 上变差，且整体仍未超过 train-mean baseline。下一步进入 FiLM process-conditioned Macro PINN。
 - 已新增 `--input-conditioning-mode concat|film`；FiLM 模式用工艺参数调制 hidden coordinate/time layers，默认仍为 concat 以兼容既有实验。
+- 已新增 `--input-feature-normalization same|none|minmax|standard|global_minmax|global_standard`，用于把工艺标量的归一化从坐标/时间归一化中解耦。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 

@@ -100,14 +100,25 @@ def _index_tensor(indices: list[int], device: str) -> Any:
 
 def _normalize_feature_tensor(tensor: Any, train_index: Any, mode: str) -> tuple[Any, dict[str, Any]]:
     torch = _torch()
-    train_values = tensor[train_index]
-    stats: dict[str, Any] = {"mode": mode}
+    fit_index = train_index
+    fit_scope = "train"
+    stat_mode = mode
+    if mode == "global_standard":
+        fit_index = torch.arange(tensor.shape[0], dtype=torch.long, device=tensor.device)
+        fit_scope = "global"
+        stat_mode = "standard"
+    elif mode == "global_minmax":
+        fit_index = torch.arange(tensor.shape[0], dtype=torch.long, device=tensor.device)
+        fit_scope = "global"
+        stat_mode = "minmax"
+    fit_values = tensor[fit_index]
+    stats: dict[str, Any] = {"mode": mode, "fit_scope": fit_scope}
     if mode == "none":
         stats["applied"] = False
         return tensor, stats
-    if mode == "standard":
-        center = train_values.mean(dim=0, keepdim=True)
-        scale = train_values.std(dim=0, unbiased=False, keepdim=True)
+    if stat_mode == "standard":
+        center = fit_values.mean(dim=0, keepdim=True)
+        scale = fit_values.std(dim=0, unbiased=False, keepdim=True)
         scale = torch.where(scale == 0, torch.ones_like(scale), scale)
         normalized = (tensor - center) / scale
         stats.update(
@@ -118,9 +129,9 @@ def _normalize_feature_tensor(tensor: Any, train_index: Any, mode: str) -> tuple
             }
         )
         return normalized, stats
-    if mode == "minmax":
-        minimum = train_values.min(dim=0, keepdim=True).values
-        maximum = train_values.max(dim=0, keepdim=True).values
+    if stat_mode == "minmax":
+        minimum = fit_values.min(dim=0, keepdim=True).values
+        maximum = fit_values.max(dim=0, keepdim=True).values
         scale = maximum - minimum
         scale = torch.where(scale == 0, torch.ones_like(scale), scale)
         normalized = (tensor - minimum) / scale
@@ -527,10 +538,15 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     time, time_normalization = _normalize_feature_tensor(time, train_index, args.input_normalization)
     input_feature_normalization = None
     if input_features is not None:
+        input_feature_normalization_mode = (
+            args.input_normalization
+            if args.input_feature_normalization == "same"
+            else args.input_feature_normalization
+        )
         input_features, input_feature_normalization = _normalize_feature_tensor(
             input_features,
             train_index,
-            args.input_normalization,
+            input_feature_normalization_mode,
         )
     target_mean = target[train_index].mean()
     target_std = target[train_index].std(unbiased=False)
@@ -910,6 +926,15 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Additional numeric row-metadata column to append to Macro PINN inputs. "
             "Use this for process conditioning such as laser_power_W, scan_speed_mm_s, or spot_size_um."
+        ),
+    )
+    parser.add_argument(
+        "--input-feature-normalization",
+        choices=["same", "none", "minmax", "standard", "global_minmax", "global_standard"],
+        default="same",
+        help=(
+            "Normalization for --input-feature-column values. same reuses --input-normalization. "
+            "global_* fits feature statistics on the full field table, useful for known process-design scalars."
         ),
     )
     parser.add_argument(
