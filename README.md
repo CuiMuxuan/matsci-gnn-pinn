@@ -221,6 +221,21 @@ bash scripts/server/run_multiline_process_film_global_feature_norm_a100.sh \
   > logs/ambench_multiline_process_film_global_feature_norm_a100_v1.log 2>&1
 ```
 
+Separate FiLM structure from process-feature normalization with concat/global-standard and hybrid controls:
+
+```bash
+bash scripts/server/run_multiline_process_concat_global_feature_norm_a100.sh \
+  > logs/ambench_multiline_process_concat_global_feature_norm_a100_v1.log 2>&1
+
+bash scripts/server/run_multiline_process_concat_film_global_feature_norm_a100.sh \
+  > logs/ambench_multiline_process_concat_film_global_feature_norm_a100_v1.log 2>&1
+
+bash scripts/server/run_multiline_process_concat_film_limited_global_feature_norm_a100.sh \
+  > logs/ambench_multiline_process_concat_film_limited_global_feature_norm_a100_v1.log 2>&1
+```
+
+The Phase 25/26 result is documented in [docs/results/ambench_multiline_process_film_conditioned_v1.md](docs/results/ambench_multiline_process_film_conditioned_v1.md). Global process-feature standardization is essential. `scan_speed` favors concat + global standardization, while `spot_size` favors FiLM + global standardization and beats the train-mean baseline in a focused three-seed check. Simple concat+FiLM hybrid stacking, including a limited `--input-film-strength 0.25` variant, does not produce a universal architecture.
+
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
 ```bash
@@ -330,6 +345,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - process-axis holdout run 已完成；工艺特征在 `line`、`laser_power`、`scan_speed`、`process` 四类 holdout 上改善 Macro PINN，但在 `spot_size` holdout 上变差，且整体仍未超过 train-mean baseline。下一步进入 FiLM process-conditioned Macro PINN。
 - 已新增 `--input-conditioning-mode concat|film`；FiLM 模式用工艺参数调制 hidden coordinate/time layers，默认仍为 concat 以兼容既有实验。
 - 已新增 `--input-feature-normalization same|none|minmax|standard|global_minmax|global_standard`，用于把工艺标量的归一化从坐标/时间归一化中解耦。
+- 已新增 `--input-conditioning-mode concat|film|concat_film` 与 `--input-film-strength`。Phase 25/26 表明工艺轴条件化是 split-sensitive：`spot_size` 的 FiLM/global-standard 分支最强，`scan_speed` 的 concat/global-standard 分支最强，简单 `concat_film` 叠加不是稳健通用解。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -372,6 +388,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_real_micro_exact_line0_1_region_embedding_v1.md](docs/results/ambench_real_micro_exact_line0_1_region_embedding_v1.md): exact `Line_0_1` fixed patch embedding 结果与 focused seed check 结果。
 - [docs/results/ambench_multiline_process_conditioned_thermal_v1.md](docs/results/ambench_multiline_process_conditioned_thermal_v1.md): multi-line/process-conditioned thermal modeling 的首轮 A100 对比结果。
 - [docs/results/ambench_multiline_process_axis_holdout_v1.md](docs/results/ambench_multiline_process_axis_holdout_v1.md): process-axis grouped holdout 对比结果与 FiLM 分支决策。
+- [docs/results/ambench_multiline_process_film_conditioned_v1.md](docs/results/ambench_multiline_process_film_conditioned_v1.md): FiLM、global process-feature normalization、concat/global-standard、hybrid 条件化与 focused seed check 结果。
 
 Real micro graph closure 对比脚本：
 

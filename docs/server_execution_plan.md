@@ -809,6 +809,23 @@ bash scripts/server/run_multiline_process_film_global_feature_norm_a100.sh \
   > logs/ambench_multiline_process_film_global_feature_norm_a100_v1.log 2>&1
 ```
 
+Phase 25/26 后续消融已经完成，结果文档为 `docs/results/ambench_multiline_process_film_conditioned_v1.md`。关键结论：
+
+- `scan_speed`：`concat + global_standard` 是最强单 seed 模型，focused 3-seed 均值相对 no-process 稳定改善，但 global RMSE 仍略高于 train-mean baseline。
+- `spot_size`：`FiLM + global_standard` 是第一条在 spot-size holdout 上三 seed 均值超过 train-mean baseline 的神经 Macro PINN 分支，hot q90 和 gradient q90 也同步更优。
+- `line`：原始 `concat + train-minmax` 仍是最不差的神经条件化路径，但所有神经模型仍弱于 mean baseline。
+- `concat_film + global_standard` 和 `concat_film + global_standard + --input-film-strength 0.25` 都没有形成通用改进；满强度 hybrid 在 line split 崩溃，受限强度缓解但仍弱于最佳单路径方法。
+
+当前代码已新增：
+
+```text
+--input-conditioning-mode concat|film|concat_film
+--input-film-strength <float>
+--input-feature-normalization global_standard
+```
+
+下一步不应继续盲目增大 hidden dim 或简单叠加 FiLM。更合理的 Phase 27 是 split/process-aware routing：保留 `global_standard` 工艺特征归一化，在 `scan_speed`、`spot_size`、`line` 三个轴上分别验证轻量 selector/gate 是否能按工艺轴选择 concat 或 FiLM 路径。该路线仍适合当前 A100-SXM4-40GB；只有引入更大多线表、learned image encoder 或大规模 mixture-of-experts 并实际超出 40GB 时，才需要向用户请求 A100-SXM4-80GB。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

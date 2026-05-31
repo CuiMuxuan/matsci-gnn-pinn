@@ -30,20 +30,22 @@ class MacroPINN(_torch().nn.Module):
         num_hidden_layers: int = 4,
         activation: str = "tanh",
         conditioning_mode: str = "concat",
+        film_strength: float = 1.0,
     ):
         super().__init__()
         torch = _torch()
         normalized_mode = conditioning_mode.lower()
-        if normalized_mode not in {"concat", "film"}:
+        if normalized_mode not in {"concat", "film", "concat_film"}:
             raise ValueError(f"Unsupported conditioning mode: {conditioning_mode}")
-        if normalized_mode == "film" and param_dim <= 0:
-            raise ValueError("FiLM conditioning requires param_dim > 0")
+        if normalized_mode in {"film", "concat_film"} and param_dim <= 0:
+            raise ValueError(f"{normalized_mode} conditioning requires param_dim > 0")
         self.coord_dim = coord_dim
         self.field_dim = field_dim
         self.param_dim = param_dim
         self.hidden_dim = hidden_dim
         self.num_hidden_layers = num_hidden_layers
         self.conditioning_mode = normalized_mode
+        self.film_strength = float(film_strength)
         if self.conditioning_mode == "concat":
             self.backbone = MLP(
                 MLPConfig(
@@ -60,6 +62,8 @@ class MacroPINN(_torch().nn.Module):
         self.hidden_layers = torch.nn.ModuleList()
         self.film_generators = torch.nn.ModuleList()
         in_dim = coord_dim + 1
+        if self.conditioning_mode == "concat_film":
+            in_dim += param_dim
         for _ in range(num_hidden_layers):
             self.hidden_layers.append(torch.nn.Linear(in_dim, hidden_dim))
             generator = torch.nn.Linear(param_dim, 2 * hidden_dim)
@@ -73,14 +77,17 @@ class MacroPINN(_torch().nn.Module):
         torch = _torch()
         if time.ndim == 1:
             time = time[:, None]
-        if self.conditioning_mode == "film":
+        if self.conditioning_mode in {"film", "concat_film"}:
             if params is None:
-                raise ValueError("params are required when conditioning_mode='film'")
-            hidden = torch.cat([coords, time], dim=-1)
+                raise ValueError(f"params are required when conditioning_mode={self.conditioning_mode!r}")
+            hidden_inputs = [coords, time]
+            if self.conditioning_mode == "concat_film":
+                hidden_inputs.append(params)
+            hidden = torch.cat(hidden_inputs, dim=-1)
             for layer, generator in zip(self.hidden_layers, self.film_generators):
                 hidden = self.activation(layer(hidden))
                 gamma, beta = generator(params).chunk(2, dim=-1)
-                hidden = hidden * (1.0 + gamma) + beta
+                hidden = hidden * (1.0 + self.film_strength * gamma) + self.film_strength * beta
             return self.output_layer(hidden)
         inputs = [coords, time]
         if self.param_dim:

@@ -77,6 +77,7 @@ def _input_feature_payload(
     feature_columns: list[str],
     normalization: dict[str, Any] | None,
     conditioning_mode: str,
+    film_strength: float,
 ) -> dict[str, Any]:
     return {
         "enabled": bool(feature_columns),
@@ -84,6 +85,7 @@ def _input_feature_payload(
         "count": len(feature_columns),
         "normalization": normalization,
         "conditioning_mode": conditioning_mode,
+        "film_strength": film_strength,
     }
 
 
@@ -562,6 +564,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         num_hidden_layers=args.layers,
         activation=args.activation,
         conditioning_mode=args.input_conditioning_mode,
+        film_strength=args.input_film_strength,
     ).to(args.device)
     closure_library = None
     closure_coefficients = None
@@ -778,6 +781,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             args.input_feature_columns,
             input_feature_normalization,
             args.input_conditioning_mode,
+            args.input_film_strength,
         ),
         "pde": {
             "field": args.pde_field,
@@ -939,11 +943,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--input-conditioning-mode",
-        choices=["concat", "film"],
+        choices=["concat", "film", "concat_film"],
         default="concat",
         help=(
             "How additional input-feature columns condition Macro PINN. "
-            "concat appends them to coordinates/time; film uses them to modulate hidden coordinate/time layers."
+            "concat appends them to coordinates/time; film uses them to modulate hidden coordinate/time layers; "
+            "concat_film does both."
+        ),
+    )
+    parser.add_argument(
+        "--input-film-strength",
+        type=float,
+        default=1.0,
+        help=(
+            "Multiplier for FiLM gamma/beta modulation in film and concat_film modes. "
+            "The default 1.0 preserves previous FiLM behavior; smaller values make FiLM a limited correction."
         ),
     )
     parser.add_argument(
