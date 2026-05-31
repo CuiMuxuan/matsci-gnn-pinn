@@ -48,6 +48,30 @@ BROAD_PROCESS_RESIDUAL_SPEC = (
     "broad_residual_mlp",
     "broad_residual_mlp",
 )
+DEFAULT_BROAD_PROCESS_GRAPH_RBF_TAG = "pg_rbf"
+BROAD_PROCESS_GRAPH_RBF_SPEC = (
+    "broad_process_graph_rbf",
+    DEFAULT_BROAD_PROCESS_GRAPH_RBF_TAG,
+    DEFAULT_BROAD_PROCESS_GRAPH_RBF_TAG,
+)
+DEFAULT_BROAD_TARGET_RESIDUAL_TAG = "target_resid_et"
+BROAD_TARGET_RESIDUAL_SPEC = (
+    "broad_target_residual",
+    DEFAULT_BROAD_TARGET_RESIDUAL_TAG,
+    DEFAULT_BROAD_TARGET_RESIDUAL_TAG,
+)
+DEFAULT_BROAD_RESIDUAL_BACKBONE_TAG = "res_backbone"
+BROAD_RESIDUAL_BACKBONE_SPEC = (
+    "broad_residual_backbone",
+    DEFAULT_BROAD_RESIDUAL_BACKBONE_TAG,
+    DEFAULT_BROAD_RESIDUAL_BACKBONE_TAG,
+)
+DEFAULT_BROAD_OUTPUT_AFFINE_TAG = "out_affine"
+BROAD_OUTPUT_AFFINE_SPEC = (
+    "broad_output_affine",
+    DEFAULT_BROAD_OUTPUT_AFFINE_TAG,
+    DEFAULT_BROAD_OUTPUT_AFFINE_TAG,
+)
 DEFAULT_BROAD_REGION_WEIGHTED_TAG = "rw2"
 
 
@@ -205,14 +229,25 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
     profile = features.get("conditioning_profile") or {}
     selected = profile.get("selected") or {}
     effective = profile.get("effective") or {}
+    process_graph = features.get("process_graph_features") or {}
     spacetime_encoding = data.get("spacetime_encoding") or {}
     residual_correction = data.get("residual_correction") or {}
     data_loss_weighting = data.get("data_loss_weighting") or {}
+    target_residual = data.get("target_residual_baseline") or {}
+    target_normalization = data.get("target_normalization") or {}
+    backbone = data.get("backbone") or {}
+    output_affine = data.get("output_affine") or {}
     return {
         "input_features_enabled": features.get("enabled"),
         "input_feature_count": features.get("count"),
+        "input_effective_columns": features.get("effective_columns"),
         "conditioning_mode": features.get("conditioning_mode"),
         "feature_normalization": (features.get("normalization") or {}).get("mode"),
+        "process_graph_enabled": process_graph.get("enabled"),
+        "process_graph_mode": process_graph.get("mode"),
+        "process_graph_anchor_count": process_graph.get("anchor_count"),
+        "process_graph_fit_scope": process_graph.get("fit_scope"),
+        "process_graph_length_scale": process_graph.get("length_scale"),
         "spacetime_encoding": spacetime_encoding.get("encoding"),
         "spacetime_fourier_bands": spacetime_encoding.get("fourier_bands"),
         "spacetime_input_dim": spacetime_encoding.get("input_dim"),
@@ -230,6 +265,19 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
         "data_loss_weighting_mode": data_loss_weighting.get("mode"),
         "data_loss_region_weight": data_loss_weighting.get("region_weight"),
         "data_loss_weighted_points": data_loss_weighting.get("selected_points"),
+        "target_space": target_normalization.get("target_space"),
+        "target_residual_enabled": target_residual.get("enabled"),
+        "target_residual_strategy": target_residual.get("strategy"),
+        "target_residual_feature_columns": target_residual.get("feature_columns"),
+        "target_residual_fit_points": target_residual.get("fit_points"),
+        "target_residual_train_rmse": target_residual.get("train_residual_rmse"),
+        "backbone_mode": backbone.get("mode"),
+        "backbone_residual_scale": backbone.get("residual_scale"),
+        "backbone_parameter_count": backbone.get("parameter_count"),
+        "output_affine_enabled": output_affine.get("enabled"),
+        "output_affine_mode": output_affine.get("mode"),
+        "output_affine_scale": output_affine.get("scale"),
+        "output_affine_input_dim": output_affine.get("input_dim"),
     }
 
 
@@ -312,9 +360,9 @@ def _fmt(value: Any) -> str:
 def print_metrics_markdown(summary: dict[str, Any]) -> None:
     print(
         "| split | method | status | test RMSE | hot q90 RMSE | gradient q90 RMSE | "
-        "spacetime | selected | effective features |"
+        "spacetime | backbone | output affine | graph | target residual | selected | effective features |"
     )
-    print("|---|---|---|---:|---:|---:|---|---|---|")
+    print("|---|---|---|---:|---:|---:|---|---|---|---|---|---|---|")
     pinn_methods = tuple(summary.get("pinn_methods") or ("no_process", "process_axis_v1", "broad_process_v1"))
     method_order = (
         "mean",
@@ -328,13 +376,13 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
         for method in method_order:
             row = split_rows["methods"].get(method, {})
             if row.get("missing"):
-                print(f"| {split} | {method} | MISSING |  |  |  |  |  | {row.get('path', '')} |")
+                print(f"| {split} | {method} | MISSING |  |  |  |  |  |  |  |  |  | {row.get('path', '')} |")
                 continue
             status = str(row.get("comparison_status") or "comparable")
             if status != "comparable":
                 reason = row.get("comparison_reason", "")
                 print(
-                    f"| {split} | {method} | INCOMPARABLE: {reason} |  |  |  |  |  | {row.get('path', '')} |"
+                    f"| {split} | {method} | INCOMPARABLE: {reason} |  |  |  |  |  |  |  |  |  | {row.get('path', '')} |"
                 )
                 continue
             selected = ""
@@ -346,10 +394,37 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
             spacetime = row.get("spacetime_encoding") or ""
             if row.get("spacetime_fourier_bands"):
                 spacetime = f"{spacetime}/{row.get('spacetime_fourier_bands')}"
+            backbone = ""
+            if row.get("backbone_mode"):
+                backbone = str(row.get("backbone_mode"))
+                if row.get("backbone_residual_scale") is not None:
+                    backbone = f"{backbone}@{row.get('backbone_residual_scale')}"
+            output_affine = ""
+            if row.get("output_affine_enabled"):
+                output_affine = "{}:{}@{}".format(
+                    row.get("output_affine_mode"),
+                    row.get("output_affine_input_dim"),
+                    row.get("output_affine_scale"),
+                )
+            graph = ""
+            if row.get("process_graph_enabled"):
+                graph = "{}:{}@{}".format(
+                    row.get("process_graph_mode"),
+                    row.get("process_graph_anchor_count"),
+                    row.get("process_graph_fit_scope"),
+                )
+            target_residual = ""
+            if row.get("target_residual_enabled"):
+                target_residual = "{}@{} rmse={}".format(
+                    row.get("target_residual_strategy"),
+                    row.get("target_residual_fit_points"),
+                    _fmt(row.get("target_residual_train_rmse")),
+                )
+            features = row.get("input_effective_columns") or row.get("effective_feature_columns")
             print(
                 (
                     "| {split} | {method} | {status} | {rmse} | {hot} | {grad} | "
-                    "{spacetime} | {selected} | {features} |"
+                    "{spacetime} | {backbone} | {output_affine} | {graph} | {target_residual} | {selected} | {features} |"
                 ).format(
                     split=split,
                     method=method,
@@ -358,8 +433,12 @@ def print_metrics_markdown(summary: dict[str, Any]) -> None:
                     hot=_fmt(row.get("hot_q90_rmse")),
                     grad=_fmt(row.get("gradient_q90_rmse")),
                     spacetime=spacetime,
+                    backbone=backbone,
+                    output_affine=output_affine,
+                    graph=graph,
+                    target_residual=target_residual,
                     selected=selected,
-                    features=_fmt(row.get("effective_feature_columns")),
+                    features=_fmt(features),
                 )
             )
 
@@ -409,9 +488,61 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--include-broad-process-graph-rbf",
+        action="store_true",
+        help=(
+            "Also summarize the Phase 36 broad_process_graph_rbf artifacts. "
+            "These use broad_process_v1 routing plus process-neighborhood RBF graph features."
+        ),
+    )
+    parser.add_argument(
+        "--include-broad-target-residual",
+        action="store_true",
+        help=(
+            "Also summarize the Phase 37 broad_target_residual artifacts. "
+            "These train Macro PINN on target residuals after fitting a train-split baseline."
+        ),
+    )
+    parser.add_argument(
+        "--include-broad-residual-backbone",
+        action="store_true",
+        help=(
+            "Also summarize the Phase 38 broad_residual_backbone artifacts. "
+            "These use broad_process_v1 routing with a residual Macro PINN backbone."
+        ),
+    )
+    parser.add_argument(
+        "--include-broad-output-affine",
+        action="store_true",
+        help=(
+            "Also summarize the Phase 39 broad_output_affine artifacts. "
+            "These use broad_process_v1 routing with a process-conditioned output affine calibration head."
+        ),
+    )
+    parser.add_argument(
         "--broad-region-weighted-tag",
         default=DEFAULT_BROAD_REGION_WEIGHTED_TAG,
         help="Run/profile tag used with --include-broad-region-weighted.",
+    )
+    parser.add_argument(
+        "--broad-process-graph-rbf-tag",
+        default=DEFAULT_BROAD_PROCESS_GRAPH_RBF_TAG,
+        help="Run/profile tag used with --include-broad-process-graph-rbf.",
+    )
+    parser.add_argument(
+        "--broad-target-residual-tag",
+        default=DEFAULT_BROAD_TARGET_RESIDUAL_TAG,
+        help="Run/profile tag used with --include-broad-target-residual.",
+    )
+    parser.add_argument(
+        "--broad-residual-backbone-tag",
+        default=DEFAULT_BROAD_RESIDUAL_BACKBONE_TAG,
+        help="Run/profile tag used with --include-broad-residual-backbone.",
+    )
+    parser.add_argument(
+        "--broad-output-affine-tag",
+        default=DEFAULT_BROAD_OUTPUT_AFFINE_TAG,
+        help="Run/profile tag used with --include-broad-output-affine.",
     )
     args = parser.parse_args()
 
@@ -426,6 +557,18 @@ def main() -> int:
     if args.include_broad_region_weighted:
         tag = args.broad_region_weighted_tag
         pinn_specs = (*pinn_specs, (tag, tag, tag))
+    if args.include_broad_process_graph_rbf:
+        tag = args.broad_process_graph_rbf_tag
+        pinn_specs = (*pinn_specs, ("broad_process_graph_rbf", tag, tag))
+    if args.include_broad_target_residual:
+        tag = args.broad_target_residual_tag
+        pinn_specs = (*pinn_specs, ("broad_target_residual", tag, tag))
+    if args.include_broad_residual_backbone:
+        tag = args.broad_residual_backbone_tag
+        pinn_specs = (*pinn_specs, ("broad_residual_backbone", tag, tag))
+    if args.include_broad_output_affine:
+        tag = args.broad_output_affine_tag
+        pinn_specs = (*pinn_specs, ("broad_output_affine", tag, tag))
     summary = collect_rows(Path(args.root), splits, args.dataset_limit, args.dataset_order, pinn_specs)
     if args.json_output:
         output = Path(args.json_output)

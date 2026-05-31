@@ -326,6 +326,66 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
 
 The Phase 35 setup and result are documented in [docs/results/ambench_multiline_process_region_weighted_loss_v1.md](docs/results/ambench_multiline_process_region_weighted_loss_v1.md). It keeps `broad_process_v1` and raw spacetime defaults, then applies optional train-split-only supervised loss weighting with `--data-loss-weighting hot_gradient`. Single-seed probes found promising region tradeoffs, but a paired seed check closed the branch as a negative diagnostic: `broad_process_v1` averaged `136.384782 / 162.125337 / 165.282182` for test RMSE / hot q90 / gradient q90, while `rw15` averaged `142.730123 / 163.186816 / 170.560643` and `rw125` averaged `140.638507 / 177.884187 / 177.816410`.
 
+Phase 36 adds optional structured process-neighborhood RBF graph features under the same broad selector guard:
+
+```bash
+PROFILE_SPLITS="spot_size laser_power" DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 \
+  bash scripts/server/run_phase36_broad_process_graph_rbf_a100.sh \
+  > logs/phase36_broad12_process_graph_rbf_a100_v1.log 2>&1
+
+python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
+  --dataset-limit 12 \
+  --dataset-order process_round_robin \
+  --split spot_size \
+  --split laser_power \
+  --include-broad-process-graph-rbf \
+  --json-output outputs/reports/phase36_broad12_process_graph_rbf_summary.json \
+  --require-comparable
+```
+
+The Phase 36 setup is documented in [docs/results/ambench_multiline_process_process_graph_rbf_v1.md](docs/results/ambench_multiline_process_process_graph_rbf_v1.md). It keeps `broad_process_v1` as the route guard and appends optional `process_graph_rbf_*` features derived from `laser_power_W`, `scan_speed_mm_s`, and `spot_size_um`; default behavior remains unchanged with `--process-graph-feature-mode none`.
+
+The completed Phase 36 seed checks close process-neighborhood RBF as an unstable diagnostic: broad12 `laser_power` improved, but broad21 `laser_power` degraded badly across seeds. Phase 37 strong-baseline residualization also closed negative: ExtraTrees residualization mirrored weak/overfit baselines and did not expose useful smooth residual structure for Macro PINN. Phase 38 then tested optional residual hidden transitions inside the Macro PINN backbone and also closed as a negative diagnostic.
+
+```bash
+PROFILE_SPLITS="spot_size laser_power" DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 BACKBONE_RESIDUAL_SCALE=0.5 \
+  bash scripts/server/run_phase38_broad_residual_backbone_a100.sh \
+  > logs/phase38_broad12_residual_backbone_a100_v1.log 2>&1
+
+python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
+  --dataset-limit 12 \
+  --dataset-order process_round_robin \
+  --split spot_size \
+  --split laser_power \
+  --include-broad-residual-backbone \
+  --json-output outputs/reports/phase38_broad12_residual_backbone_summary.json \
+  --require-comparable
+```
+
+The Phase 37 setup and negative result are documented in [docs/results/ambench_multiline_process_target_residual_v1.md](docs/results/ambench_multiline_process_target_residual_v1.md). Phase 38 is documented in [docs/results/ambench_multiline_process_residual_backbone_v1.md](docs/results/ambench_multiline_process_residual_backbone_v1.md). It adds `--backbone-mode mlp|residual` and `--backbone-residual-scale`; default behavior remains unchanged with `mlp`. Focused broad12 results did not justify seed-check expansion: `spot_size` gained only global RMSE while degrading hot/gradient regions, and `laser_power` improved regions while losing global RMSE.
+
+Phase 39 is the current active node. It adds a small process-conditioned output affine calibration head under the same `broad_process_v1` route guard:
+
+```bash
+PROFILE_SPLITS="spot_size laser_power" DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 OUTPUT_AFFINE_SCALE=0.5 \
+  bash scripts/server/run_phase39_broad_output_affine_a100.sh \
+  > logs/phase39_broad12_output_affine_a100_v1.log 2>&1
+
+python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
+  --dataset-limit 12 \
+  --dataset-order process_round_robin \
+  --split spot_size \
+  --split laser_power \
+  --include-broad-output-affine \
+  --json-output outputs/reports/phase39_broad12_output_affine_summary.json \
+  --require-comparable
+```
+
+The Phase 39 setup and result are documented in [docs/results/ambench_multiline_process_output_affine_v1.md](docs/results/ambench_multiline_process_output_affine_v1.md). It adds `--output-affine-mode none|linear`, `--output-affine-scale`, and `--output-affine-lr`; default behavior remains unchanged with `none`. The branch is a local-positive but non-transferable diagnostic: broad12 `laser_power` improved across three seeds, but broad21 `laser_power` regressed from `178.040331 / 296.909567 / 254.954359` to `210.939830 / 407.352779 / 326.056523`.
+
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
 ```bash
@@ -445,6 +505,11 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 33 已完成 fixed Fourier spacetime representation 诊断。`--spacetime-encoding fourier` 与 `--spacetime-fourier-bands` 已实现并记录到 metrics/checkpoint；但 broad12 同口径结果在所有 split 均弱于 `broad_process_v1`，因此 Fourier 不替代 raw coordinate/time basis，下一步应转向 closure/GNN reintegration 或更结构化的数据表示。
 - Phase 34 learned residual correction 已关闭为负结果。默认 residual MLP 只带来 `0.015` 量级的全局 RMSE 改善，却明显伤害 hot q90 和 gradient q90；弱残差设置接近保持区域指标但没有收益。
 - Phase 35 train-split region-weighted data loss 已关闭为负诊断。`rw15` 和 `rw125` 的单 seed 区域收益没有通过 paired seed check，下一步应转向更结构化的 process/microstructure 表示，而不是继续调 loss 权重。
+- Phase 36 structured process-neighborhood RBF graph features 已关闭为不稳定诊断。broad12 `laser_power` 有信号，但 broad21 paired seed check 退化严重，因此不继续调 RBF anchor/length-scale。
+- Phase 37 strong-baseline residualized Macro PINN 已关闭为负诊断。ExtraTrees residualization 基本复现弱/过拟合 baseline，没有留下稳定可学的 residual target。
+- Phase 38 residual Macro PINN backbone 已关闭为负诊断。`spot_size` 的微弱 global RMSE 改善伴随 hot/gradient 退化，`laser_power` 的区域改善伴随 global RMSE 退化，因此不做 seed check 或 broad21 扩展。
+- Phase 39 process-conditioned output affine calibration 已关闭为局部正但不迁移的诊断。broad12 `laser_power` 三 seed 同时改善 global/hot/gradient，但 broad21 `laser_power` 明显退化，因此不能作为当前 paper-facing model claim。
+- Phase 40 下一节点应围绕 transfer-safe process calibration 或更强 process-conditioned architecture 展开，优先解释为什么 broad12 校准收益无法迁移到 broad21。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -497,6 +562,10 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_multiline_process_fourier_spacetime_v1.md](docs/results/ambench_multiline_process_fourier_spacetime_v1.md): Phase 33 fixed Fourier spacetime representation 诊断、broad12 可比性门禁结果与不扩到 broad21 的决策。
 - [docs/results/ambench_multiline_process_residual_correction_v1.md](docs/results/ambench_multiline_process_residual_correction_v1.md): Phase 34 learned residual correction 分支实现、focused `spot_size` 结果与关闭决策。
 - [docs/results/ambench_multiline_process_region_weighted_loss_v1.md](docs/results/ambench_multiline_process_region_weighted_loss_v1.md): Phase 35 train-split region-weighted data loss 实现、focused `spot_size` 验收命令与决策门槛。
+- [docs/results/ambench_multiline_process_process_graph_rbf_v1.md](docs/results/ambench_multiline_process_process_graph_rbf_v1.md): Phase 36 structured process-neighborhood RBF graph feature 分支实现、A100 命令与验收门槛。
+- [docs/results/ambench_multiline_process_target_residual_v1.md](docs/results/ambench_multiline_process_target_residual_v1.md): Phase 37 strong-baseline residualized Macro PINN 分支实现、focused A100 负结果与关闭决策。
+- [docs/results/ambench_multiline_process_residual_backbone_v1.md](docs/results/ambench_multiline_process_residual_backbone_v1.md): Phase 38 residual Macro PINN backbone 分支实现、A100 命令与验收门槛。
+- [docs/results/ambench_multiline_process_output_affine_v1.md](docs/results/ambench_multiline_process_output_affine_v1.md): Phase 39 process-conditioned output affine calibration 分支实现、A100 命令与验收门槛。
 
 Real micro graph closure 对比脚本：
 

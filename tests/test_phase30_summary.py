@@ -143,6 +143,99 @@ def _region_weighted_metrics(rmse: float) -> dict:
     return payload
 
 
+def _process_graph_metrics(rmse: float) -> dict:
+    payload = _metrics(rmse)
+    payload["input_features"].update(
+        {
+            "enabled": True,
+            "count": 7,
+            "effective_columns": [
+                "laser_power_W",
+                "scan_speed_mm_s",
+                "spot_size_um",
+                "process_graph_rbf_0",
+                "process_graph_rbf_1",
+                "process_graph_rbf_2",
+                "process_graph_rbf_3",
+            ],
+            "process_graph_features": {
+                "enabled": True,
+                "mode": "rbf",
+                "columns": ["laser_power_W", "scan_speed_mm_s", "spot_size_um"],
+                "fit_scope": "train",
+                "requested_anchor_count": 4,
+                "anchor_count": 4,
+                "source_unique_nodes": 7,
+                "length_scale": 1.0,
+                "feature_names": [
+                    "process_graph_rbf_0",
+                    "process_graph_rbf_1",
+                    "process_graph_rbf_2",
+                    "process_graph_rbf_3",
+                ],
+            },
+        }
+    )
+    return payload
+
+
+def _target_residual_metrics(rmse: float) -> dict:
+    payload = _metrics(rmse)
+    payload["target_normalization"] = {
+        "enabled": True,
+        "mean": 0.0,
+        "std": 12.5,
+        "target_space": "residual",
+    }
+    payload["target_residual_baseline"] = {
+        "enabled": True,
+        "strategy": "extra_trees",
+        "feature_columns": [
+            "x",
+            "y",
+            "t",
+            "laser_power_W",
+            "scan_speed_mm_s",
+            "spot_size_um",
+        ],
+        "fit_split": "train",
+        "fit_points": 800,
+        "n_neighbors": None,
+        "n_estimators": 80,
+        "random_state": 7,
+        "train_residual_mean": 0.0,
+        "train_residual_rmse": 18.25,
+    }
+    return payload
+
+
+def _residual_backbone_metrics(rmse: float) -> dict:
+    payload = _metrics(rmse)
+    payload["backbone"] = {
+        "mode": "residual",
+        "residual_scale": 0.5,
+        "hidden_dim": 128,
+        "layers": 4,
+        "parameter_count": 51201,
+        "implementation": "MacroPINN",
+    }
+    return payload
+
+
+def _output_affine_metrics(rmse: float) -> dict:
+    payload = _metrics(rmse)
+    payload["output_affine"] = {
+        "enabled": True,
+        "mode": "linear",
+        "input_dim": 3,
+        "scale": 0.5,
+        "lr": 0.001,
+        "parameter_count": 8,
+        "identity_initialized": True,
+    }
+    return payload
+
+
 def test_phase30_summary_marks_mismatched_tiny_smoke_as_incomparable(tmp_path: Path):
     summary = _load_summary_module()
     split = "scan_speed"
@@ -441,3 +534,223 @@ def test_phase30_summary_can_include_broad_region_weighted_artifacts(tmp_path: P
     assert weighted_row["data_loss_weighting_mode"] == "hot_gradient"
     assert weighted_row["data_loss_region_weight"] == 2.0
     assert weighted_row["data_loss_weighted_points"] == 120
+
+
+def test_phase30_summary_can_include_broad_process_graph_rbf_artifacts(tmp_path: Path):
+    summary = _load_summary_module()
+    split = "spot_size"
+    baseline_id = summary._run_id(split, 12, "process_round_robin", "process_axis_profile")
+    graph_id = summary._run_id(split, 12, "process_round_robin", "pg_rbf")
+
+    manifest = _manifest(1200, 30, 96)
+    split_payload = _split(1200)
+    split_payload["group_key"] = "spot_size_um"
+    _write_json(tmp_path / "outputs/data_audits" / f"{baseline_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{baseline_id}_split.json", split_payload)
+    _write_json(tmp_path / "outputs/data_audits" / f"{graph_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{graph_id}_split.json", split_payload)
+    for method, baseline_tag in summary.BASELINE_TAGS:
+        _write_json(
+            tmp_path / "outputs/baselines" / f"{baseline_id}_{baseline_tag}_regions_q90.json",
+            _metrics(100.0),
+        )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_no_process_v1" / "metrics.json",
+        _metrics(90.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_process_axis_profile_v1" / "metrics.json",
+        _metrics(80.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{graph_id}_macro_pinn_minmax_pg_rbf_v1" / "metrics.json",
+        _process_graph_metrics(65.0),
+    )
+
+    payload = summary.collect_rows(
+        tmp_path,
+        (split,),
+        12,
+        "process_round_robin",
+        (*summary.DEFAULT_PINN_SPECS, summary.BROAD_PROCESS_GRAPH_RBF_SPEC),
+    )
+    graph_row = payload["splits"][split]["methods"]["broad_process_graph_rbf"]
+
+    assert payload["pinn_methods"] == [
+        "no_process",
+        "process_axis_v1",
+        "broad_process_v1",
+        "broad_process_graph_rbf",
+    ]
+    assert graph_row["comparison_status"] == "comparable"
+    assert graph_row["rmse"] == 65.0
+    assert graph_row["input_feature_count"] == 7
+    assert graph_row["process_graph_enabled"] is True
+    assert graph_row["process_graph_mode"] == "rbf"
+    assert graph_row["process_graph_anchor_count"] == 4
+    assert graph_row["process_graph_fit_scope"] == "train"
+    assert graph_row["process_graph_length_scale"] == 1.0
+    assert graph_row["input_effective_columns"][-1] == "process_graph_rbf_3"
+
+
+def test_phase30_summary_can_include_broad_target_residual_artifacts(tmp_path: Path):
+    summary = _load_summary_module()
+    split = "laser_power"
+    baseline_id = summary._run_id(split, 12, "process_round_robin", "process_axis_profile")
+    residual_id = summary._run_id(split, 12, "process_round_robin", "target_resid_et")
+
+    manifest = _manifest(1200, 30, 96)
+    split_payload = _split(1200)
+    split_payload["group_key"] = "laser_power_W"
+    _write_json(tmp_path / "outputs/data_audits" / f"{baseline_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{baseline_id}_split.json", split_payload)
+    _write_json(tmp_path / "outputs/data_audits" / f"{residual_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{residual_id}_split.json", split_payload)
+    for method, baseline_tag in summary.BASELINE_TAGS:
+        _write_json(
+            tmp_path / "outputs/baselines" / f"{baseline_id}_{baseline_tag}_regions_q90.json",
+            _metrics(100.0),
+        )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_no_process_v1" / "metrics.json",
+        _metrics(90.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_process_axis_profile_v1" / "metrics.json",
+        _metrics(80.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{residual_id}_macro_pinn_minmax_target_resid_et_v1" / "metrics.json",
+        _target_residual_metrics(64.0),
+    )
+
+    payload = summary.collect_rows(
+        tmp_path,
+        (split,),
+        12,
+        "process_round_robin",
+        (*summary.DEFAULT_PINN_SPECS, summary.BROAD_TARGET_RESIDUAL_SPEC),
+    )
+    residual_row = payload["splits"][split]["methods"]["broad_target_residual"]
+
+    assert payload["pinn_methods"] == [
+        "no_process",
+        "process_axis_v1",
+        "broad_process_v1",
+        "broad_target_residual",
+    ]
+    assert residual_row["comparison_status"] == "comparable"
+    assert residual_row["rmse"] == 64.0
+    assert residual_row["target_space"] == "residual"
+    assert residual_row["target_residual_enabled"] is True
+    assert residual_row["target_residual_strategy"] == "extra_trees"
+    assert residual_row["target_residual_fit_points"] == 800
+    assert residual_row["target_residual_train_rmse"] == 18.25
+    assert residual_row["target_residual_feature_columns"][-1] == "spot_size_um"
+
+
+def test_phase30_summary_can_include_broad_residual_backbone_artifacts(tmp_path: Path):
+    summary = _load_summary_module()
+    split = "spot_size"
+    baseline_id = summary._run_id(split, 12, "process_round_robin", "process_axis_profile")
+    residual_backbone_id = summary._run_id(split, 12, "process_round_robin", "res_backbone")
+
+    manifest = _manifest(1200, 30, 96)
+    split_payload = _split(1200)
+    split_payload["group_key"] = "spot_size_um"
+    _write_json(tmp_path / "outputs/data_audits" / f"{baseline_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{baseline_id}_split.json", split_payload)
+    _write_json(tmp_path / "outputs/data_audits" / f"{residual_backbone_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{residual_backbone_id}_split.json", split_payload)
+    for method, baseline_tag in summary.BASELINE_TAGS:
+        _write_json(
+            tmp_path / "outputs/baselines" / f"{baseline_id}_{baseline_tag}_regions_q90.json",
+            _metrics(100.0),
+        )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_no_process_v1" / "metrics.json",
+        _metrics(90.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_process_axis_profile_v1" / "metrics.json",
+        _metrics(80.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{residual_backbone_id}_macro_pinn_minmax_res_backbone_v1" / "metrics.json",
+        _residual_backbone_metrics(63.0),
+    )
+
+    payload = summary.collect_rows(
+        tmp_path,
+        (split,),
+        12,
+        "process_round_robin",
+        (*summary.DEFAULT_PINN_SPECS, summary.BROAD_RESIDUAL_BACKBONE_SPEC),
+    )
+    row = payload["splits"][split]["methods"]["broad_residual_backbone"]
+
+    assert payload["pinn_methods"] == [
+        "no_process",
+        "process_axis_v1",
+        "broad_process_v1",
+        "broad_residual_backbone",
+    ]
+    assert row["comparison_status"] == "comparable"
+    assert row["rmse"] == 63.0
+    assert row["backbone_mode"] == "residual"
+    assert row["backbone_residual_scale"] == 0.5
+    assert row["backbone_parameter_count"] == 51201
+
+
+def test_phase30_summary_can_include_broad_output_affine_artifacts(tmp_path: Path):
+    summary = _load_summary_module()
+    split = "laser_power"
+    baseline_id = summary._run_id(split, 12, "process_round_robin", "process_axis_profile")
+    output_affine_id = summary._run_id(split, 12, "process_round_robin", "out_affine")
+
+    manifest = _manifest(1200, 30, 96)
+    split_payload = _split(1200)
+    split_payload["group_key"] = "laser_power_W"
+    _write_json(tmp_path / "outputs/data_audits" / f"{baseline_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{baseline_id}_split.json", split_payload)
+    _write_json(tmp_path / "outputs/data_audits" / f"{output_affine_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{output_affine_id}_split.json", split_payload)
+    for method, baseline_tag in summary.BASELINE_TAGS:
+        _write_json(
+            tmp_path / "outputs/baselines" / f"{baseline_id}_{baseline_tag}_regions_q90.json",
+            _metrics(100.0),
+        )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_no_process_v1" / "metrics.json",
+        _metrics(90.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_process_axis_profile_v1" / "metrics.json",
+        _metrics(80.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{output_affine_id}_macro_pinn_minmax_out_affine_v1" / "metrics.json",
+        _output_affine_metrics(62.0),
+    )
+
+    payload = summary.collect_rows(
+        tmp_path,
+        (split,),
+        12,
+        "process_round_robin",
+        (*summary.DEFAULT_PINN_SPECS, summary.BROAD_OUTPUT_AFFINE_SPEC),
+    )
+    row = payload["splits"][split]["methods"]["broad_output_affine"]
+
+    assert payload["pinn_methods"] == [
+        "no_process",
+        "process_axis_v1",
+        "broad_process_v1",
+        "broad_output_affine",
+    ]
+    assert row["comparison_status"] == "comparable"
+    assert row["rmse"] == 62.0
+    assert row["output_affine_enabled"] is True
+    assert row["output_affine_mode"] == "linear"
+    assert row["output_affine_scale"] == 0.5
+    assert row["output_affine_input_dim"] == 3

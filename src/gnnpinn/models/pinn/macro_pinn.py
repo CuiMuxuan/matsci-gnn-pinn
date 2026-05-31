@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from .coordinate_networks import MLP, MLPConfig, _activation
+from .coordinate_networks import MLP, MLPConfig, ResidualMLP, _activation
 
 
 def _torch() -> Any:
@@ -36,6 +36,8 @@ class MacroPINN(_torch().nn.Module):
         route_trainable: bool = True,
         spacetime_encoding: str = "raw",
         spacetime_fourier_bands: int = 4,
+        backbone_mode: str = "mlp",
+        backbone_residual_scale: float = 1.0,
     ):
         super().__init__()
         torch = _torch()
@@ -51,6 +53,13 @@ class MacroPINN(_torch().nn.Module):
             raise ValueError(f"Unsupported spacetime encoding: {spacetime_encoding}")
         if spacetime_fourier_bands < 1:
             raise ValueError("spacetime_fourier_bands must be >= 1")
+        normalized_backbone_mode = backbone_mode.lower()
+        if normalized_backbone_mode not in {"mlp", "residual"}:
+            raise ValueError(f"Unsupported backbone mode: {backbone_mode}")
+        if backbone_residual_scale < 0.0:
+            raise ValueError("backbone_residual_scale must be non-negative")
+        if normalized_backbone_mode == "residual" and num_hidden_layers < 1:
+            raise ValueError("residual backbone requires num_hidden_layers >= 1")
         self.coord_dim = coord_dim
         self.field_dim = field_dim
         self.param_dim = param_dim
@@ -62,29 +71,27 @@ class MacroPINN(_torch().nn.Module):
         self.route_trainable = bool(route_trainable)
         self.spacetime_encoding = normalized_spacetime_encoding
         self.spacetime_fourier_bands = int(spacetime_fourier_bands)
+        self.backbone_mode = normalized_backbone_mode
+        self.backbone_residual_scale = float(backbone_residual_scale)
         spacetime_dim = self._spacetime_feature_dim()
         self.spacetime_dim = spacetime_dim
         if self.conditioning_mode == "concat":
-            self.backbone = MLP(
-                MLPConfig(
-                    input_dim=spacetime_dim + param_dim,
-                    output_dim=field_dim,
-                    hidden_dim=hidden_dim,
-                    num_hidden_layers=num_hidden_layers,
-                    activation=activation,
-                )
+            self.backbone = self._build_backbone(
+                input_dim=spacetime_dim + param_dim,
+                field_dim=field_dim,
+                hidden_dim=hidden_dim,
+                num_hidden_layers=num_hidden_layers,
+                activation=activation,
             )
             return
 
         if self.conditioning_mode == "routed":
-            self.concat_expert = MLP(
-                MLPConfig(
-                    input_dim=spacetime_dim + param_dim,
-                    output_dim=field_dim,
-                    hidden_dim=hidden_dim,
-                    num_hidden_layers=num_hidden_layers,
-                    activation=activation,
-                )
+            self.concat_expert = self._build_backbone(
+                input_dim=spacetime_dim + param_dim,
+                field_dim=field_dim,
+                hidden_dim=hidden_dim,
+                num_hidden_layers=num_hidden_layers,
+                activation=activation,
             )
             self.route_gate = torch.nn.Linear(param_dim, 1)
             torch.nn.init.zeros_(self.route_gate.weight)
@@ -107,6 +114,26 @@ class MacroPINN(_torch().nn.Module):
             self.film_generators.append(generator)
             in_dim = hidden_dim
         self.output_layer = torch.nn.Linear(in_dim, field_dim)
+
+    def _build_backbone(
+        self,
+        *,
+        input_dim: int,
+        field_dim: int,
+        hidden_dim: int,
+        num_hidden_layers: int,
+        activation: str,
+    ) -> Any:
+        config = MLPConfig(
+            input_dim=input_dim,
+            output_dim=field_dim,
+            hidden_dim=hidden_dim,
+            num_hidden_layers=num_hidden_layers,
+            activation=activation,
+        )
+        if self.backbone_mode == "residual":
+            return ResidualMLP(config, residual_scale=self.backbone_residual_scale)
+        return MLP(config)
 
     def _spacetime_feature_dim(self) -> int:
         base_dim = self.coord_dim + 1
@@ -141,10 +168,13 @@ class MacroPINN(_torch().nn.Module):
             if self.conditioning_mode == "concat_film":
                 hidden_inputs.append(params)
             hidden = torch.cat(hidden_inputs, dim=-1)
-            for layer, generator in zip(self.hidden_layers, self.film_generators):
+            for layer_index, (layer, generator) in enumerate(zip(self.hidden_layers, self.film_generators)):
+                previous_hidden = hidden
                 hidden = self.activation(layer(hidden))
                 gamma, beta = generator(params).chunk(2, dim=-1)
                 hidden = hidden * (1.0 + self.film_strength * gamma) + self.film_strength * beta
+                if self.backbone_mode == "residual" and layer_index > 0:
+                    hidden = previous_hidden + self.backbone_residual_scale * hidden
             film_output = self.output_layer(hidden)
             if self.conditioning_mode == "routed":
                 gate = self.routing_gate(params)

@@ -10,6 +10,8 @@ HIDDEN_DIM="${HIDDEN_DIM:-128}"
 LAYERS="${LAYERS:-4}"
 LR="${LR:-1e-3}"
 SEED="${SEED:-7}"
+BACKBONE_MODE="${BACKBONE_MODE:-mlp}"
+BACKBONE_RESIDUAL_SCALE="${BACKBONE_RESIDUAL_SCALE:-1.0}"
 RUN_ID="${RUN_ID:-ambench_multiline_process_temperature_a100_sxm4_40gb_v1}"
 SPLIT_STRATEGY="${SPLIT_STRATEGY:-line}"
 TRAIN_FRACTION="${TRAIN_FRACTION:-0.6}"
@@ -23,6 +25,11 @@ PROCESS_FILM_STRENGTH="${PROCESS_FILM_STRENGTH:-1.0}"
 PROCESS_ROUTE_FILM_PRIOR="${PROCESS_ROUTE_FILM_PRIOR:-0.5}"
 FREEZE_PROCESS_ROUTE="${FREEZE_PROCESS_ROUTE:-0}"
 PROCESS_CONDITIONING_PROFILE="${PROCESS_CONDITIONING_PROFILE:-none}"
+PROCESS_GRAPH_FEATURE_MODE="${PROCESS_GRAPH_FEATURE_MODE:-none}"
+PROCESS_GRAPH_FEATURE_COUNT="${PROCESS_GRAPH_FEATURE_COUNT:-4}"
+PROCESS_GRAPH_LENGTH_SCALE="${PROCESS_GRAPH_LENGTH_SCALE:-1.0}"
+PROCESS_GRAPH_FIT_SCOPE="${PROCESS_GRAPH_FIT_SCOPE:-train}"
+PROCESS_GRAPH_FEATURE_COLUMNS="${PROCESS_GRAPH_FEATURE_COLUMNS:-}"
 SPACETIME_ENCODING="${SPACETIME_ENCODING:-raw}"
 SPACETIME_FOURIER_BANDS="${SPACETIME_FOURIER_BANDS:-4}"
 RESIDUAL_CORRECTION_MODE="${RESIDUAL_CORRECTION_MODE:-none}"
@@ -31,10 +38,18 @@ RESIDUAL_CORRECTION_LAYERS="${RESIDUAL_CORRECTION_LAYERS:-1}"
 RESIDUAL_CORRECTION_SCALE="${RESIDUAL_CORRECTION_SCALE:-0.1}"
 RESIDUAL_CORRECTION_LR="${RESIDUAL_CORRECTION_LR:-}"
 RESIDUAL_CORRECTION_START_STEP="${RESIDUAL_CORRECTION_START_STEP:-0}"
+OUTPUT_AFFINE_MODE="${OUTPUT_AFFINE_MODE:-none}"
+OUTPUT_AFFINE_SCALE="${OUTPUT_AFFINE_SCALE:-1.0}"
+OUTPUT_AFFINE_LR="${OUTPUT_AFFINE_LR:-}"
 DATA_LOSS_WEIGHTING="${DATA_LOSS_WEIGHTING:-none}"
 DATA_LOSS_HOT_QUANTILE="${DATA_LOSS_HOT_QUANTILE:-0.9}"
 DATA_LOSS_GRADIENT_QUANTILE="${DATA_LOSS_GRADIENT_QUANTILE:-0.9}"
 DATA_LOSS_REGION_WEIGHT="${DATA_LOSS_REGION_WEIGHT:-2.0}"
+TARGET_RESIDUAL_BASELINE="${TARGET_RESIDUAL_BASELINE:-none}"
+TARGET_RESIDUAL_BASELINE_FEATURE_COLUMNS="${TARGET_RESIDUAL_BASELINE_FEATURE_COLUMNS:-}"
+TARGET_RESIDUAL_BASELINE_N_NEIGHBORS="${TARGET_RESIDUAL_BASELINE_N_NEIGHBORS:-8}"
+TARGET_RESIDUAL_BASELINE_N_ESTIMATORS="${TARGET_RESIDUAL_BASELINE_N_ESTIMATORS:-200}"
+TARGET_RESIDUAL_BASELINE_RANDOM_STATE="${TARGET_RESIDUAL_BASELINE_RANDOM_STATE:-$SEED}"
 DATASET_SELECTION="${DATASET_SELECTION:-representative7}"
 DATASET_REGEX="${DATASET_REGEX:-}"
 DATASET_LIMIT="${DATASET_LIMIT:-}"
@@ -158,6 +173,16 @@ run_macro_pinn() {
       residual_correction_args+=(--residual-correction-lr "$RESIDUAL_CORRECTION_LR")
     fi
   fi
+  local output_affine_args=()
+  if [[ "$OUTPUT_AFFINE_MODE" != "none" && "$tag" != "no_process" ]]; then
+    output_affine_args+=(
+      --output-affine-mode "$OUTPUT_AFFINE_MODE"
+      --output-affine-scale "$OUTPUT_AFFINE_SCALE"
+    )
+    if [[ -n "$OUTPUT_AFFINE_LR" ]]; then
+      output_affine_args+=(--output-affine-lr "$OUTPUT_AFFINE_LR")
+    fi
+  fi
   local data_loss_weighting_args=()
   if [[ "$DATA_LOSS_WEIGHTING" != "none" ]]; then
     data_loss_weighting_args+=(
@@ -166,6 +191,30 @@ run_macro_pinn() {
       --data-loss-gradient-quantile "$DATA_LOSS_GRADIENT_QUANTILE"
       --data-loss-region-weight "$DATA_LOSS_REGION_WEIGHT"
     )
+  fi
+  local target_residual_args=()
+  if [[ "$TARGET_RESIDUAL_BASELINE" != "none" ]]; then
+    target_residual_args+=(
+      --target-residual-baseline "$TARGET_RESIDUAL_BASELINE"
+      --target-residual-baseline-n-neighbors "$TARGET_RESIDUAL_BASELINE_N_NEIGHBORS"
+      --target-residual-baseline-n-estimators "$TARGET_RESIDUAL_BASELINE_N_ESTIMATORS"
+      --target-residual-baseline-random-state "$TARGET_RESIDUAL_BASELINE_RANDOM_STATE"
+    )
+    for column in $TARGET_RESIDUAL_BASELINE_FEATURE_COLUMNS; do
+      target_residual_args+=(--target-residual-baseline-feature-column "$column")
+    done
+  fi
+  local process_graph_args=()
+  if [[ "$PROCESS_GRAPH_FEATURE_MODE" != "none" && "$tag" != "no_process" ]]; then
+    process_graph_args+=(
+      --process-graph-feature-mode "$PROCESS_GRAPH_FEATURE_MODE"
+      --process-graph-feature-count "$PROCESS_GRAPH_FEATURE_COUNT"
+      --process-graph-length-scale "$PROCESS_GRAPH_LENGTH_SCALE"
+      --process-graph-fit-scope "$PROCESS_GRAPH_FIT_SCOPE"
+    )
+    for column in $PROCESS_GRAPH_FEATURE_COLUMNS; do
+      process_graph_args+=(--process-graph-feature-column "$column")
+    done
   fi
   "$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.train.macro_pinn \
     --table "$TABLE" \
@@ -178,10 +227,15 @@ run_macro_pinn() {
     --lr "$LR" \
     --seed "$SEED" \
     --device "$DEVICE" \
+    --backbone-mode "$BACKBONE_MODE" \
+    --backbone-residual-scale "$BACKBONE_RESIDUAL_SCALE" \
     --spacetime-encoding "$SPACETIME_ENCODING" \
     --spacetime-fourier-bands "$SPACETIME_FOURIER_BANDS" \
     "${residual_correction_args[@]}" \
+    "${output_affine_args[@]}" \
     "${data_loss_weighting_args[@]}" \
+    "${target_residual_args[@]}" \
+    "${process_graph_args[@]}" \
     --input-normalization minmax \
     "${route_args[@]}" \
     "${profile_args[@]}" \

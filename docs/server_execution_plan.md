@@ -1032,6 +1032,149 @@ seed check 结果：
 
 结论：Phase 35 关闭为负诊断。保留 data-loss weighting 作为可复现分析选项，但不扩到其它 split。下一步应转向更结构化的 process/microstructure 表示或 graph-conditioned branch，而不是继续调 scalar loss 权重。当前分支不需要 A100-SXM4-80GB。
 
+Phase 36 structured process-neighborhood RBF graph feature branch 已进入实现与 focused A100 验证阶段，结果文档为 `docs/results/ambench_multiline_process_process_graph_rbf_v1.md`。关键实现：
+
+- CLI 新增 `--process-graph-feature-mode none|rbf`、`--process-graph-feature-column`、`--process-graph-feature-count`、`--process-graph-length-scale`、`--process-graph-fit-scope train|global`；默认 `none`，不改变旧实验。
+- RBF 分支从 `laser_power_W`、`scan_speed_mm_s`、`spot_size_um` 等 row metadata 构造 standardized process vectors，选择唯一 process anchors，并把相似度作为 `process_graph_rbf_*` 特征追加到 Macro PINN 条件输入。
+- 该分支可与普通 process scalars 同用，也可在 `broad_process_v1` 对 `scan_speed`/full `process` 回退 no-process scalars 后，通过显式 `--process-graph-feature-column` 形成 graph-only 输入。
+- metrics/checkpoint 记录 `process_graph_features` metadata，包括列、fit scope、anchor 数、length scale、最终 effective feature names 和 checkpoint `param_dim`。
+- `scripts/server/run_multiline_process_conditioned_thermal_a100.sh` 新增 `PROCESS_GRAPH_*` 环境变量；`scripts/server/run_phase36_broad_process_graph_rbf_a100.sh` 默认 focused 跑 broad12 `spot_size` 与 `laser_power`，run tag 使用短名 `pg_rbf` 避免 Windows/server 长路径问题。
+- `scripts/server/summarize_phase30_broad_process_selector_smoke.py --include-broad-process-graph-rbf` 可在 manifest/split comparability gate 中纳入 Phase 36 artifacts，并显示 graph mode/anchor/scope。
+
+focused A100 验证命令：
+
+```bash
+PROFILE_SPLITS="spot_size laser_power" DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 \
+  bash scripts/server/run_phase36_broad_process_graph_rbf_a100.sh \
+  > logs/phase36_broad12_process_graph_rbf_a100_v1.log 2>&1
+
+python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
+  --dataset-limit 12 \
+  --dataset-order process_round_robin \
+  --split spot_size \
+  --split laser_power \
+  --include-broad-process-graph-rbf \
+  --json-output outputs/reports/phase36_broad12_process_graph_rbf_summary.json \
+  --require-comparable
+```
+
+focused/seed-check 结果：
+
+| Dataset/Split | Method | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | 判断 |
+| --- | --- | ---: | ---: | ---: | --- |
+| broad12 `spot_size` | `broad_process_v1` | 136.384782 | 162.125337 | 165.282182 | baseline |
+| broad12 `spot_size` | `pg_rbf_global` | 148.632815 | 255.706330 | 236.036198 | 负诊断 |
+| broad12 `laser_power` | `broad_process_v1` | 143.639451 | 266.975170 | 225.572273 | baseline |
+| broad12 `laser_power` | `pg_rbf_global` | 140.689962 | 245.732430 | 211.178946 | broad12 有信号 |
+| broad21 `laser_power` | `broad_process_v1` | 168.816296 | 263.145682 | 229.087591 | baseline |
+| broad21 `laser_power` | `pg_rbf_global` | 271.516427 | 257.153407 | 291.054335 | 不稳定 |
+
+结论：Phase 36 关闭为 process-neighborhood scalar-graph 负/不稳定诊断。保留 `process_graph_rbf_*` 作为可复现实验选项，但不继续调 anchor/length-scale。当前分支不需要 A100-SXM4-80GB。
+
+Phase 37 strong-baseline residualized Macro PINN 已完成 focused A100 验证并关闭为负诊断，结果文档为 `docs/results/ambench_multiline_process_target_residual_v1.md`。关键实现：
+
+- CLI 新增 `--target-residual-baseline none|mean|knn|extra_trees`、`--target-residual-baseline-feature-column`、`--target-residual-baseline-n-neighbors`、`--target-residual-baseline-n-estimators`、`--target-residual-baseline-random-state`；默认 `none`，不改变旧实验。
+- 启用后先在 optimization train split 上拟合 baseline，再让 Macro PINN 学习 `target - baseline_prediction`；评估时把 baseline prediction 加回。
+- target normalization 现在记录 `target_space`，启用残差 baseline 时为 `residual`；metrics/checkpoint 记录 baseline strategy、feature columns、fit split、fit points 和 train residual RMSE。
+- 当前残差 baseline 分支仅支持 data-only training；若 `pde_weight > 0` 会报错，避免对不可微 tree/kNN baseline 计算 PDE residual 产生含混语义。
+- `scripts/server/run_multiline_process_conditioned_thermal_a100.sh` 新增 `TARGET_RESIDUAL_BASELINE*` 环境变量；`scripts/server/run_phase37_broad_target_residual_a100.sh` 默认 focused 跑 broad12 `spot_size` 与 `laser_power`，run tag 使用 `target_resid_et`。
+- `scripts/server/summarize_phase30_broad_process_selector_smoke.py --include-broad-target-residual` 可在 manifest/split comparability gate 中纳入 Phase 37 artifacts，并显示 target residual baseline metadata。
+
+focused A100 验证命令：
+
+```bash
+PROFILE_SPLITS="spot_size laser_power" DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 \
+  bash scripts/server/run_phase37_broad_target_residual_a100.sh \
+  > logs/phase37_broad12_target_residual_et_a100_v1.log 2>&1
+
+python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
+  --dataset-limit 12 \
+  --dataset-order process_round_robin \
+  --split spot_size \
+  --split laser_power \
+  --include-broad-target-residual \
+  --json-output outputs/reports/phase37_broad12_target_residual_summary.json \
+  --require-comparable
+```
+
+结果：broad12 `spot_size` 的 `target_resid_et` 基本跟随弱 ExtraTrees process baseline，测试指标为 `207.575682 / 357.674336 / 326.647214`，明显弱于 `broad_process_v1` 的 `136.309183 / 165.228535 / 169.049295`。broad12 `laser_power` 也退化到 `172.134324 / 340.026811 / 265.502092`，而 ExtraTrees train residual RMSE 为 `0.000000`，说明 baseline 已在 train split 上过拟合并没有留下可学的平滑 residual。结论：Phase 37 保留为可复现实验控制，不做 seed check，不扩 broad21。
+
+Phase 38 residual Macro PINN backbone 已完成 focused A100 验证并关闭为负诊断，结果文档为 `docs/results/ambench_multiline_process_residual_backbone_v1.md`。关键实现：
+
+- CLI 新增 `--backbone-mode mlp|residual` 与 `--backbone-residual-scale`；默认 `mlp`，不改变旧实验。
+- `residual` 模式在 concat/routed-concat expert 中使用 same-width hidden residual MLP；FiLM/concat-FiLM route 在首层投影后对同维 hidden transitions 加 residual skip。
+- metrics/checkpoint 新增 `backbone` metadata，记录 mode、residual scale、hidden width、layer count 和参数量。
+- `scripts/server/run_multiline_process_conditioned_thermal_a100.sh` 新增 `BACKBONE_MODE` 与 `BACKBONE_RESIDUAL_SCALE` 环境变量。
+- `scripts/server/run_phase38_broad_residual_backbone_a100.sh` 默认 focused 跑 broad12 `spot_size` 与 `laser_power`，run tag 使用 `res_backbone`。
+- `scripts/server/summarize_phase30_broad_process_selector_smoke.py --include-broad-residual-backbone` 可在 manifest/split comparability gate 中纳入 Phase 38 artifacts，并显示 backbone metadata。
+
+focused A100 验证命令：
+
+```bash
+PROFILE_SPLITS="spot_size laser_power" DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 BACKBONE_RESIDUAL_SCALE=0.5 \
+  bash scripts/server/run_phase38_broad_residual_backbone_a100.sh \
+  > logs/phase38_broad12_residual_backbone_a100_v1.log 2>&1
+
+python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
+  --dataset-limit 12 \
+  --dataset-order process_round_robin \
+  --split spot_size \
+  --split laser_power \
+  --include-broad-residual-backbone \
+  --json-output outputs/reports/phase38_broad12_residual_backbone_summary.json \
+  --require-comparable
+```
+
+验收：先比较 `spot_size` 和 `laser_power` against mean/kNN/ExtraTrees、no-process、`process_axis_v1`、`broad_process_v1` 和 Phase 37 负诊断。若 residual backbone 在至少一个已正向 split 上同时改善 global/hot q90/gradient q90 且没有明显不稳定，再做 paired seed check；若退化，则关闭为 backbone diagnostic，下一步转向更物理对齐的数据表示或更强但仍 train-split-safe 的 process-conditioned architecture。当前分支不需要 A100-SXM4-80GB。
+
+结果：broad12 `spot_size` residual backbone 给出轻微 global RMSE 改善，但 hot/gradient 明显退化：`136.025906 / 205.891992 / 197.838013` vs `broad_process_v1` 的 `136.309183 / 165.228535 / 169.049295`。broad12 `laser_power` 区域指标略有改善但 global RMSE 明显变差：`159.276166 / 239.054654 / 214.876025` vs `140.753534 / 254.473291 / 215.411533`。结论：Phase 38 不做 seed check，不扩 broad21，保留 residual backbone 为可复现实验选项。
+
+Phase 39 process-conditioned output affine calibration 当前进入实现与 focused A100 验证阶段，结果文档为 `docs/results/ambench_multiline_process_output_affine_v1.md`。关键实现：
+
+- CLI 新增 `--output-affine-mode none|linear`、`--output-affine-scale` 与 `--output-affine-lr`；默认 `none`，不改变旧实验。
+- `linear` 模式从 active process/input features 预测 `(gamma, beta)`，在 normalized target space 中应用 `prediction <- (1 + scale * gamma) * prediction + scale * beta`。
+- 输出 affine head 零初始化，因此初始行为是 identity，可与 `broad_process_v1` 做同口径比较。
+- metrics/checkpoint 新增 `output_affine` metadata，记录 mode、input dim、scale、learning rate、参数量与 identity initialization，并保存 `output_affine_state_dict`。
+- `scripts/server/run_multiline_process_conditioned_thermal_a100.sh` 新增 `OUTPUT_AFFINE_MODE`、`OUTPUT_AFFINE_SCALE` 与 `OUTPUT_AFFINE_LR` 环境变量。
+- `scripts/server/run_phase39_broad_output_affine_a100.sh` 默认 focused 跑 feature-active broad12 `spot_size` 与 `laser_power`，run tag 使用 `out_affine`。
+- `scripts/server/summarize_phase30_broad_process_selector_smoke.py --include-broad-output-affine` 可在 manifest/split comparability gate 中纳入 Phase 39 artifacts，并显示 output affine metadata。
+
+focused A100 验证命令：
+
+```bash
+PROFILE_SPLITS="spot_size laser_power" DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 OUTPUT_AFFINE_SCALE=0.5 \
+  bash scripts/server/run_phase39_broad_output_affine_a100.sh \
+  > logs/phase39_broad12_output_affine_a100_v1.log 2>&1
+
+python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
+  --dataset-limit 12 \
+  --dataset-order process_round_robin \
+  --split spot_size \
+  --split laser_power \
+  --include-broad-output-affine \
+  --json-output outputs/reports/phase39_broad12_output_affine_summary.json \
+  --require-comparable
+```
+
+验收：先比较 `spot_size` 和 `laser_power` against mean/kNN/ExtraTrees、no-process、`process_axis_v1`、`broad_process_v1` 和 Phase 38 负诊断。若 output affine 在至少一个已正向 split 上同时改善 global/hot q90/gradient q90 且没有明显不稳定，再做 paired seed check；若退化，则关闭为 output-calibration diagnostic，下一步转向更强数据表示或更结构化 process-conditioned architecture。当前分支不需要 A100-SXM4-80GB。
+
+结果：
+
+| Dataset/Split | Method | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | 判断 |
+| --- | --- | ---: | ---: | ---: | --- |
+| broad12 `spot_size` | `broad_process_v1` | 136.309183 | 165.228535 | 169.049295 | baseline |
+| broad12 `spot_size` | `broad_output_affine` | 137.814723 | 170.105606 | 173.564283 | 负 |
+| broad12 `laser_power` | `broad_process_v1` | 140.753534 | 254.473291 | 215.411533 | baseline |
+| broad12 `laser_power` | `broad_output_affine` | 139.161435 | 238.174812 | 207.673483 | 正 |
+| broad21 `laser_power` | `broad_process_v1` | 178.040331 | 296.909567 | 254.954359 | baseline |
+| broad21 `laser_power` | `broad_output_affine` | 210.939830 | 407.352779 | 326.056523 | 不迁移 |
+
+broad12 `laser_power` paired seed check 结果：`broad_process_v1` 三 seed 均值为 `148.172067 / 296.570673 / 242.768775`，`broad_output_affine` 三 seed 均值为 `136.412542 / 267.616397 / 224.432279`，delta 为 `-11.759525 / -28.954276 / -18.336496`。结论：Phase 39 关闭为 broad12 局部正但 broad21 不迁移的诊断分支，不做 broad21 seed check，不作为论文主 claim。下一步应测试更 transfer-safe 的校准约束，或转向更强 process-conditioned architecture/data representation。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import platform
 from pathlib import Path
 from typing import Any
@@ -73,6 +74,90 @@ def _input_feature_tensor(sample: Any, feature_columns: list[str], device: str) 
     return torch.tensor(rows, dtype=torch.float32, device=device)
 
 
+def _process_graph_feature_tensor(
+    sample: Any,
+    args: argparse.Namespace,
+    train_indices: list[int],
+    device: str,
+) -> tuple[Any | None, dict[str, Any]]:
+    if args.process_graph_feature_mode == "none":
+        return None, {"enabled": False, "mode": "none"}
+    if args.process_graph_feature_mode != "rbf":
+        raise ValueError(f"Unsupported process graph feature mode: {args.process_graph_feature_mode}")
+    if args.process_graph_feature_count <= 0:
+        raise ValueError("--process-graph-feature-count must be positive")
+    if args.process_graph_length_scale <= 0.0:
+        raise ValueError("--process-graph-length-scale must be positive")
+    columns = list(args.process_graph_feature_columns or args.input_feature_columns)
+    if not columns:
+        return None, {
+            "enabled": False,
+            "mode": args.process_graph_feature_mode,
+            "reason": "no process graph feature columns are active after profile resolution",
+        }
+    torch = _torch()
+    source = _input_feature_tensor(sample, columns, device)
+    if source is None:
+        raise ValueError("--process-graph-feature-mode rbf could not build source process features")
+    if args.process_graph_fit_scope == "train":
+        if not train_indices:
+            raise ValueError("--process-graph-feature-mode rbf requires non-empty train indices")
+        fit_index = _index_tensor(train_indices, device)
+    elif args.process_graph_fit_scope == "global":
+        fit_index = torch.arange(source.shape[0], dtype=torch.long, device=device)
+    else:
+        raise ValueError(f"Unsupported process graph fit scope: {args.process_graph_fit_scope}")
+
+    fit_values = source[fit_index]
+    center = fit_values.mean(dim=0, keepdim=True)
+    scale = fit_values.std(dim=0, unbiased=False, keepdim=True)
+    scale = torch.where(scale == 0, torch.ones_like(scale), scale)
+    normalized = (source - center) / scale
+    fit_normalized = normalized[fit_index]
+
+    unique_keys: set[tuple[float, ...]] = set()
+    unique_rows: list[Any] = []
+    for row in fit_normalized.detach().cpu().tolist():
+        key = tuple(round(float(value), 10) for value in row)
+        if key not in unique_keys:
+            unique_keys.add(key)
+            unique_rows.append(row)
+    if not unique_rows:
+        raise ValueError("--process-graph-feature-mode rbf found no unique process nodes")
+
+    requested_count = int(args.process_graph_feature_count)
+    if len(unique_rows) <= requested_count:
+        anchor_rows = unique_rows
+    elif requested_count == 1:
+        anchor_rows = [unique_rows[0]]
+    else:
+        anchor_indices = [
+            min(len(unique_rows) - 1, int(math.floor(index * len(unique_rows) / requested_count)))
+            for index in range(requested_count)
+        ]
+        anchor_rows = [unique_rows[index] for index in anchor_indices]
+    anchors = torch.tensor(anchor_rows, dtype=torch.float32, device=device)
+    deltas = normalized[:, None, :] - anchors[None, :, :]
+    squared_distances = torch.sum(deltas * deltas, dim=-1)
+    features = torch.exp(-squared_distances / (2.0 * args.process_graph_length_scale**2))
+    feature_names = [f"process_graph_rbf_{index}" for index in range(features.shape[-1])]
+    payload = {
+        "enabled": True,
+        "mode": args.process_graph_feature_mode,
+        "columns": columns,
+        "fit_scope": args.process_graph_fit_scope,
+        "requested_anchor_count": requested_count,
+        "anchor_count": int(features.shape[-1]),
+        "source_unique_nodes": len(unique_rows),
+        "length_scale": args.process_graph_length_scale,
+        "feature_names": feature_names,
+        "center": center.detach().cpu().reshape(-1).tolist(),
+        "scale": scale.detach().cpu().reshape(-1).tolist(),
+        "anchors": anchors.detach().cpu().tolist(),
+    }
+    return features, payload
+
+
 def _input_feature_payload(
     feature_columns: list[str],
     normalization: dict[str, Any] | None,
@@ -82,14 +167,22 @@ def _input_feature_payload(
     route_trainable: bool,
     route_summary: dict[str, Any] | None = None,
     conditioning_profile: dict[str, Any] | None = None,
+    process_graph_features: dict[str, Any] | None = None,
+    effective_feature_count: int | None = None,
 ) -> dict[str, Any]:
+    process_graph_payload = process_graph_features or {"enabled": False, "mode": "none"}
+    process_graph_names = (
+        list(process_graph_payload.get("feature_names") or []) if process_graph_payload.get("enabled") else []
+    )
     return {
-        "enabled": bool(feature_columns),
+        "enabled": bool(feature_columns) or bool(process_graph_payload.get("enabled")),
         "columns": feature_columns,
-        "count": len(feature_columns),
+        "effective_columns": [*feature_columns, *process_graph_names],
+        "count": effective_feature_count if effective_feature_count is not None else len(feature_columns),
         "normalization": normalization,
         "conditioning_mode": conditioning_mode,
         "film_strength": film_strength,
+        "process_graph_features": process_graph_payload,
         "route": {
             "enabled": route_summary is not None,
             "film_prior": route_film_prior,
@@ -105,6 +198,17 @@ def _spacetime_encoding_payload(args: argparse.Namespace, model: Any) -> dict[st
         "encoding": args.spacetime_encoding,
         "fourier_bands": args.spacetime_fourier_bands,
         "input_dim": int(model.spacetime_dim),
+    }
+
+
+def _backbone_payload(args: argparse.Namespace, model: Any) -> dict[str, Any]:
+    return {
+        "mode": args.backbone_mode,
+        "residual_scale": args.backbone_residual_scale if args.backbone_mode == "residual" else None,
+        "hidden_dim": args.hidden_dim,
+        "layers": args.layers,
+        "parameter_count": int(sum(parameter.numel() for parameter in model.parameters())),
+        "implementation": type(model).__name__,
     }
 
 
@@ -193,6 +297,59 @@ def _residual_correction_payload(
         "lr": lr if enabled else None,
         "parameter_count": parameter_count,
         "last_layer_zero_initialized": enabled,
+    }
+
+
+def _build_output_affine(args: argparse.Namespace, input_dim: int) -> Any | None:
+    if args.output_affine_mode == "none":
+        return None
+    if args.output_affine_mode != "linear":
+        raise ValueError(f"Unsupported output affine mode: {args.output_affine_mode}")
+    if input_dim <= 0:
+        raise ValueError("--output-affine-mode linear requires active input/process features")
+    if args.output_affine_scale < 0.0:
+        raise ValueError("--output-affine-scale must be non-negative")
+    torch = _torch()
+    module = torch.nn.Linear(input_dim, 2)
+    torch.nn.init.zeros_(module.weight)
+    torch.nn.init.zeros_(module.bias)
+    return module.to(args.device)
+
+
+def _apply_output_affine(
+    prediction: Any,
+    output_affine: Any | None,
+    args: argparse.Namespace,
+    params: Any | None,
+) -> Any:
+    if output_affine is None:
+        return prediction
+    if params is None:
+        raise ValueError("Output affine calibration requires process/input features")
+    gamma, beta = output_affine(params).chunk(2, dim=-1)
+    return prediction * (1.0 + args.output_affine_scale * gamma) + args.output_affine_scale * beta
+
+
+def _output_affine_payload(
+    args: argparse.Namespace,
+    output_affine: Any | None,
+    input_dim: int,
+) -> dict[str, Any]:
+    enabled = output_affine is not None
+    lr = args.output_affine_lr if args.output_affine_lr is not None else args.lr
+    parameter_count = (
+        int(sum(parameter.numel() for parameter in output_affine.parameters()))
+        if output_affine is not None
+        else 0
+    )
+    return {
+        "enabled": enabled,
+        "mode": args.output_affine_mode,
+        "input_dim": input_dim if enabled else None,
+        "scale": args.output_affine_scale if enabled else None,
+        "lr": lr if enabled else None,
+        "parameter_count": parameter_count,
+        "identity_initialized": enabled,
     }
 
 
@@ -373,6 +530,121 @@ def _normalize_feature_tensor(tensor: Any, train_index: Any, mode: str) -> tuple
     raise ValueError(f"Unsupported input normalization mode: {mode}")
 
 
+def _baseline_feature_matrix(sample: Any, feature_columns: list[str] | None) -> tuple[list[list[float]], list[str]]:
+    default_columns = list(sample.metadata.get("coordinate_columns") or [])
+    time_column = sample.metadata.get("time_column")
+    if time_column:
+        default_columns.append(time_column)
+    columns = list(feature_columns or default_columns)
+    if not columns:
+        raise ValueError("Target residual baselines require at least one feature column")
+
+    coord_columns = list(sample.metadata.get("coordinate_columns") or [])
+    row_metadata = sample.metadata.get("row_metadata", {})
+    rows: list[list[float]] = []
+    for row_index in range(sample.n_points):
+        row: list[float] = []
+        for column in columns:
+            if column in coord_columns:
+                row.append(float(sample.coordinates[row_index][coord_columns.index(column)]))
+            elif time_column and column == time_column:
+                row.append(float(sample.time[row_index]))
+            elif column in sample.observations:
+                row.append(float(sample.observations[column][row_index]))
+            elif column in row_metadata:
+                value = row_metadata[column][row_index]
+                try:
+                    row.append(float(value))
+                except (TypeError, ValueError) as exc:
+                    raise ValueError(
+                        f"Target residual baseline feature column {column!r} contains a non-numeric value "
+                        f"at row {row_index}: {value!r}"
+                    ) from exc
+            else:
+                raise ValueError(f"Target residual baseline feature column not found: {column}")
+        rows.append(row)
+    return rows, columns
+
+
+def _target_residual_baseline_predictions(
+    sample: Any,
+    target: str,
+    train_indices: list[int],
+    args: argparse.Namespace,
+    device: str,
+) -> tuple[Any, dict[str, Any]]:
+    torch = _torch()
+    if args.target_residual_baseline == "none":
+        predictions = torch.zeros((sample.n_points, 1), dtype=torch.float32, device=device)
+        return predictions, {"enabled": False, "strategy": "none"}
+
+    if args.pde_weight > 0:
+        raise ValueError("--target-residual-baseline is currently supported only for data-only training")
+    if not train_indices:
+        raise ValueError("--target-residual-baseline requires a non-empty train split")
+
+    y_true = [float(value) for value in sample.require_observation(target)]
+    if args.target_residual_baseline == "mean":
+        mean_value = sum(y_true[index] for index in train_indices) / len(train_indices)
+        predictions_list = [mean_value for _ in y_true]
+        feature_columns: list[str] = []
+    else:
+        feature_matrix, feature_columns = _baseline_feature_matrix(
+            sample,
+            args.target_residual_baseline_feature_columns,
+        )
+        x_fit = [feature_matrix[index] for index in train_indices]
+        y_fit = [y_true[index] for index in train_indices]
+        if args.target_residual_baseline == "knn":
+            from sklearn.neighbors import KNeighborsRegressor
+            from sklearn.pipeline import make_pipeline
+            from sklearn.preprocessing import StandardScaler
+
+            model = make_pipeline(
+                StandardScaler(),
+                KNeighborsRegressor(
+                    n_neighbors=max(1, min(args.target_residual_baseline_n_neighbors, len(train_indices)))
+                ),
+            )
+        elif args.target_residual_baseline == "extra_trees":
+            from sklearn.ensemble import ExtraTreesRegressor
+
+            model = ExtraTreesRegressor(
+                n_estimators=args.target_residual_baseline_n_estimators,
+                random_state=args.target_residual_baseline_random_state,
+                n_jobs=-1,
+            )
+        else:
+            raise ValueError(f"Unsupported target residual baseline: {args.target_residual_baseline}")
+        model.fit(x_fit, y_fit)
+        predictions_list = [float(value) for value in model.predict(feature_matrix)]
+
+    predictions = torch.tensor(predictions_list, dtype=torch.float32, device=device).reshape(-1, 1)
+    residuals = [truth - pred for truth, pred in zip(y_true, predictions_list)]
+    train_residuals = [residuals[index] for index in train_indices]
+    payload = {
+        "enabled": True,
+        "strategy": args.target_residual_baseline,
+        "feature_columns": feature_columns,
+        "fit_split": args.train_split,
+        "fit_points": len(train_indices),
+        "n_neighbors": (
+            args.target_residual_baseline_n_neighbors if args.target_residual_baseline == "knn" else None
+        ),
+        "n_estimators": (
+            args.target_residual_baseline_n_estimators if args.target_residual_baseline == "extra_trees" else None
+        ),
+        "random_state": (
+            args.target_residual_baseline_random_state
+            if args.target_residual_baseline == "extra_trees"
+            else None
+        ),
+        "train_residual_mean": sum(train_residuals) / len(train_residuals),
+        "train_residual_rmse": math.sqrt(sum(value * value for value in train_residuals) / len(train_residuals)),
+    }
+    return predictions, payload
+
+
 def _metric_payload(y_true: list[float], y_pred: list[float]) -> dict[str, float]:
     metrics: dict[str, float] = {
         "rmse": rmse(y_true, y_pred),
@@ -390,6 +662,8 @@ def _jsonable_config(args: argparse.Namespace) -> dict[str, Any]:
     for key, value in list(config.items()):
         if isinstance(value, Path):
             config[key] = str(value)
+        elif isinstance(value, list):
+            config[key] = [str(item) if isinstance(item, Path) else item for item in value]
     return config
 
 
@@ -397,15 +671,19 @@ def _optimizer_payload(
     args: argparse.Namespace,
     closure_coefficients: Any | None,
     residual_correction: Any | None = None,
+    output_affine: Any | None = None,
 ) -> dict[str, Any]:
     closure_lr = args.closure_lr if args.closure_lr is not None else args.lr
     residual_lr = args.residual_correction_lr if args.residual_correction_lr is not None else args.lr
+    output_affine_lr = args.output_affine_lr if args.output_affine_lr is not None else args.lr
     return {
         "backbone_lr": args.lr,
         "closure_lr": closure_lr if closure_coefficients is not None else None,
         "closure_lr_overridden": args.closure_lr is not None,
         "residual_correction_lr": residual_lr if residual_correction is not None else None,
         "residual_correction_lr_overridden": args.residual_correction_lr is not None,
+        "output_affine_lr": output_affine_lr if output_affine is not None else None,
+        "output_affine_lr_overridden": args.output_affine_lr is not None,
         "freeze_backbone_after_closure_start": args.freeze_backbone_after_closure_start,
         "closure_graph_lr": args.closure_graph_lr,
     }
@@ -916,13 +1194,25 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         closure_graph_sample_ids = [str(value) for value in row_metadata[args.closure_graph_sample_id_column]]
     split_manifest = load_split_manifest(args.split_manifest) if args.split_manifest else None
     input_conditioning_profile = _resolve_input_conditioning_profile(args, split_manifest)
-    coords, time, target = sample_to_tensors(sample, args.target, args.device)
-    input_features = _input_feature_tensor(sample, args.input_feature_columns, args.device)
     train_indices = (
         split_indices(split_manifest, args.train_split)
         if split_manifest
         else list(range(sample.n_points))
     )
+    coords, time, target = sample_to_tensors(sample, args.target, args.device)
+    input_features = _input_feature_tensor(sample, args.input_feature_columns, args.device)
+    process_graph_features, process_graph_feature_payload = _process_graph_feature_tensor(
+        sample,
+        args,
+        train_indices,
+        args.device,
+    )
+    if process_graph_features is not None:
+        input_features = (
+            torch.cat([input_features, process_graph_features], dim=-1)
+            if input_features is not None
+            else process_graph_features
+        )
     residual_candidate_indices = _residual_candidate_indices(
         sample=sample,
         target=args.target,
@@ -946,11 +1236,19 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             train_index,
             input_feature_normalization_mode,
         )
-    target_mean = target[train_index].mean()
-    target_std = target[train_index].std(unbiased=False)
+    target_residual_baseline, target_residual_baseline_payload = _target_residual_baseline_predictions(
+        sample,
+        args.target,
+        train_indices,
+        args,
+        args.device,
+    )
+    target_for_training = target - target_residual_baseline
+    target_mean = target_for_training[train_index].mean()
+    target_std = target_for_training[train_index].std(unbiased=False)
     if float(target_std.detach().cpu()) == 0.0:
         target_std = torch.ones_like(target_std)
-    train_target = (target - target_mean) / target_std if args.normalize_target else target
+    train_target = (target_for_training - target_mean) / target_std if args.normalize_target else target_for_training
     data_loss_weights, data_loss_weighting = _data_loss_weight_tensor(
         sample=sample,
         target=args.target,
@@ -972,11 +1270,15 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         route_trainable=args.input_route_trainable,
         spacetime_encoding=args.spacetime_encoding,
         spacetime_fourier_bands=args.spacetime_fourier_bands,
+        backbone_mode=args.backbone_mode,
+        backbone_residual_scale=args.backbone_residual_scale,
     ).to(args.device)
     residual_correction_input_dim = coords.shape[-1] + time.reshape(time.shape[0], -1).shape[-1]
     if input_features is not None:
         residual_correction_input_dim += input_features.shape[-1]
     residual_correction = _build_residual_correction(args, residual_correction_input_dim)
+    output_affine_input_dim = int(input_features.shape[-1]) if input_features is not None else 0
+    output_affine = _build_output_affine(args, output_affine_input_dim)
     closure_library = None
     closure_coefficients = None
     graph_state_dim = coords.shape[-1] + time.reshape(time.shape[0], -1).shape[-1]
@@ -1002,6 +1304,9 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     if residual_correction is not None:
         residual_lr = args.residual_correction_lr if args.residual_correction_lr is not None else args.lr
         parameter_groups.append({"params": list(residual_correction.parameters()), "lr": residual_lr})
+    if output_affine is not None:
+        output_affine_lr = args.output_affine_lr if args.output_affine_lr is not None else args.lr
+        parameter_groups.append({"params": list(output_affine.parameters()), "lr": output_affine_lr})
     graph_parameters = (
         [parameter for parameter in graph_provider.parameters() if parameter.requires_grad]
         if graph_provider is not None
@@ -1051,11 +1356,13 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             input_features_data,
             active=residual_correction_active,
         )
+        pred = _apply_output_affine(pred, output_affine, args, input_features_data)
         pred_for_loss = pred
+        baseline_data = target_residual_baseline[train_index]
         if args.normalize_target:
-            pred_physical = pred * target_std + target_mean
+            pred_physical = pred * target_std + target_mean + baseline_data
         else:
-            pred_physical = pred
+            pred_physical = pred + baseline_data
         data_error = (pred_for_loss - train_target[train_index]) ** 2
         data_loss = torch.sum(data_error * data_loss_weights) / data_loss_weights.sum()
         pde_loss = torch.zeros((), dtype=target.dtype, device=target.device)
@@ -1077,10 +1384,12 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 input_features_residual,
                 active=residual_correction_active,
             )
+            pred_residual = _apply_output_affine(pred_residual, output_affine, args, input_features_residual)
+            baseline_residual = target_residual_baseline[residual_index]
             if args.normalize_target:
-                pred_residual_physical = pred_residual * target_std + target_mean
+                pred_residual_physical = pred_residual * target_std + target_mean + baseline_residual
             else:
-                pred_residual_physical = pred_residual
+                pred_residual_physical = pred_residual + baseline_residual
             residual_field = pred_residual_physical[:, 0] if args.pde_field == "physical" else pred_residual[:, 0]
             if closure_library is not None and closure_coefficients is not None:
                 graph_embedding = None
@@ -1148,6 +1457,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                     "closure_stage_active": bool(closure_stage_active),
                     "backbone_frozen": bool(backbone_frozen),
                     "residual_correction_active": bool(residual_correction is not None and residual_correction_active),
+                    "output_affine_enabled": bool(output_affine is not None),
                     "data_loss_region_weighting_enabled": bool(data_loss_weighting["enabled"]),
                     "data_loss_region_weighted_points": float(data_loss_weighting["selected_points"]),
                     "data_loss_mean_weight": float(data_loss_weighting["mean_weight"]),
@@ -1165,8 +1475,10 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             input_features,
             active=True,
         )
+        pred_tensor = _apply_output_affine(pred_tensor, output_affine, args, input_features)
         if args.normalize_target:
             pred_tensor = pred_tensor * target_std + target_mean
+        pred_tensor = pred_tensor + target_residual_baseline
         pred = pred_tensor.detach().cpu().reshape(-1).tolist()
         input_route_summary = (
             model.routing_summary(input_features)
@@ -1221,7 +1533,13 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "enabled": args.normalize_target,
             "mean": float(target_mean.detach().cpu()),
             "std": float(target_std.detach().cpu()),
+            "target_space": (
+                "residual"
+                if target_residual_baseline_payload.get("enabled")
+                else "target"
+            ),
         },
+        "target_residual_baseline": target_residual_baseline_payload,
         "data_loss_weighting": data_loss_weighting,
         "input_normalization": {
             "mode": args.input_normalization,
@@ -1239,12 +1557,20 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             args.input_route_trainable,
             input_route_summary,
             input_conditioning_profile,
+            process_graph_feature_payload,
+            int(input_features.shape[-1]) if input_features is not None else 0,
         ),
         "spacetime_encoding": _spacetime_encoding_payload(args, model),
+        "backbone": _backbone_payload(args, model),
         "residual_correction": _residual_correction_payload(
             args,
             residual_correction,
             residual_correction_input_dim,
+        ),
+        "output_affine": _output_affine_payload(
+            args,
+            output_affine,
+            output_affine_input_dim,
         ),
         "pde": {
             "field": args.pde_field,
@@ -1260,7 +1586,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "residual_gradient_quantile": args.residual_gradient_quantile,
             "residual_candidate_points": len(residual_candidate_indices),
         },
-        "optimizer": _optimizer_payload(args, closure_coefficients, residual_correction),
+        "optimizer": _optimizer_payload(args, closure_coefficients, residual_correction, output_affine),
         "closure": _closure_payload(
             closure_mode=args.closure_mode,
             closure_library=closure_library,
@@ -1282,6 +1608,9 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "residual_correction_state_dict": (
                 residual_correction.state_dict() if residual_correction is not None else None
             ),
+            "output_affine_state_dict": (
+                output_affine.state_dict() if output_affine is not None else None
+            ),
             "metadata": {
                 "coord_dim": coords.shape[-1],
                 "target": args.target,
@@ -1291,8 +1620,11 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 "param_dim": int(input_features.shape[-1]) if input_features is not None else 0,
                 "input_features": metrics_payload["input_features"],
                 "spacetime_encoding": metrics_payload["spacetime_encoding"],
+                "backbone": metrics_payload["backbone"],
                 "residual_correction": metrics_payload["residual_correction"],
+                "output_affine": metrics_payload["output_affine"],
                 "data_loss_weighting": metrics_payload["data_loss_weighting"],
+                "target_residual_baseline": metrics_payload["target_residual_baseline"],
             },
         },
         checkpoint_path,
@@ -1335,6 +1667,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--layers", type=int, default=3)
     parser.add_argument("--activation", default="tanh")
+    parser.add_argument(
+        "--backbone-mode",
+        choices=["mlp", "residual"],
+        default="mlp",
+        help=(
+            "Internal Macro PINN backbone. mlp preserves the original fully connected network; "
+            "residual adds same-width hidden residual transitions inside the backbone."
+        ),
+    )
+    parser.add_argument(
+        "--backbone-residual-scale",
+        type=float,
+        default=1.0,
+        help="Residual branch multiplier used when --backbone-mode=residual.",
+    )
     parser.add_argument(
         "--spacetime-encoding",
         choices=["raw", "fourier"],
@@ -1387,6 +1734,26 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=0,
         help="Training step at which the learned residual correction starts contributing to predictions.",
+    )
+    parser.add_argument(
+        "--output-affine-mode",
+        choices=["none", "linear"],
+        default="none",
+        help=(
+            "Optional process-conditioned output calibration. linear learns gamma/beta from active input "
+            "features and applies prediction <- (1 + scale * gamma) * prediction + scale * beta."
+        ),
+    )
+    parser.add_argument(
+        "--output-affine-scale",
+        type=float,
+        default=1.0,
+        help="Multiplier for gamma/beta produced by --output-affine-mode=linear.",
+    )
+    parser.add_argument(
+        "--output-affine-lr",
+        type=float,
+        help="Optional learning rate for output-affine parameters; defaults to --lr.",
     )
     parser.add_argument("--pde-weight", type=float, default=0.0)
     parser.add_argument(
@@ -1466,6 +1833,43 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--split-manifest", type=Path, help="Optional JSON split manifest.")
     parser.add_argument("--train-split", default="train", help="Split used for optimization when split manifest is provided.")
     parser.add_argument(
+        "--target-residual-baseline",
+        choices=["none", "mean", "knn", "extra_trees"],
+        default="none",
+        help=(
+            "Optional strong baseline fit on the train split. When enabled, Macro PINN trains on "
+            "target - baseline_prediction and adds the baseline back for metrics."
+        ),
+    )
+    parser.add_argument(
+        "--target-residual-baseline-feature-column",
+        action="append",
+        dest="target_residual_baseline_feature_columns",
+        default=[],
+        help=(
+            "Feature column used by knn/extra_trees target residual baselines. Defaults to coordinates plus time. "
+            "Can include row metadata such as laser_power_W, scan_speed_mm_s, and spot_size_um."
+        ),
+    )
+    parser.add_argument(
+        "--target-residual-baseline-n-neighbors",
+        type=int,
+        default=8,
+        help="k for --target-residual-baseline=knn.",
+    )
+    parser.add_argument(
+        "--target-residual-baseline-n-estimators",
+        type=int,
+        default=200,
+        help="Number of trees for --target-residual-baseline=extra_trees.",
+    )
+    parser.add_argument(
+        "--target-residual-baseline-random-state",
+        type=int,
+        default=7,
+        help="Random state for --target-residual-baseline=extra_trees.",
+    )
+    parser.add_argument(
         "--input-normalization",
         default="none",
         choices=["none", "minmax", "standard"],
@@ -1534,6 +1938,43 @@ def build_parser() -> argparse.ArgumentParser:
             "broad_process_v1 can also fall back to no process features on broad-data splits where process conditioning degraded. "
             "broad_process_v2 is the same conservative broad-data profile except line_id uses concat/same."
         ),
+    )
+    parser.add_argument(
+        "--process-graph-feature-mode",
+        choices=["none", "rbf"],
+        default="none",
+        help=(
+            "Optional structured process-neighborhood features appended to Macro PINN input features. "
+            "rbf maps each row's process metadata to RBF similarities against process anchors."
+        ),
+    )
+    parser.add_argument(
+        "--process-graph-feature-column",
+        action="append",
+        dest="process_graph_feature_columns",
+        default=[],
+        help=(
+            "Numeric row-metadata column used to build process-neighborhood graph features. "
+            "Defaults to active --input-feature-column values after any conditioning profile is resolved."
+        ),
+    )
+    parser.add_argument(
+        "--process-graph-feature-count",
+        type=int,
+        default=4,
+        help="Maximum number of process RBF anchor features when --process-graph-feature-mode=rbf.",
+    )
+    parser.add_argument(
+        "--process-graph-length-scale",
+        type=float,
+        default=1.0,
+        help="RBF length scale in standardized process-feature space.",
+    )
+    parser.add_argument(
+        "--process-graph-fit-scope",
+        choices=["train", "global"],
+        default="train",
+        help="Rows used to fit process graph feature standardization and anchors.",
     )
     parser.add_argument(
         "--hot-quantile",
