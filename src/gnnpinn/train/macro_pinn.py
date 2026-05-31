@@ -78,6 +78,10 @@ def _input_feature_payload(
     normalization: dict[str, Any] | None,
     conditioning_mode: str,
     film_strength: float,
+    route_film_prior: float,
+    route_trainable: bool,
+    route_summary: dict[str, Any] | None = None,
+    conditioning_profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "enabled": bool(feature_columns),
@@ -86,6 +90,74 @@ def _input_feature_payload(
         "normalization": normalization,
         "conditioning_mode": conditioning_mode,
         "film_strength": film_strength,
+        "route": {
+            "enabled": route_summary is not None,
+            "film_prior": route_film_prior,
+            "trainable": route_trainable,
+            "summary": route_summary,
+        },
+        "conditioning_profile": conditioning_profile or {"enabled": False, "profile": "none"},
+    }
+
+
+def _resolve_input_conditioning_profile(
+    args: argparse.Namespace,
+    split_manifest: dict[str, Any] | None,
+) -> dict[str, Any]:
+    profile = args.input_conditioning_profile
+    if profile == "none":
+        return {"enabled": False, "profile": profile}
+    if split_manifest is None:
+        raise ValueError("--input-conditioning-profile requires --split-manifest")
+    group_key = split_manifest.get("group_key")
+    if not group_key:
+        raise ValueError("--input-conditioning-profile requires a grouped split manifest with group_key")
+
+    profile_v1 = {
+        "line_id": {
+            "conditioning_mode": "concat",
+            "feature_normalization": "same",
+            "reason": "line holdout keeps the strongest neural route from Phase 24: concat with train-fitted minmax.",
+        },
+        "scan_speed_mm_s": {
+            "conditioning_mode": "concat",
+            "feature_normalization": "global_standard",
+            "reason": "scan-speed holdout was strongest with concat plus global process-feature standardization.",
+        },
+        "spot_size_um": {
+            "conditioning_mode": "film",
+            "feature_normalization": "global_standard",
+            "reason": "spot-size holdout was repaired by FiLM plus global process-feature standardization.",
+        },
+        "laser_power_W": {
+            "conditioning_mode": "concat",
+            "feature_normalization": "global_standard",
+            "reason": "laser-power holdout uses the conservative global-standard concat route from process-axis diagnostics.",
+        },
+        "process_condition": {
+            "conditioning_mode": "concat",
+            "feature_normalization": "global_standard",
+            "reason": "full process holdout uses the conservative global-standard concat route from process-axis diagnostics.",
+        },
+    }
+    if profile != "process_axis_v1":
+        raise ValueError(f"Unsupported input conditioning profile: {profile}")
+    if group_key not in profile_v1:
+        raise ValueError(f"Unsupported group_key {group_key!r} for input conditioning profile {profile!r}")
+
+    selected = profile_v1[group_key]
+    requested = {
+        "conditioning_mode": args.input_conditioning_mode,
+        "feature_normalization": args.input_feature_normalization,
+    }
+    args.input_conditioning_mode = selected["conditioning_mode"]
+    args.input_feature_normalization = selected["feature_normalization"]
+    return {
+        "enabled": True,
+        "profile": profile,
+        "group_key": group_key,
+        "requested": requested,
+        "selected": selected,
     }
 
 
@@ -522,6 +594,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     coords, time, target = sample_to_tensors(sample, args.target, args.device)
     input_features = _input_feature_tensor(sample, args.input_feature_columns, args.device)
     split_manifest = load_split_manifest(args.split_manifest) if args.split_manifest else None
+    input_conditioning_profile = _resolve_input_conditioning_profile(args, split_manifest)
     train_indices = (
         split_indices(split_manifest, args.train_split)
         if split_manifest
@@ -565,6 +638,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         activation=args.activation,
         conditioning_mode=args.input_conditioning_mode,
         film_strength=args.input_film_strength,
+        route_film_prior=args.input_route_film_prior,
+        route_trainable=args.input_route_trainable,
     ).to(args.device)
     closure_library = None
     closure_coefficients = None
@@ -721,6 +796,11 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         if args.normalize_target:
             pred_tensor = pred_tensor * target_std + target_mean
         pred = pred_tensor.detach().cpu().reshape(-1).tolist()
+        input_route_summary = (
+            model.routing_summary(input_features)
+            if input_features is not None and args.input_conditioning_mode == "routed"
+            else None
+        )
     y_true = target.detach().cpu().reshape(-1).tolist()
     metrics = _metric_payload(y_true, pred)
     split_metrics = None
@@ -782,6 +862,10 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             input_feature_normalization,
             args.input_conditioning_mode,
             args.input_film_strength,
+            args.input_route_film_prior,
+            args.input_route_trainable,
+            input_route_summary,
+            input_conditioning_profile,
         ),
         "pde": {
             "field": args.pde_field,
@@ -943,12 +1027,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--input-conditioning-mode",
-        choices=["concat", "film", "concat_film"],
+        choices=["concat", "film", "concat_film", "routed"],
         default="concat",
         help=(
             "How additional input-feature columns condition Macro PINN. "
             "concat appends them to coordinates/time; film uses them to modulate hidden coordinate/time layers; "
-            "concat_film does both."
+            "concat_film does both; routed trains concat and FiLM experts and gates their outputs from process features."
         ),
     )
     parser.add_argument(
@@ -958,6 +1042,30 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Multiplier for FiLM gamma/beta modulation in film and concat_film modes. "
             "The default 1.0 preserves previous FiLM behavior; smaller values make FiLM a limited correction."
+        ),
+    )
+    parser.add_argument(
+        "--input-route-film-prior",
+        type=float,
+        default=0.5,
+        help=(
+            "Initial FiLM-expert gate weight for --input-conditioning-mode routed. "
+            "Use values below 0.5 for concat-favored axes and above 0.5 for FiLM-favored axes."
+        ),
+    )
+    parser.add_argument(
+        "--freeze-input-route",
+        action="store_false",
+        dest="input_route_trainable",
+        help="Keep the routed concat/FiLM gate fixed at its initialized process-feature prior.",
+    )
+    parser.add_argument(
+        "--input-conditioning-profile",
+        choices=["none", "process_axis_v1"],
+        default="none",
+        help=(
+            "Optional split-aware conditioning profile. process_axis_v1 reads the split manifest group_key "
+            "and selects the Phase 25 best-known route for line, scan-speed, spot-size, laser-power, or full-process holdouts."
         ),
     )
     parser.add_argument(
@@ -1117,6 +1225,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.set_defaults(normalize_target=True)
     parser.set_defaults(closure_include_bias=True)
     parser.set_defaults(closure_graph_trainable=False)
+    parser.set_defaults(input_route_trainable=True)
     return parser
 
 

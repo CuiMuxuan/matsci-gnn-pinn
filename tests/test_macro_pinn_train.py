@@ -331,6 +331,154 @@ def test_macro_pinn_training_cli_supports_concat_film_process_conditioning(tmp_p
     assert checkpoint["metadata"]["input_features"]["film_strength"] == 0.25
 
 
+def test_macro_pinn_training_cli_supports_routed_process_conditioning(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_process_temperature.csv"
+    table.write_text(
+        "x,y,t,T,line_id,laser_power_W,scan_speed_mm_s,spot_size_um\n"
+        "0,0,0,10,Line_0_1,285,960,67\n"
+        "1,0,0,11,Line_0_1,285,960,67\n"
+        "0,1,1,20,Line_3_1,325,960,67\n"
+        "1,1,1,21,Line_3_1,325,960,67\n",
+        encoding="utf-8",
+    )
+    split = tmp_path / "split.json"
+    split.write_text(
+        '{"splits":{"train":[0,1],"val":[2],"test":[3]}}',
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "routed_conditioned_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--split-manifest",
+            str(split),
+            "--input-normalization",
+            "standard",
+            "--input-conditioning-mode",
+            "routed",
+            "--input-route-film-prior",
+            "0.8",
+            "--freeze-input-route",
+            "--input-feature-normalization",
+            "global_standard",
+            "--input-feature-column",
+            "laser_power_W",
+            "--input-feature-column",
+            "scan_speed_mm_s",
+            "--input-feature-column",
+            "spot_size_um",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    checkpoint = __import__("torch").load(output_dir / "checkpoint.pt", map_location="cpu")
+
+    assert status == 0
+    assert payload["config"]["input_conditioning_mode"] == "routed"
+    assert payload["config"]["input_route_film_prior"] == 0.8
+    assert payload["config"]["input_route_trainable"] is False
+    assert payload["input_features"]["conditioning_mode"] == "routed"
+    assert payload["input_features"]["route"]["enabled"] is True
+    assert payload["input_features"]["route"]["film_prior"] == 0.8
+    assert payload["input_features"]["route"]["trainable"] is False
+    assert payload["input_features"]["route"]["summary"]["film_gate_mean"] == pytest.approx(0.8)
+    assert checkpoint["metadata"]["param_dim"] == 3
+    assert checkpoint["metadata"]["input_features"]["conditioning_mode"] == "routed"
+    assert checkpoint["metadata"]["input_features"]["route"]["summary"]["film_gate_mean"] == pytest.approx(0.8)
+
+
+def test_macro_pinn_training_cli_supports_process_axis_conditioning_profile(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_process_temperature.csv"
+    table.write_text(
+        "x,y,t,T,line_id,laser_power_W,scan_speed_mm_s,spot_size_um\n"
+        "0,0,0,10,Line_0_1,285,960,67\n"
+        "1,0,0,11,Line_0_1,285,960,67\n"
+        "0,1,1,20,Line_3_1,325,960,82\n"
+        "1,1,1,21,Line_3_1,325,960,82\n",
+        encoding="utf-8",
+    )
+    split = tmp_path / "split.json"
+    split.write_text(
+        json.dumps(
+            {
+                "group_key": "spot_size_um",
+                "splits": {"train": [0, 1], "val": [2], "test": [3]},
+            }
+        ),
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "profiled_conditioned_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--split-manifest",
+            str(split),
+            "--input-normalization",
+            "standard",
+            "--input-conditioning-mode",
+            "concat",
+            "--input-feature-normalization",
+            "same",
+            "--input-conditioning-profile",
+            "process_axis_v1",
+            "--input-feature-column",
+            "laser_power_W",
+            "--input-feature-column",
+            "scan_speed_mm_s",
+            "--input-feature-column",
+            "spot_size_um",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    profile = payload["input_features"]["conditioning_profile"]
+
+    assert status == 0
+    assert payload["config"]["input_conditioning_mode"] == "film"
+    assert payload["config"]["input_feature_normalization"] == "global_standard"
+    assert payload["input_features"]["conditioning_mode"] == "film"
+    assert payload["input_features"]["normalization"]["mode"] == "global_standard"
+    assert profile["enabled"] is True
+    assert profile["profile"] == "process_axis_v1"
+    assert profile["group_key"] == "spot_size_um"
+    assert profile["requested"]["conditioning_mode"] == "concat"
+    assert profile["requested"]["feature_normalization"] == "same"
+    assert profile["selected"]["conditioning_mode"] == "film"
+    assert profile["selected"]["feature_normalization"] == "global_standard"
+
+
 def test_macro_pinn_training_cli_with_sparse_closure_writes_expression(tmp_path: Path):
     from gnnpinn.train.macro_pinn import main
 

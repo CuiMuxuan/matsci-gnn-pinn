@@ -19,6 +19,9 @@ PROCESS_FEATURE_TAG="${PROCESS_FEATURE_TAG:-process_features}"
 PROCESS_CONDITIONING_MODE="${PROCESS_CONDITIONING_MODE:-concat}"
 PROCESS_FEATURE_NORMALIZATION="${PROCESS_FEATURE_NORMALIZATION:-same}"
 PROCESS_FILM_STRENGTH="${PROCESS_FILM_STRENGTH:-1.0}"
+PROCESS_ROUTE_FILM_PRIOR="${PROCESS_ROUTE_FILM_PRIOR:-0.5}"
+FREEZE_PROCESS_ROUTE="${FREEZE_PROCESS_ROUTE:-0}"
+PROCESS_CONDITIONING_PROFILE="${PROCESS_CONDITIONING_PROFILE:-none}"
 
 cd "$REPO_ROOT"
 mkdir -p logs outputs/baselines outputs/data_audits outputs/data_splits outputs/runs
@@ -98,6 +101,17 @@ run_baseline extra_trees process \
 run_macro_pinn() {
   local tag="$1"
   shift
+  local route_args=()
+  if [[ "$PROCESS_CONDITIONING_MODE" == "routed" ]]; then
+    route_args+=(--input-route-film-prior "$PROCESS_ROUTE_FILM_PRIOR")
+    if [[ "$FREEZE_PROCESS_ROUTE" == "1" ]]; then
+      route_args+=(--freeze-input-route)
+    fi
+  fi
+  local profile_args=()
+  if [[ "$PROCESS_CONDITIONING_PROFILE" != "none" && "$tag" != "no_process" ]]; then
+    profile_args+=(--input-conditioning-profile "$PROCESS_CONDITIONING_PROFILE")
+  fi
   "$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.train.macro_pinn \
     --table "$TABLE" \
     --target temperature_C \
@@ -110,6 +124,8 @@ run_macro_pinn() {
     --seed "$SEED" \
     --device "$DEVICE" \
     --input-normalization minmax \
+    "${route_args[@]}" \
+    "${profile_args[@]}" \
     "$@" \
     --hot-quantile 0.9 \
     --gradient-quantile 0.9 \

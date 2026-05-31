@@ -819,12 +819,22 @@ Phase 25/26 后续消融已经完成，结果文档为 `docs/results/ambench_mul
 当前代码已新增：
 
 ```text
---input-conditioning-mode concat|film|concat_film
+--input-conditioning-mode concat|film|concat_film|routed
 --input-film-strength <float>
 --input-feature-normalization global_standard
+--input-route-film-prior <float>
+--freeze-input-route
+--input-conditioning-profile process_axis_v1
 ```
 
-下一步不应继续盲目增大 hidden dim 或简单叠加 FiLM。更合理的 Phase 27 是 split/process-aware routing：保留 `global_standard` 工艺特征归一化，在 `scan_speed`、`spot_size`、`line` 三个轴上分别验证轻量 selector/gate 是否能按工艺轴选择 concat 或 FiLM 路径。该路线仍适合当前 A100-SXM4-40GB；只有引入更大多线表、learned image encoder 或大规模 mixture-of-experts 并实际超出 40GB 时，才需要向用户请求 A100-SXM4-80GB。
+Phase 27 split/process-aware routing 已完成，结果文档为 `docs/results/ambench_multiline_process_axis_routing_v1.md`。关键结论：
+
+- 可训练 dual-expert routed 模式是负结果。即使 gate 保持接近先验，两个新专家混合训练仍弱于最佳单一路径：`line` test RMSE `219.861259`，`scan_speed` `150.293172`，`spot_size` `273.800445`。
+- 显式 `process_axis_v1` profile 是当前可复现路线。它读取 grouped split manifest 的 `group_key`，并记录 selected route：`line_id -> concat/same`、`scan_speed_mm_s -> concat/global_standard`、`spot_size_um -> film/global_standard`。
+- `process_axis_v1` 恢复了最佳单路径结果：`line` test RMSE `157.793227`，`scan_speed` `133.430469`，`spot_size` `142.351582`。
+- `scan_speed` 与 `spot_size` 的 seed-7 profile 结果均低于 train-mean baseline；`line` 仍弱于 train-mean baseline。
+
+下一步不应继续扩大 blind mixture-of-experts。Phase 28 应把 `process_axis_v1` 扩展到 `laser_power` 与 full `process` holdout，并对 paper-facing profile routes 做 focused seed checks。该路线仍适合当前 A100-SXM4-40GB；只有引入更大多线表、learned image encoder 或大规模 mixture-of-experts 并实际超出 40GB 时，才需要向用户请求 A100-SXM4-80GB。
 
 ## 阶段 E：方向三弱双向耦合
 

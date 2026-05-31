@@ -37,6 +37,21 @@ PINN_SERIES = (
         "{split}_concat_film_strength0_25_global_standard_a100_sxm4_40gb_v1",
         "process_concat_film_strength0_25_global_standard",
     ),
+    (
+        "routed_concat_prior_global_standard",
+        "{split}_routed_concat_prior_global_standard_a100_sxm4_40gb_v1",
+        "process_routed_concat_prior_global_standard",
+    ),
+    (
+        "routed_film_prior_global_standard",
+        "{split}_routed_film_prior_global_standard_a100_sxm4_40gb_v1",
+        "process_routed_film_prior_global_standard",
+    ),
+    (
+        "process_axis_profile",
+        "{split}_process_axis_profile_a100_sxm4_40gb_v1",
+        "process_axis_profile",
+    ),
 )
 
 BASELINE_SERIES = (
@@ -107,6 +122,10 @@ def collect_rows(root: Path) -> list[dict[str, Any]]:
             data = _read_json(path)
             features = data.get("input_features") or {}
             normalization = features.get("normalization") or {}
+            route = features.get("route") or {}
+            route_summary = route.get("summary") or {}
+            profile = features.get("conditioning_profile") or {}
+            selected_profile = profile.get("selected") or {}
             row.update(_metric_fields(_test_metrics(data)))
             row.update(
                 {
@@ -114,6 +133,15 @@ def collect_rows(root: Path) -> list[dict[str, Any]]:
                     "film_strength": features.get("film_strength"),
                     "feature_normalization_mode": normalization.get("mode"),
                     "feature_normalization_fit_scope": normalization.get("fit_scope"),
+                    "route_film_prior": route.get("film_prior"),
+                    "route_trainable": route.get("trainable"),
+                    "route_film_gate_mean": route_summary.get("film_gate_mean"),
+                    "route_film_gate_min": route_summary.get("film_gate_min"),
+                    "route_film_gate_max": route_summary.get("film_gate_max"),
+                    "conditioning_profile": profile.get("profile"),
+                    "conditioning_profile_group_key": profile.get("group_key"),
+                    "conditioning_profile_selected_mode": selected_profile.get("conditioning_mode"),
+                    "conditioning_profile_selected_norm": selected_profile.get("feature_normalization"),
                 }
             )
             rows.append(row)
@@ -194,14 +222,20 @@ def _fmt(value: Any) -> str:
 
 
 def print_markdown(rows: list[dict[str, Any]]) -> None:
-    print("| split | method | test RMSE | hot q90 RMSE | gradient q90 RMSE | mode | film strength | feature norm |")
-    print("|---|---|---:|---:|---:|---|---:|---|")
+    print("| split | method | test RMSE | hot q90 RMSE | gradient q90 RMSE | mode | film strength | feature norm | profile | selected | route prior | route film gate |")
+    print("|---|---|---:|---:|---:|---|---:|---|---|---|---:|---:|")
     for row in rows:
         if row.get("missing"):
-            print(f"| {row['split']} | {row['method']} | MISSING |  |  |  |  | {row['path']} |")
+            print(f"| {row['split']} | {row['method']} | MISSING |  |  |  |  | {row['path']} |  |  |  |  |")
             continue
+        selected = ""
+        if row.get("conditioning_profile_selected_mode"):
+            selected = "{}/{}".format(
+                row.get("conditioning_profile_selected_mode"),
+                row.get("conditioning_profile_selected_norm"),
+            )
         print(
-            "| {split} | {method} | {rmse} | {hot} | {grad} | {mode} | {strength} | {norm} |".format(
+            "| {split} | {method} | {rmse} | {hot} | {grad} | {mode} | {strength} | {norm} | {profile} | {selected} | {prior} | {gate} |".format(
                 split=row["split"],
                 method=row["method"],
                 rmse=_fmt(row.get("rmse")),
@@ -210,6 +244,10 @@ def print_markdown(rows: list[dict[str, Any]]) -> None:
                 mode=_fmt(row.get("conditioning_mode")),
                 strength=_fmt(row.get("film_strength")),
                 norm=_fmt(row.get("feature_normalization_mode")),
+                profile=_fmt(row.get("conditioning_profile")),
+                selected=selected,
+                prior=_fmt(row.get("route_film_prior")),
+                gate=_fmt(row.get("route_film_gate_mean")),
             )
         )
 
