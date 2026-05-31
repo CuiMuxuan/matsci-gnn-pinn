@@ -87,3 +87,31 @@ STEPS=500 N_ESTIMATORS=80 PROCESS_FEATURE_COLUMNS="" PROCESS_FEATURE_TAG=phys_on
 Compare `broad_derived_process` against mean, kNN, ExtraTrees, no-process Macro PINN, `process_axis_v1`, and `broad_process_v1` on the same broad21 `laser_power` manifest/split. If it improves broad21 global, hot q90, and gradient q90 without falling behind the strongest baselines, run a paired broad12/broad21 check. If it is negative, close the branch and pivot again.
 
 The branch remains lightweight and should fit the current A100-SXM4-40GB server. Do not request A100-SXM4-80GB unless a later learned encoder or coupled graph branch exceeds the current GPU envelope.
+
+## Results
+
+Broad21 `laser_power` focused validation:
+
+| Dataset/Split | Method | Feature set | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | Signal |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| broad21 `laser_power` | `broad_process_v1` | raw process scalars | 178.040331 | 296.909567 | 254.954359 | route guard |
+| broad21 `laser_power` | `broad_derived_process` | raw + `am_energy_v1` | 212.704856 | 221.878476 | 238.794848 | global negative, region positive |
+| broad21 `laser_power` | `broad_derived_process` | derived-only `am_energy_v1` | 171.892969 | 211.624381 | 207.270255 | positive vs route guard |
+| broad21 `laser_power` | `mean` | train mean | 131.741364 | 237.730958 | 205.133029 | strongest global baseline |
+| broad21 `laser_power` | `knn_process` | coords + raw process | 155.888818 | 311.251309 | 248.736635 | strong global baseline |
+
+The derived-only representation improves `broad_process_v1` on all three Macro PINN decision metrics, but it still trails the mean/kNN baselines on global RMSE and trails the mean baseline slightly on gradient q90.
+
+Broad12 transfer check:
+
+| Dataset/Split | Method | Feature set | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | Signal |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| broad12 `laser_power` | `broad_process_v1` | raw process scalars | 140.753534 | 254.473291 | 215.411533 | route guard |
+| broad12 `laser_power` | `broad_derived_process` | derived-only `am_energy_v1` | 162.766699 | 303.019663 | 254.346542 | negative |
+| broad12 `laser_power` | `mean` | train mean | 132.965887 | 242.427068 | 208.105836 | strongest baseline |
+
+## Decision
+
+Phase 41 is a useful diagnostic but not a paper-facing model claim. Derived-only `am_energy_v1` gives the first broad21 `laser_power` Macro PINN improvement over `broad_process_v1` after the output-affine failures, especially in hot-zone and gradient-band metrics. However, the same representation fails on broad12 and still trails the strongest broad21 global baselines. Do not run seed expansion yet.
+
+The next branch should not simply add more derived scalars. It should either learn or validate-select the process representation/profile from train/validation evidence, or pivot to a stronger baseline-facing architecture that can preserve the broad21 hot/gradient gain without broad12 regression.

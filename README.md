@@ -509,7 +509,8 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 38 residual Macro PINN backbone 已关闭为负诊断。`spot_size` 的微弱 global RMSE 改善伴随 hot/gradient 退化，`laser_power` 的区域改善伴随 global RMSE 退化，因此不做 seed check 或 broad21 扩展。
 - Phase 39 process-conditioned output affine calibration 已关闭为局部正但不迁移的诊断。broad12 `laser_power` 三 seed 同时改善 global/hot/gradient，但 broad21 `laser_power` 明显退化，因此不能作为当前 paper-facing model claim。
 - Phase 40 output-affine 小尺度 sweep 已关闭为负诊断。broad21 `laser_power` 的 `scale=0.25` 与 `0.10` 仍弱于 `broad_process_v1`，说明问题不只是校准幅度过大。
-- Phase 41 physics-derived process representation 已进入实现/验证。新增 `--input-derived-process-features am_energy_v1`，把 `P/v`、`P/(v*d)`、`P/(v*d^2)` 与 `d/v` 这类 AM 工艺派生量作为输入特征，在 broad21 `laser_power` 上先做 focused A100 gate。
+- Phase 41 physics-derived process representation 已关闭为 broad21 正向但 broad12 不迁移的诊断。derived-only `am_energy_v1` 在 broad21 `laser_power` 上将 `broad_process_v1` 的 `178.040331 / 296.909567 / 254.954359` 改到 `171.892969 / 211.624381 / 207.270255`，但 broad12 `laser_power` 退化到 `162.766699 / 303.019663 / 254.346542`，因此不做 seed expansion。
+- Phase 42 下一节点应检查 validation metrics 能否在 raw process scalars 与 derived-only features 之间做 test-free selection；若不能解释 broad12/broad21 分裂，则转向更强 baseline-facing architecture。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 

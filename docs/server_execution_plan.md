@@ -1211,6 +1211,8 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
 
 验收：先比较 `broad_derived_process` against mean/kNN/ExtraTrees、no-process、`process_axis_v1` 与 `broad_process_v1`。若 broad21 `laser_power` 同时改善 global/hot q90/gradient q90 且不落后于最强 baseline，再做 broad12/broad21 paired validation；若退化，则关闭为物理派生特征诊断并继续 pivot。当前分支不需要 A100-SXM4-80GB。
 
+结果：raw process scalars + `am_energy_v1` 在 broad21 `laser_power` 上改善 hot/gradient 但严重牺牲 global：`212.704856 / 221.878476 / 238.794848` vs `broad_process_v1` `178.040331 / 296.909567 / 254.954359`。derived-only `am_energy_v1` 去掉 raw scalars 后在 broad21 上转为正向：`171.892969 / 211.624381 / 207.270255`，但 broad12 同口径检查退化为 `162.766699 / 303.019663 / 254.346542` vs `broad_process_v1` `140.753534 / 254.473291 / 215.411533`。结论：Phase 41 不做 seed expansion；下一步进入 Phase 42，检查 validation metrics 能否在 raw process scalars 与 derived-only representation 之间做不看 test 的选择，或者转向更强 baseline-facing architecture。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
