@@ -1213,6 +1213,15 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
 
 结果：raw process scalars + `am_energy_v1` 在 broad21 `laser_power` 上改善 hot/gradient 但严重牺牲 global：`212.704856 / 221.878476 / 238.794848` vs `broad_process_v1` `178.040331 / 296.909567 / 254.954359`。derived-only `am_energy_v1` 去掉 raw scalars 后在 broad21 上转为正向：`171.892969 / 211.624381 / 207.270255`，但 broad12 同口径检查退化为 `162.766699 / 303.019663 / 254.346542` vs `broad_process_v1` `140.753534 / 254.473291 / 215.411533`。结论：Phase 41 不做 seed expansion；下一步进入 Phase 42，检查 validation metrics 能否在 raw process scalars 与 derived-only representation 之间做不看 test 的选择，或者转向更强 baseline-facing architecture。
 
+Phase 42 validation-selection 检查结果文档为 `docs/results/ambench_multiline_process_validation_selection_v1.md`。脚本：
+
+```bash
+python scripts/server/summarize_phase42_validation_selection.py \
+  --json-output outputs/reports/phase42_laser_power_validation_selection_summary.json
+```
+
+结论：simple validation selector 不可信。broad12 val RMSE/gradient 能选 raw process，broad21 val gradient 能选 derived-only，但 broad21 val RMSE 错选 raw，broad21 val hot q90 错选 raw+derived。下一步不应添加 hand-coded validation-selected raw/derived profile，而应转向更强 baseline-facing architecture 或训练目标。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
