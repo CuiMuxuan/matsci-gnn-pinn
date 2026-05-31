@@ -25,6 +25,7 @@ PROCESS_FILM_STRENGTH="${PROCESS_FILM_STRENGTH:-1.0}"
 PROCESS_ROUTE_FILM_PRIOR="${PROCESS_ROUTE_FILM_PRIOR:-0.5}"
 FREEZE_PROCESS_ROUTE="${FREEZE_PROCESS_ROUTE:-0}"
 PROCESS_CONDITIONING_PROFILE="${PROCESS_CONDITIONING_PROFILE:-none}"
+PROCESS_DERIVED_FEATURE_MODE="${PROCESS_DERIVED_FEATURE_MODE:-none}"
 PROCESS_GRAPH_FEATURE_MODE="${PROCESS_GRAPH_FEATURE_MODE:-none}"
 PROCESS_GRAPH_FEATURE_COUNT="${PROCESS_GRAPH_FEATURE_COUNT:-4}"
 PROCESS_GRAPH_LENGTH_SCALE="${PROCESS_GRAPH_LENGTH_SCALE:-1.0}"
@@ -160,6 +161,10 @@ run_macro_pinn() {
   if [[ "$PROCESS_CONDITIONING_PROFILE" != "none" && "$tag" != "no_process" ]]; then
     profile_args+=(--input-conditioning-profile "$PROCESS_CONDITIONING_PROFILE")
   fi
+  local derived_process_args=()
+  if [[ "$PROCESS_DERIVED_FEATURE_MODE" != "none" && "$tag" != "no_process" ]]; then
+    derived_process_args+=(--input-derived-process-features "$PROCESS_DERIVED_FEATURE_MODE")
+  fi
   local residual_correction_args=()
   if [[ "$RESIDUAL_CORRECTION_MODE" != "none" ]]; then
     residual_correction_args+=(
@@ -235,6 +240,7 @@ run_macro_pinn() {
     "${output_affine_args[@]}" \
     "${data_loss_weighting_args[@]}" \
     "${target_residual_args[@]}" \
+    "${derived_process_args[@]}" \
     "${process_graph_args[@]}" \
     --input-normalization minmax \
     "${route_args[@]}" \

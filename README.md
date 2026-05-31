@@ -366,25 +366,24 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
 
 The Phase 37 setup and negative result are documented in [docs/results/ambench_multiline_process_target_residual_v1.md](docs/results/ambench_multiline_process_target_residual_v1.md). Phase 38 is documented in [docs/results/ambench_multiline_process_residual_backbone_v1.md](docs/results/ambench_multiline_process_residual_backbone_v1.md). It adds `--backbone-mode mlp|residual` and `--backbone-residual-scale`; default behavior remains unchanged with `mlp`. Focused broad12 results did not justify seed-check expansion: `spot_size` gained only global RMSE while degrading hot/gradient regions, and `laser_power` improved regions while losing global RMSE.
 
-Phase 39 is the current active node. It adds a small process-conditioned output affine calibration head under the same `broad_process_v1` route guard:
+Phase 39 output-affine calibration is now closed as a local-positive but non-transferable diagnostic. Phase 40 checked smaller broad21 `laser_power` output-affine scales (`0.25` and `0.10`), but both remained worse than `broad_process_v1`. Phase 41 is the current active node: it pivots from output calibration to physics-derived AM process features under the same `broad_process_v1` route guard.
 
 ```bash
-PROFILE_SPLITS="spot_size laser_power" DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
-STEPS=500 N_ESTIMATORS=80 OUTPUT_AFFINE_SCALE=0.5 \
-  bash scripts/server/run_phase39_broad_output_affine_a100.sh \
-  > logs/phase39_broad12_output_affine_a100_v1.log 2>&1
+PROFILE_SPLITS=laser_power DATASET_LIMIT=21 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 \
+  bash scripts/server/run_phase41_broad_derived_process_features_a100.sh \
+  > logs/phase41_broad21_laser_power_derived_process_a100_v1.log 2>&1
 
 python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
-  --dataset-limit 12 \
+  --dataset-limit 21 \
   --dataset-order process_round_robin \
-  --split spot_size \
   --split laser_power \
-  --include-broad-output-affine \
-  --json-output outputs/reports/phase39_broad12_output_affine_summary.json \
+  --include-broad-derived-process \
+  --json-output outputs/reports/phase41_broad21_laser_power_derived_process_summary.json \
   --require-comparable
 ```
 
-The Phase 39 setup and result are documented in [docs/results/ambench_multiline_process_output_affine_v1.md](docs/results/ambench_multiline_process_output_affine_v1.md). It adds `--output-affine-mode none|linear`, `--output-affine-scale`, and `--output-affine-lr`; default behavior remains unchanged with `none`. The branch is a local-positive but non-transferable diagnostic: broad12 `laser_power` improved across three seeds, but broad21 `laser_power` regressed from `178.040331 / 296.909567 / 254.954359` to `210.939830 / 407.352779 / 326.056523`.
+The Phase 39 setup and result are documented in [docs/results/ambench_multiline_process_output_affine_v1.md](docs/results/ambench_multiline_process_output_affine_v1.md). Phase 40/41 is documented in [docs/results/ambench_multiline_process_derived_process_features_v1.md](docs/results/ambench_multiline_process_derived_process_features_v1.md). The new CLI option is `--input-derived-process-features none|am_energy_v1`; default behavior remains unchanged with `none`.
 
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
@@ -509,7 +508,8 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 37 strong-baseline residualized Macro PINN 已关闭为负诊断。ExtraTrees residualization 基本复现弱/过拟合 baseline，没有留下稳定可学的 residual target。
 - Phase 38 residual Macro PINN backbone 已关闭为负诊断。`spot_size` 的微弱 global RMSE 改善伴随 hot/gradient 退化，`laser_power` 的区域改善伴随 global RMSE 退化，因此不做 seed check 或 broad21 扩展。
 - Phase 39 process-conditioned output affine calibration 已关闭为局部正但不迁移的诊断。broad12 `laser_power` 三 seed 同时改善 global/hot/gradient，但 broad21 `laser_power` 明显退化，因此不能作为当前 paper-facing model claim。
-- Phase 40 下一节点应围绕 transfer-safe process calibration 或更强 process-conditioned architecture 展开，优先解释为什么 broad12 校准收益无法迁移到 broad21。
+- Phase 40 output-affine 小尺度 sweep 已关闭为负诊断。broad21 `laser_power` 的 `scale=0.25` 与 `0.10` 仍弱于 `broad_process_v1`，说明问题不只是校准幅度过大。
+- Phase 41 physics-derived process representation 已进入实现/验证。新增 `--input-derived-process-features am_energy_v1`，把 `P/v`、`P/(v*d)`、`P/(v*d^2)` 与 `d/v` 这类 AM 工艺派生量作为输入特征，在 broad21 `laser_power` 上先做 focused A100 gate。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -566,6 +566,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_multiline_process_target_residual_v1.md](docs/results/ambench_multiline_process_target_residual_v1.md): Phase 37 strong-baseline residualized Macro PINN 分支实现、focused A100 负结果与关闭决策。
 - [docs/results/ambench_multiline_process_residual_backbone_v1.md](docs/results/ambench_multiline_process_residual_backbone_v1.md): Phase 38 residual Macro PINN backbone 分支实现、A100 命令与验收门槛。
 - [docs/results/ambench_multiline_process_output_affine_v1.md](docs/results/ambench_multiline_process_output_affine_v1.md): Phase 39 process-conditioned output affine calibration 分支实现、A100 命令与验收门槛。
+- [docs/results/ambench_multiline_process_derived_process_features_v1.md](docs/results/ambench_multiline_process_derived_process_features_v1.md): Phase 40 output-affine scale sweep 负结果与 Phase 41 physics-derived process features 分支实现、A100 命令与验收门槛。
 
 Real micro graph closure 对比脚本：
 

@@ -35,6 +35,15 @@ from gnnpinn.models.pinn import MLP, MLPConfig, MacroPINN
 from gnnpinn.physics.heat import HeatEquationParams, transient_heat_residual
 
 
+AM_ENERGY_DERIVED_FEATURE_NAMES = (
+    "line_energy_J_per_mm",
+    "energy_density_proxy_J_per_mm_um",
+    "energy_density_area_proxy_J_per_mm_um2",
+    "dwell_time_ms",
+)
+AM_ENERGY_SOURCE_COLUMNS = ("laser_power_W", "scan_speed_mm_s", "spot_size_um")
+
+
 def _torch() -> Any:
     import torch
 
@@ -58,20 +67,75 @@ def _input_feature_tensor(sample: Any, feature_columns: list[str], device: str) 
     for row_index in range(sample.n_points):
         row: list[float] = []
         for column in feature_columns:
-            if column not in row_metadata:
-                raise ValueError(
-                    f"Input feature column {column!r} was not found in field-table row metadata. "
-                    "Use metadata/process columns such as laser_power_W, scan_speed_mm_s, or spot_size_um."
-                )
-            value = row_metadata[column][row_index]
-            try:
-                row.append(float(value))
-            except (TypeError, ValueError) as exc:
-                raise ValueError(
-                    f"Input feature column {column!r} contains a non-numeric value at row {row_index}: {value!r}"
-                ) from exc
+            row.append(_row_metadata_float(row_metadata, column, row_index, "Input feature column"))
         rows.append(row)
     return torch.tensor(rows, dtype=torch.float32, device=device)
+
+
+def _row_metadata_float(
+    row_metadata: dict[str, Any],
+    column: str,
+    row_index: int,
+    label: str,
+) -> float:
+    if column not in row_metadata:
+        raise ValueError(
+            f"{label} {column!r} was not found in field-table row metadata. "
+            "Use metadata/process columns such as laser_power_W, scan_speed_mm_s, or spot_size_um."
+        )
+    value = row_metadata[column][row_index]
+    try:
+        return float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"{label} {column!r} contains a non-numeric value at row {row_index}: {value!r}"
+        ) from exc
+
+
+def _derived_process_feature_tensor(
+    sample: Any,
+    args: argparse.Namespace,
+    device: str,
+) -> tuple[Any | None, dict[str, Any]]:
+    mode = args.input_derived_process_features
+    if mode == "none":
+        return None, {"enabled": False, "mode": "none"}
+    if mode != "am_energy_v1":
+        raise ValueError(f"Unsupported derived process feature mode: {mode}")
+    torch = _torch()
+    row_metadata = sample.metadata.get("row_metadata", {})
+    rows: list[list[float]] = []
+    for row_index in range(sample.n_points):
+        laser_power = _row_metadata_float(row_metadata, "laser_power_W", row_index, "Derived process source column")
+        scan_speed = _row_metadata_float(row_metadata, "scan_speed_mm_s", row_index, "Derived process source column")
+        spot_size = _row_metadata_float(row_metadata, "spot_size_um", row_index, "Derived process source column")
+        if scan_speed == 0.0:
+            raise ValueError("Derived process feature scan_speed_mm_s must be non-zero")
+        if spot_size == 0.0:
+            raise ValueError("Derived process feature spot_size_um must be non-zero")
+        rows.append(
+            [
+                laser_power / scan_speed,
+                laser_power / (scan_speed * spot_size),
+                laser_power / (scan_speed * spot_size * spot_size),
+                spot_size / scan_speed,
+            ]
+        )
+    payload = {
+        "enabled": True,
+        "mode": mode,
+        "source_columns": list(AM_ENERGY_SOURCE_COLUMNS),
+        "feature_names": list(AM_ENERGY_DERIVED_FEATURE_NAMES),
+        "formulas": {
+            "line_energy_J_per_mm": "laser_power_W / scan_speed_mm_s",
+            "energy_density_proxy_J_per_mm_um": "laser_power_W / (scan_speed_mm_s * spot_size_um)",
+            "energy_density_area_proxy_J_per_mm_um2": (
+                "laser_power_W / (scan_speed_mm_s * spot_size_um * spot_size_um)"
+            ),
+            "dwell_time_ms": "spot_size_um / scan_speed_mm_s",
+        },
+    }
+    return torch.tensor(rows, dtype=torch.float32, device=device), payload
 
 
 def _process_graph_feature_tensor(
@@ -167,21 +231,31 @@ def _input_feature_payload(
     route_trainable: bool,
     route_summary: dict[str, Any] | None = None,
     conditioning_profile: dict[str, Any] | None = None,
+    derived_process_features: dict[str, Any] | None = None,
     process_graph_features: dict[str, Any] | None = None,
     effective_feature_count: int | None = None,
 ) -> dict[str, Any]:
+    derived_payload = derived_process_features or {"enabled": False, "mode": "none"}
+    derived_names = (
+        list(derived_payload.get("feature_names") or []) if derived_payload.get("enabled") else []
+    )
     process_graph_payload = process_graph_features or {"enabled": False, "mode": "none"}
     process_graph_names = (
         list(process_graph_payload.get("feature_names") or []) if process_graph_payload.get("enabled") else []
     )
     return {
-        "enabled": bool(feature_columns) or bool(process_graph_payload.get("enabled")),
+        "enabled": (
+            bool(feature_columns)
+            or bool(derived_payload.get("enabled"))
+            or bool(process_graph_payload.get("enabled"))
+        ),
         "columns": feature_columns,
-        "effective_columns": [*feature_columns, *process_graph_names],
+        "effective_columns": [*feature_columns, *derived_names, *process_graph_names],
         "count": effective_feature_count if effective_feature_count is not None else len(feature_columns),
         "normalization": normalization,
         "conditioning_mode": conditioning_mode,
         "film_strength": film_strength,
+        "derived_process_features": derived_payload,
         "process_graph_features": process_graph_payload,
         "route": {
             "enabled": route_summary is not None,
@@ -447,12 +521,16 @@ def _resolve_input_conditioning_profile(
         "conditioning_mode": args.input_conditioning_mode,
         "feature_normalization": args.input_feature_normalization,
         "feature_columns": list(args.input_feature_columns),
+        "derived_process_features": args.input_derived_process_features,
     }
     if "feature_columns" in selected:
         args.input_feature_columns = list(selected["feature_columns"])
+        if not args.input_feature_columns:
+            args.input_derived_process_features = "none"
     if selected["conditioning_mode"] == "none":
         args.input_conditioning_mode = "concat"
         args.input_feature_normalization = "none"
+        args.input_derived_process_features = "none"
     else:
         args.input_conditioning_mode = selected["conditioning_mode"]
         args.input_feature_normalization = selected["feature_normalization"]
@@ -466,6 +544,7 @@ def _resolve_input_conditioning_profile(
             "conditioning_mode": args.input_conditioning_mode,
             "feature_normalization": args.input_feature_normalization,
             "feature_columns": list(args.input_feature_columns),
+            "derived_process_features": args.input_derived_process_features,
         },
     }
 
@@ -1201,6 +1280,17 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     )
     coords, time, target = sample_to_tensors(sample, args.target, args.device)
     input_features = _input_feature_tensor(sample, args.input_feature_columns, args.device)
+    derived_process_features, derived_process_feature_payload = _derived_process_feature_tensor(
+        sample,
+        args,
+        args.device,
+    )
+    if derived_process_features is not None:
+        input_features = (
+            torch.cat([input_features, derived_process_features], dim=-1)
+            if input_features is not None
+            else derived_process_features
+        )
     process_graph_features, process_graph_feature_payload = _process_graph_feature_tensor(
         sample,
         args,
@@ -1557,6 +1647,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             args.input_route_trainable,
             input_route_summary,
             input_conditioning_profile,
+            derived_process_feature_payload,
             process_graph_feature_payload,
             int(input_features.shape[-1]) if input_features is not None else 0,
         ),
@@ -1883,6 +1974,16 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Additional numeric row-metadata column to append to Macro PINN inputs. "
             "Use this for process conditioning such as laser_power_W, scan_speed_mm_s, or spot_size_um."
+        ),
+    )
+    parser.add_argument(
+        "--input-derived-process-features",
+        choices=["none", "am_energy_v1"],
+        default="none",
+        help=(
+            "Append deterministic AM process features derived from laser_power_W, scan_speed_mm_s, "
+            "and spot_size_um. am_energy_v1 adds line-energy, energy-density proxy, "
+            "area-normalized energy proxy, and dwell-time features."
         ),
     )
     parser.add_argument(

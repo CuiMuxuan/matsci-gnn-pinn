@@ -470,6 +470,79 @@ def test_macro_pinn_training_cli_records_process_conditioning_columns(tmp_path: 
     ]
 
 
+def test_macro_pinn_training_cli_supports_derived_process_features(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_process_temperature.csv"
+    table.write_text(
+        "x,y,t,T,line_id,laser_power_W,scan_speed_mm_s,spot_size_um\n"
+        "0,0,0,10,Line_0_1,285,960,67\n"
+        "1,0,0,11,Line_0_1,285,960,67\n"
+        "0,1,1,20,Line_3_1,325,1200,82\n"
+        "1,1,1,21,Line_3_1,325,1200,82\n"
+        "2,1,1,30,Line_4_1,245,800,49\n"
+        "2,2,1,31,Line_4_1,245,800,49\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "derived_process_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "3",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--input-normalization",
+            "standard",
+            "--input-feature-normalization",
+            "standard",
+            "--input-feature-column",
+            "laser_power_W",
+            "--input-feature-column",
+            "scan_speed_mm_s",
+            "--input-feature-column",
+            "spot_size_um",
+            "--input-derived-process-features",
+            "am_energy_v1",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    checkpoint = __import__("torch").load(output_dir / "checkpoint.pt", map_location="cpu")
+
+    assert status == 0
+    derived = payload["input_features"]["derived_process_features"]
+    assert payload["config"]["input_derived_process_features"] == "am_energy_v1"
+    assert derived["enabled"] is True
+    assert derived["mode"] == "am_energy_v1"
+    assert derived["source_columns"] == ["laser_power_W", "scan_speed_mm_s", "spot_size_um"]
+    assert derived["feature_names"] == [
+        "line_energy_J_per_mm",
+        "energy_density_proxy_J_per_mm_um",
+        "energy_density_area_proxy_J_per_mm_um2",
+        "dwell_time_ms",
+    ]
+    assert payload["input_features"]["effective_columns"] == [
+        "laser_power_W",
+        "scan_speed_mm_s",
+        "spot_size_um",
+        *derived["feature_names"],
+    ]
+    assert payload["input_features"]["count"] == 7
+    assert checkpoint["metadata"]["param_dim"] == 7
+    assert checkpoint["metadata"]["input_features"] == payload["input_features"]
+
+
 def test_macro_pinn_training_cli_supports_process_graph_rbf_features(tmp_path: Path):
     from gnnpinn.train.macro_pinn import main
 

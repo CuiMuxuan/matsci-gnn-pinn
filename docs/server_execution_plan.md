@@ -1173,7 +1173,42 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
 | broad21 `laser_power` | `broad_process_v1` | 178.040331 | 296.909567 | 254.954359 | baseline |
 | broad21 `laser_power` | `broad_output_affine` | 210.939830 | 407.352779 | 326.056523 | 不迁移 |
 
-broad12 `laser_power` paired seed check 结果：`broad_process_v1` 三 seed 均值为 `148.172067 / 296.570673 / 242.768775`，`broad_output_affine` 三 seed 均值为 `136.412542 / 267.616397 / 224.432279`，delta 为 `-11.759525 / -28.954276 / -18.336496`。结论：Phase 39 关闭为 broad12 局部正但 broad21 不迁移的诊断分支，不做 broad21 seed check，不作为论文主 claim。下一步应测试更 transfer-safe 的校准约束，或转向更强 process-conditioned architecture/data representation。
+broad12 `laser_power` paired seed check 结果：`broad_process_v1` 三 seed 均值为 `148.172067 / 296.570673 / 242.768775`，`broad_output_affine` 三 seed 均值为 `136.412542 / 267.616397 / 224.432279`，delta 为 `-11.759525 / -28.954276 / -18.336496`。结论：Phase 39 关闭为 broad12 局部正但 broad21 不迁移的诊断分支，不做 broad21 seed check，不作为论文主 claim。
+
+Phase 40 进一步测试更小 output-affine scale 是否能修复 broad21 transfer，结果仍为负：
+
+| Dataset/Split | Method | Scale | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | 判断 |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| broad21 `laser_power` | `broad_process_v1` | n/a | 178.040331 | 296.909567 | 254.954359 | baseline |
+| broad21 `laser_power` | `broad_output_affine` | 0.25 | 195.281223 | 383.819303 | 305.364963 | 负 |
+| broad21 `laser_power` | `broad_output_affine` | 0.10 | 224.145034 | 412.785926 | 334.457714 | 负 |
+
+结论：不要继续调 output-affine scale。Phase 41 转向 physics-derived process representation，结果文档为 `docs/results/ambench_multiline_process_derived_process_features_v1.md`。关键实现：
+
+- CLI 新增 `--input-derived-process-features none|am_energy_v1`；默认 `none`，不改变旧实验。
+- `am_energy_v1` 从 `laser_power_W`、`scan_speed_mm_s`、`spot_size_um` 派生 `P/v`、`P/(v*d)`、`P/(v*d^2)` 与 `d/v` 形式的 AM 工艺特征，并加入 `input_features.effective_columns`。
+- `scripts/server/run_multiline_process_conditioned_thermal_a100.sh` 新增 `PROCESS_DERIVED_FEATURE_MODE` 环境变量。
+- `scripts/server/run_phase41_broad_derived_process_features_a100.sh` 默认 focused 跑 broad21 `laser_power`，run tag 使用 `phys_proc`。
+- `scripts/server/summarize_phase30_broad_process_selector_smoke.py --include-broad-derived-process` 可在 manifest/split comparability gate 中纳入 Phase 41 artifacts，并显示 derived-process metadata。
+
+focused A100 验证命令：
+
+```bash
+PROFILE_SPLITS=laser_power DATASET_LIMIT=21 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 \
+  bash scripts/server/run_phase41_broad_derived_process_features_a100.sh \
+  > logs/phase41_broad21_laser_power_derived_process_a100_v1.log 2>&1
+
+python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
+  --dataset-limit 21 \
+  --dataset-order process_round_robin \
+  --split laser_power \
+  --include-broad-derived-process \
+  --json-output outputs/reports/phase41_broad21_laser_power_derived_process_summary.json \
+  --require-comparable
+```
+
+验收：先比较 `broad_derived_process` against mean/kNN/ExtraTrees、no-process、`process_axis_v1` 与 `broad_process_v1`。若 broad21 `laser_power` 同时改善 global/hot q90/gradient q90 且不落后于最强 baseline，再做 broad12/broad21 paired validation；若退化，则关闭为物理派生特征诊断并继续 pivot。当前分支不需要 A100-SXM4-80GB。
 
 ## 阶段 E：方向三弱双向耦合
 

@@ -72,6 +72,12 @@ BROAD_OUTPUT_AFFINE_SPEC = (
     DEFAULT_BROAD_OUTPUT_AFFINE_TAG,
     DEFAULT_BROAD_OUTPUT_AFFINE_TAG,
 )
+DEFAULT_BROAD_DERIVED_PROCESS_TAG = "phys_proc"
+BROAD_DERIVED_PROCESS_SPEC = (
+    "broad_derived_process",
+    DEFAULT_BROAD_DERIVED_PROCESS_TAG,
+    DEFAULT_BROAD_DERIVED_PROCESS_TAG,
+)
 DEFAULT_BROAD_REGION_WEIGHTED_TAG = "rw2"
 
 
@@ -230,6 +236,7 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
     selected = profile.get("selected") or {}
     effective = profile.get("effective") or {}
     process_graph = features.get("process_graph_features") or {}
+    derived_process = features.get("derived_process_features") or {}
     spacetime_encoding = data.get("spacetime_encoding") or {}
     residual_correction = data.get("residual_correction") or {}
     data_loss_weighting = data.get("data_loss_weighting") or {}
@@ -248,6 +255,10 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
         "process_graph_anchor_count": process_graph.get("anchor_count"),
         "process_graph_fit_scope": process_graph.get("fit_scope"),
         "process_graph_length_scale": process_graph.get("length_scale"),
+        "derived_process_enabled": derived_process.get("enabled"),
+        "derived_process_mode": derived_process.get("mode"),
+        "derived_process_feature_names": derived_process.get("feature_names"),
+        "derived_process_source_columns": derived_process.get("source_columns"),
         "spacetime_encoding": spacetime_encoding.get("encoding"),
         "spacetime_fourier_bands": spacetime_encoding.get("fourier_bands"),
         "spacetime_input_dim": spacetime_encoding.get("input_dim"),
@@ -520,6 +531,14 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--include-broad-derived-process",
+        action="store_true",
+        help=(
+            "Also summarize Phase 41 broad_derived_process artifacts. "
+            "These use broad_process_v1 routing plus deterministic AM process-derived input features."
+        ),
+    )
+    parser.add_argument(
         "--broad-region-weighted-tag",
         default=DEFAULT_BROAD_REGION_WEIGHTED_TAG,
         help="Run/profile tag used with --include-broad-region-weighted.",
@@ -543,6 +562,11 @@ def main() -> int:
         "--broad-output-affine-tag",
         default=DEFAULT_BROAD_OUTPUT_AFFINE_TAG,
         help="Run/profile tag used with --include-broad-output-affine.",
+    )
+    parser.add_argument(
+        "--broad-derived-process-tag",
+        default=DEFAULT_BROAD_DERIVED_PROCESS_TAG,
+        help="Run/profile tag used with --include-broad-derived-process.",
     )
     args = parser.parse_args()
 
@@ -569,6 +593,9 @@ def main() -> int:
     if args.include_broad_output_affine:
         tag = args.broad_output_affine_tag
         pinn_specs = (*pinn_specs, ("broad_output_affine", tag, tag))
+    if args.include_broad_derived_process:
+        tag = args.broad_derived_process_tag
+        pinn_specs = (*pinn_specs, ("broad_derived_process", tag, tag))
     summary = collect_rows(Path(args.root), splits, args.dataset_limit, args.dataset_order, pinn_specs)
     if args.json_output:
         output = Path(args.json_output)

@@ -236,6 +236,36 @@ def _output_affine_metrics(rmse: float) -> dict:
     return payload
 
 
+def _derived_process_metrics(rmse: float) -> dict:
+    payload = _metrics(rmse)
+    feature_names = [
+        "line_energy_J_per_mm",
+        "energy_density_proxy_J_per_mm_um",
+        "energy_density_area_proxy_J_per_mm_um2",
+        "dwell_time_ms",
+    ]
+    payload["input_features"].update(
+        {
+            "enabled": True,
+            "columns": ["laser_power_W", "scan_speed_mm_s", "spot_size_um"],
+            "effective_columns": [
+                "laser_power_W",
+                "scan_speed_mm_s",
+                "spot_size_um",
+                *feature_names,
+            ],
+            "count": 7,
+            "derived_process_features": {
+                "enabled": True,
+                "mode": "am_energy_v1",
+                "source_columns": ["laser_power_W", "scan_speed_mm_s", "spot_size_um"],
+                "feature_names": feature_names,
+            },
+        }
+    )
+    return payload
+
+
 def test_phase30_summary_marks_mismatched_tiny_smoke_as_incomparable(tmp_path: Path):
     summary = _load_summary_module()
     split = "scan_speed"
@@ -754,3 +784,57 @@ def test_phase30_summary_can_include_broad_output_affine_artifacts(tmp_path: Pat
     assert row["output_affine_mode"] == "linear"
     assert row["output_affine_scale"] == 0.5
     assert row["output_affine_input_dim"] == 3
+
+
+def test_phase30_summary_can_include_broad_derived_process_artifacts(tmp_path: Path):
+    summary = _load_summary_module()
+    split = "laser_power"
+    baseline_id = summary._run_id(split, 12, "process_round_robin", "process_axis_profile")
+    derived_id = summary._run_id(split, 12, "process_round_robin", "phys_proc")
+
+    manifest = _manifest(1200, 30, 96)
+    split_payload = _split(1200)
+    split_payload["group_key"] = "laser_power_W"
+    _write_json(tmp_path / "outputs/data_audits" / f"{baseline_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{baseline_id}_split.json", split_payload)
+    _write_json(tmp_path / "outputs/data_audits" / f"{derived_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{derived_id}_split.json", split_payload)
+    for method, baseline_tag in summary.BASELINE_TAGS:
+        _write_json(
+            tmp_path / "outputs/baselines" / f"{baseline_id}_{baseline_tag}_regions_q90.json",
+            _metrics(100.0),
+        )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_no_process_v1" / "metrics.json",
+        _metrics(90.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_process_axis_profile_v1" / "metrics.json",
+        _metrics(80.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{derived_id}_macro_pinn_minmax_phys_proc_v1" / "metrics.json",
+        _derived_process_metrics(61.0),
+    )
+
+    payload = summary.collect_rows(
+        tmp_path,
+        (split,),
+        12,
+        "process_round_robin",
+        (*summary.DEFAULT_PINN_SPECS, summary.BROAD_DERIVED_PROCESS_SPEC),
+    )
+    row = payload["splits"][split]["methods"]["broad_derived_process"]
+
+    assert payload["pinn_methods"] == [
+        "no_process",
+        "process_axis_v1",
+        "broad_process_v1",
+        "broad_derived_process",
+    ]
+    assert row["comparison_status"] == "comparable"
+    assert row["rmse"] == 61.0
+    assert row["derived_process_enabled"] is True
+    assert row["derived_process_mode"] == "am_energy_v1"
+    assert row["derived_process_feature_names"][-1] == "dwell_time_ms"
+    assert row["input_effective_columns"][-1] == "dwell_time_ms"
