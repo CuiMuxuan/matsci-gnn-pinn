@@ -7,9 +7,10 @@
   - `scripts/server/run_multiline_process_conditioned_thermal_a100.sh`
   - `scripts/server/run_phase34_broad_residual_correction_a100.sh`
   - `scripts/server/summarize_phase30_broad_process_selector_smoke.py`
-- Planned server logs:
+- Server logs:
   - `logs/phase34_broad12_spot_size_residual_mlp_a100_v1.log`
-- Planned server summaries:
+  - `logs/phase34_broad12_spot_size_residual_s003_a100_v1.log`
+- Server summaries:
   - `outputs/reports/phase34_broad12_spot_size_residual_mlp_summary.json`
 
 ## Motivation
@@ -84,3 +85,24 @@ The branch should be compared against the same manifest/split as Phase 30:
 - Phase 33 Fourier only as diagnostic context.
 
 If the residual MLP improves `spot_size` without sacrificing hot q90 and gradient q90, scale it to `laser_power` and then all broad12 splits. If it fails on `spot_size`, close it as a negative branch and pivot to weak closure/GNN coupling or a sampling/alignment change. Current implementation does not require A100-SXM4-80GB.
+
+## Results
+
+The focused broad12 `spot_size` run passed the manifest/split comparability gate. Lower is better.
+
+| Method | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | Residual config | Decision |
+|---|---:|---:|---:|---|---|
+| `broad_process_v1` | 136.309183 | 165.228535 | 169.049295 | none | Current strongest route. |
+| `broad_residual_mlp` | 136.294049 | 192.514042 | 187.270890 | scale `0.1`, lr `5e-4`, start `100` | Global RMSE improves by only `0.015134`, but hot/gradient regions degrade sharply. |
+| `broad_residual_s003` | 136.327054 | 165.248033 | 169.062741 | scale `0.03`, lr `1e-4`, start `300` | Nearly preserves region metrics but gives no useful improvement. |
+
+The first residual MLP behaves like a small global fitting correction rather than a useful thermal-region correction: it slightly reduces test RMSE while making the high-temperature and high-gradient bands worse. The weaker/later residual setting removes most of that harm but also removes the already tiny gain.
+
+## Decision
+
+Close learned residual correction as a negative Phase 34 branch:
+
+- Do not scale `broad_residual_mlp` to all broad12 splits or broad21.
+- Keep `--residual-correction-mode mlp` as an explicit diagnostic option because the implementation is reproducible and artifact-recorded.
+- Keep `broad_process_v1` as the default broad-data route guard.
+- The next branch should target the metric that actually matters here: hot-zone and gradient-band accuracy. A low-risk next step is train-split region-weighted data loss under `broad_process_v1`, rather than another unconstrained residual head or stronger sparse closure.

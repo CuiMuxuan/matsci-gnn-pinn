@@ -48,6 +48,7 @@ BROAD_PROCESS_RESIDUAL_SPEC = (
     "broad_residual_mlp",
     "broad_residual_mlp",
 )
+DEFAULT_BROAD_REGION_WEIGHTED_TAG = "rw2"
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -206,6 +207,7 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
     effective = profile.get("effective") or {}
     spacetime_encoding = data.get("spacetime_encoding") or {}
     residual_correction = data.get("residual_correction") or {}
+    data_loss_weighting = data.get("data_loss_weighting") or {}
     return {
         "input_features_enabled": features.get("enabled"),
         "input_feature_count": features.get("count"),
@@ -224,6 +226,10 @@ def _collect_profile_metadata(data: dict[str, Any]) -> dict[str, Any]:
         "residual_correction_mode": residual_correction.get("mode"),
         "residual_correction_scale": residual_correction.get("scale"),
         "residual_correction_start_step": residual_correction.get("start_step"),
+        "data_loss_weighting_enabled": data_loss_weighting.get("enabled"),
+        "data_loss_weighting_mode": data_loss_weighting.get("mode"),
+        "data_loss_region_weight": data_loss_weighting.get("region_weight"),
+        "data_loss_weighted_points": data_loss_weighting.get("selected_points"),
     }
 
 
@@ -394,6 +400,19 @@ def main() -> int:
             "These use broad_process_v1 routing plus a weak learned residual correction head."
         ),
     )
+    parser.add_argument(
+        "--include-broad-region-weighted",
+        action="store_true",
+        help=(
+            "Also summarize a Phase 35 region-weighted data-loss artifact. "
+            "The expected run/profile tag defaults to rw2."
+        ),
+    )
+    parser.add_argument(
+        "--broad-region-weighted-tag",
+        default=DEFAULT_BROAD_REGION_WEIGHTED_TAG,
+        help="Run/profile tag used with --include-broad-region-weighted.",
+    )
     args = parser.parse_args()
 
     splits = tuple(args.split) if args.split else DEFAULT_SPLITS
@@ -404,6 +423,9 @@ def main() -> int:
         pinn_specs = (*pinn_specs, BROAD_PROCESS_FOURIER_SPEC)
     if args.include_broad_process_residual:
         pinn_specs = (*pinn_specs, BROAD_PROCESS_RESIDUAL_SPEC)
+    if args.include_broad_region_weighted:
+        tag = args.broad_region_weighted_tag
+        pinn_specs = (*pinn_specs, (tag, tag, tag))
     summary = collect_rows(Path(args.root), splits, args.dataset_limit, args.dataset_order, pinn_specs)
     if args.json_output:
         output = Path(args.json_output)

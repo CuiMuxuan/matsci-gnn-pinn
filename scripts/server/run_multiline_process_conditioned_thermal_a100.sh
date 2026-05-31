@@ -31,6 +31,10 @@ RESIDUAL_CORRECTION_LAYERS="${RESIDUAL_CORRECTION_LAYERS:-1}"
 RESIDUAL_CORRECTION_SCALE="${RESIDUAL_CORRECTION_SCALE:-0.1}"
 RESIDUAL_CORRECTION_LR="${RESIDUAL_CORRECTION_LR:-}"
 RESIDUAL_CORRECTION_START_STEP="${RESIDUAL_CORRECTION_START_STEP:-0}"
+DATA_LOSS_WEIGHTING="${DATA_LOSS_WEIGHTING:-none}"
+DATA_LOSS_HOT_QUANTILE="${DATA_LOSS_HOT_QUANTILE:-0.9}"
+DATA_LOSS_GRADIENT_QUANTILE="${DATA_LOSS_GRADIENT_QUANTILE:-0.9}"
+DATA_LOSS_REGION_WEIGHT="${DATA_LOSS_REGION_WEIGHT:-2.0}"
 DATASET_SELECTION="${DATASET_SELECTION:-representative7}"
 DATASET_REGEX="${DATASET_REGEX:-}"
 DATASET_LIMIT="${DATASET_LIMIT:-}"
@@ -154,6 +158,15 @@ run_macro_pinn() {
       residual_correction_args+=(--residual-correction-lr "$RESIDUAL_CORRECTION_LR")
     fi
   fi
+  local data_loss_weighting_args=()
+  if [[ "$DATA_LOSS_WEIGHTING" != "none" ]]; then
+    data_loss_weighting_args+=(
+      --data-loss-weighting "$DATA_LOSS_WEIGHTING"
+      --data-loss-hot-quantile "$DATA_LOSS_HOT_QUANTILE"
+      --data-loss-gradient-quantile "$DATA_LOSS_GRADIENT_QUANTILE"
+      --data-loss-region-weight "$DATA_LOSS_REGION_WEIGHT"
+    )
+  fi
   "$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.train.macro_pinn \
     --table "$TABLE" \
     --target temperature_C \
@@ -168,6 +181,7 @@ run_macro_pinn() {
     --spacetime-encoding "$SPACETIME_ENCODING" \
     --spacetime-fourier-bands "$SPACETIME_FOURIER_BANDS" \
     "${residual_correction_args[@]}" \
+    "${data_loss_weighting_args[@]}" \
     --input-normalization minmax \
     "${route_args[@]}" \
     "${profile_args[@]}" \

@@ -932,13 +932,13 @@ Phase 33 fixed Fourier spacetime representation diagnostic 已完成，结果文
 
 因此 Phase 33 关闭为 negative representation diagnostic。Fourier basis 已实现并保留为可复现实验选项，但不替代默认 raw coordinate/time basis，也没有证据支持扩到 broad21。下一步应转向更结构化的分支：closure/GNN reintegration、broad selector 下的 learned residual correction，或改变采样/对齐的数据表示，而不是继续堆固定 coordinate basis。当前 A100-SXM4-40GB 仍足够，无需请求 A100-SXM4-80GB。
 
-Phase 34 learned residual correction diagnostic 已进入实现与 focused A100 验证阶段，结果文档为 `docs/results/ambench_multiline_process_residual_correction_v1.md`。先导 sparse closure probes 在 strongest broad12 `spot_size` route 上退化：
+Phase 34 learned residual correction diagnostic 已完成并关闭为负结果，结果文档为 `docs/results/ambench_multiline_process_residual_correction_v1.md`。先导 sparse closure probes 在 strongest broad12 `spot_size` route 上退化：
 
 - `broad_process_v1` spot-size baseline: test RMSE `136.309183`, hot q90 `165.228535`, gradient q90 `169.049295`。
 - `pde_weight=1e-4`, `closure_start_step=100`: test RMSE `151.152357`, hot q90 `197.625638`, gradient q90 `191.064629`。
 - lite closure: test RMSE `158.792203`, hot q90 `258.922260`, gradient q90 `237.740336`。
 
-因此本轮不继续加强 PDE/closure residual，而是在 base Macro PINN 输出上加一个弱 residual MLP correction：
+因此 Phase 34 没有继续加强 PDE/closure residual，而是在 base Macro PINN 输出上加一个弱 residual MLP correction：
 
 ```text
 prediction = MacroPINN(coords, time, process?) + scale * ResidualMLP([coords, time, process?])
@@ -951,7 +951,7 @@ prediction = MacroPINN(coords, time, process?) + scale * ResidualMLP([coords, ti
 - metrics/checkpoint 记录 `residual_correction` metadata；summary 脚本新增 `--include-broad-process-residual` 并继续执行 manifest/split comparability gate。
 - `scripts/server/run_phase34_broad_residual_correction_a100.sh` 默认只跑 broad12 `spot_size`，不覆盖 Phase 30/33 artifact。
 
-首轮 focused A100 命令：
+focused A100 验证命令：
 
 ```bash
 PROFILE_SPLITS=spot_size DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
@@ -968,7 +968,49 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
   --require-comparable
 ```
 
-验收：如果 `broad_residual_mlp` 改善 `spot_size` test RMSE 且不牺牲 hot/gradient q90，再扩到 `laser_power` 和全 broad12 split；如果仍弱于 `broad_process_v1`，关闭 learned residual correction，转向弱 closure/GNN coupling 或采样/对齐数据表示变更。当前分支不需要 A100-SXM4-80GB。
+验证结果：
+
+- `broad_residual_mlp` 通过 manifest/split comparability gate，但只把 global test RMSE 从 `136.309183` 改为 `136.294049`，hot q90 从 `165.228535` 退化到 `192.514042`，gradient q90 从 `169.049295` 退化到 `187.270890`。
+- 弱残差设置 `scale=0.03`, `lr=1e-4`, `start=300` 基本保持区域指标（hot q90 `165.248033`, gradient q90 `169.062741`），但 global test RMSE `136.327054` 没有收益。
+
+结论：learned residual correction 保留为可复现诊断选项，不扩到全 broad12 或 broad21。下一步 Phase 35 直接针对 hot-zone/gradient-band supervised error，而不是再加 unconstrained residual head。
+
+Phase 35 train-split region-weighted data loss 已进入实现与 focused A100 验证阶段，结果文档为 `docs/results/ambench_multiline_process_region_weighted_loss_v1.md`。关键实现：
+
+- CLI 新增 `--data-loss-weighting none|hot|gradient|hot_gradient`、`--data-loss-hot-quantile`、`--data-loss-gradient-quantile`、`--data-loss-region-weight`；默认 `none`，不改变旧实验。
+- 加权 selector 只在 optimization train split 上拟合阈值；gradient selector 也只在训练点子集内计算邻域差分，避免 test/val 目标值泄漏进 loss 权重。
+- supervised data loss 使用 `sum(weight_i * squared_error_i) / sum(weight_i)`，因此权重改变区域贡献，不改变 loss 的整体尺度定义。
+- metrics/checkpoint 记录 `data_loss_weighting` metadata；summary 脚本新增 `--include-broad-region-weighted` 并继续执行 manifest/split comparability gate。
+- `scripts/server/run_phase35_broad_region_weighted_loss_a100.sh` 默认只跑 broad12 `spot_size`，不覆盖 Phase 30/34 artifact。
+
+首轮 focused A100 命令：
+
+```bash
+PROFILE_SPLITS=spot_size DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 \
+  bash scripts/server/run_phase35_broad_region_weighted_loss_a100.sh \
+  > logs/phase35_broad12_spot_size_region_hotgrad_w2_a100_v1.log 2>&1
+
+python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
+  --dataset-limit 12 \
+  --dataset-order process_round_robin \
+  --split spot_size \
+  --include-broad-region-weighted \
+  --json-output outputs/reports/phase35_broad12_spot_size_region_hotgrad_w2_summary.json \
+  --require-comparable
+```
+
+若权重 2.0 能改善 hot q90 或 gradient q90 且不明显牺牲 global RMSE，再跑权重 4.0 focused 变体：
+
+```bash
+PROFILE_SPLITS=spot_size DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 REGION_WEIGHTED_RUN_TAG=rw4 \
+DATA_LOSS_REGION_WEIGHT=4.0 \
+  bash scripts/server/run_phase35_broad_region_weighted_loss_a100.sh \
+  > logs/phase35_broad12_spot_size_region_hotgrad_w4_a100_v1.log 2>&1
+```
+
+验收：只有当 region-weighted data loss 改善 hot q90 和/或 gradient q90，并且 global test RMSE 接近 `broad_process_v1` 时，才继续扩到其它 split。当前分支不需要 A100-SXM4-80GB。
 
 ## 阶段 E：方向三弱双向耦合
 

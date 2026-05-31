@@ -123,6 +123,26 @@ def _residual_metrics(rmse: float) -> dict:
     return payload
 
 
+def _region_weighted_metrics(rmse: float) -> dict:
+    payload = _metrics(rmse)
+    payload["data_loss_weighting"] = {
+        "enabled": True,
+        "mode": "hot_gradient",
+        "fit_scope": "train",
+        "normalization": "sum_weights",
+        "train_points": 800,
+        "selected_points": 120,
+        "selected_fraction": 0.15,
+        "region_weight": 2.0,
+        "hot_quantile": 0.9,
+        "gradient_quantile": 0.9,
+        "weight_sum": 920.0,
+        "mean_weight": 1.15,
+        "selectors": {},
+    }
+    return payload
+
+
 def test_phase30_summary_marks_mismatched_tiny_smoke_as_incomparable(tmp_path: Path):
     summary = _load_summary_module()
     split = "scan_speed"
@@ -366,3 +386,58 @@ def test_phase30_summary_can_include_broad_process_residual_artifacts(tmp_path: 
     assert residual_row["residual_correction_mode"] == "mlp"
     assert residual_row["residual_correction_scale"] == 0.1
     assert residual_row["residual_correction_start_step"] == 100
+
+
+def test_phase30_summary_can_include_broad_region_weighted_artifacts(tmp_path: Path):
+    summary = _load_summary_module()
+    split = "spot_size"
+    tag = "rw2"
+    baseline_id = summary._run_id(split, 12, "process_round_robin", "process_axis_profile")
+    weighted_id = summary._run_id(split, 12, "process_round_robin", tag)
+
+    manifest = _manifest(1200, 30, 96)
+    split_payload = _split(1200)
+    split_payload["group_key"] = "spot_size_um"
+    _write_json(tmp_path / "outputs/data_audits" / f"{baseline_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{baseline_id}_split.json", split_payload)
+    _write_json(tmp_path / "outputs/data_audits" / f"{weighted_id}_manifest.json", manifest)
+    _write_json(tmp_path / "outputs/data_splits" / f"{weighted_id}_split.json", split_payload)
+    for method, baseline_tag in summary.BASELINE_TAGS:
+        _write_json(
+            tmp_path / "outputs/baselines" / f"{baseline_id}_{baseline_tag}_regions_q90.json",
+            _metrics(100.0),
+        )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_no_process_v1" / "metrics.json",
+        _metrics(90.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{baseline_id}_macro_pinn_minmax_process_axis_profile_v1" / "metrics.json",
+        _metrics(80.0),
+    )
+    _write_json(
+        tmp_path / "outputs/runs" / f"{weighted_id}_macro_pinn_minmax_{tag}_v1" / "metrics.json",
+        _region_weighted_metrics(66.0),
+    )
+
+    payload = summary.collect_rows(
+        tmp_path,
+        (split,),
+        12,
+        "process_round_robin",
+        (*summary.DEFAULT_PINN_SPECS, (tag, tag, tag)),
+    )
+    weighted_row = payload["splits"][split]["methods"][tag]
+
+    assert payload["pinn_methods"] == [
+        "no_process",
+        "process_axis_v1",
+        "broad_process_v1",
+        tag,
+    ]
+    assert weighted_row["comparison_status"] == "comparable"
+    assert weighted_row["rmse"] == 66.0
+    assert weighted_row["data_loss_weighting_enabled"] is True
+    assert weighted_row["data_loss_weighting_mode"] == "hot_gradient"
+    assert weighted_row["data_loss_region_weight"] == 2.0
+    assert weighted_row["data_loss_weighted_points"] == 120

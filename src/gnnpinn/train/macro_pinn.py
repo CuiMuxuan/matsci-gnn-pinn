@@ -583,16 +583,180 @@ def _residual_candidate_indices(
         return train_indices
     if mode not in {"hot", "gradient", "hot_gradient"}:
         raise ValueError(f"Unsupported residual sampling mode: {mode}")
+    selected, _ = _region_candidate_indices(
+        sample=sample,
+        target=target,
+        train_indices=train_indices,
+        mode=mode,
+        hot_quantile=hot_quantile,
+        gradient_quantile=gradient_quantile,
+    )
+    return selected
+
+
+def _region_candidate_indices(
+    sample: Any,
+    target: str,
+    train_indices: list[int],
+    mode: str,
+    hot_quantile: float,
+    gradient_quantile: float,
+    gradient_reference_indices: list[int] | None = None,
+) -> tuple[list[int], dict[str, Any]]:
+    if mode not in {"hot", "gradient", "hot_gradient"}:
+        raise ValueError(f"Unsupported region candidate mode: {mode}")
     target_values = sample.require_observation(target)
     selected: set[int] = set()
+    selectors: dict[str, Any] = {}
     if mode in {"hot", "hot_gradient"}:
         threshold = _quantile_threshold([target_values[index] for index in train_indices], hot_quantile)
-        selected.update(index for index in train_indices if float(target_values[index]) >= threshold)
+        hot_indices = [index for index in train_indices if float(target_values[index]) >= threshold]
+        selected.update(hot_indices)
+        selectors["hot"] = {
+            "target": target,
+            "quantile": hot_quantile,
+            "threshold": threshold,
+            "n_points": len(hot_indices),
+        }
     if mode in {"gradient", "hot_gradient"}:
-        gradient_scores = _spatial_gradient_scores(sample, target_values)
+        gradient_scores = (
+            _spatial_gradient_scores_for_indices(sample, target_values, gradient_reference_indices)
+            if gradient_reference_indices is not None
+            else _spatial_gradient_scores(sample, target_values)
+        )
         threshold = _quantile_threshold([gradient_scores[index] for index in train_indices], gradient_quantile)
-        selected.update(index for index in train_indices if float(gradient_scores[index]) >= threshold)
-    return sorted(selected) or train_indices
+        gradient_indices = [index for index in train_indices if float(gradient_scores[index]) >= threshold]
+        selected.update(gradient_indices)
+        selectors["gradient"] = {
+            "target": target,
+            "quantile": gradient_quantile,
+            "threshold": threshold,
+            "n_points": len(gradient_indices),
+            "score_scope": "provided_indices" if gradient_reference_indices is not None else "full_sample",
+        }
+    selected_indices = sorted(selected)
+    selectors["fallback_to_all_train"] = not selected_indices
+    return selected_indices or train_indices, selectors
+
+
+def _spatial_gradient_scores_for_indices(sample: Any, values: list[float], active_indices: list[int]) -> list[float]:
+    row_values = sample.observations.get("row_index")
+    col_values = sample.observations.get("col_index")
+    if row_values is None or col_values is None:
+        coord_columns = list(sample.metadata.get("coordinate_columns") or [])
+        if "y" in coord_columns and "x" in coord_columns:
+            row_pos = coord_columns.index("y")
+            col_pos = coord_columns.index("x")
+            row_values = [row[row_pos] for row in sample.coordinates]
+            col_values = [row[col_pos] for row in sample.coordinates]
+        else:
+            return [0.0 for _ in range(sample.n_points)]
+
+    frame_values = sample.observations.get("frame_index")
+    frames = frame_values if frame_values is not None else [0.0 for _ in range(sample.n_points)]
+    groups: dict[float, list[int]] = {}
+    for index in active_indices:
+        groups.setdefault(float(frames[index]), []).append(index)
+
+    scores = [0.0 for _ in range(sample.n_points)]
+    for group_indices in groups.values():
+        rows = sorted({float(row_values[index]) for index in group_indices})
+        cols = sorted({float(col_values[index]) for index in group_indices})
+        row_neighbors = _axis_neighbors(rows)
+        col_neighbors = _axis_neighbors(cols)
+        by_position = {
+            (float(row_values[index]), float(col_values[index])): index
+            for index in group_indices
+        }
+        for index in group_indices:
+            row = float(row_values[index])
+            col = float(col_values[index])
+            local_scores: list[float] = []
+            for neighbor_row in row_neighbors.get(row, []):
+                neighbor = by_position.get((neighbor_row, col))
+                if neighbor is not None:
+                    distance = abs(neighbor_row - row) or 1.0
+                    local_scores.append(abs(float(values[index]) - float(values[neighbor])) / distance)
+            for neighbor_col in col_neighbors.get(col, []):
+                neighbor = by_position.get((row, neighbor_col))
+                if neighbor is not None:
+                    distance = abs(neighbor_col - col) or 1.0
+                    local_scores.append(abs(float(values[index]) - float(values[neighbor])) / distance)
+            if local_scores:
+                scores[index] = max(local_scores)
+    return scores
+
+
+def _axis_neighbors(values: list[float]) -> dict[float, list[float]]:
+    neighbors: dict[float, list[float]] = {}
+    for position, value in enumerate(values):
+        current: list[float] = []
+        if position > 0:
+            current.append(values[position - 1])
+        if position + 1 < len(values):
+            current.append(values[position + 1])
+        neighbors[value] = current
+    return neighbors
+
+
+def _data_loss_weight_tensor(
+    sample: Any,
+    target: str,
+    train_indices: list[int],
+    args: argparse.Namespace,
+    device: str,
+) -> tuple[Any, dict[str, Any]]:
+    torch = _torch()
+    if args.data_loss_weighting == "none":
+        weights = torch.ones((len(train_indices), 1), dtype=torch.float32, device=device)
+        return weights, {
+            "enabled": False,
+            "mode": "none",
+            "fit_scope": "train",
+            "normalization": "sum_weights",
+            "train_points": len(train_indices),
+            "selected_points": 0,
+            "selected_fraction": 0.0,
+            "region_weight": args.data_loss_region_weight,
+            "hot_quantile": args.data_loss_hot_quantile,
+            "gradient_quantile": args.data_loss_gradient_quantile,
+            "weight_sum": float(weights.sum().detach().cpu()),
+            "mean_weight": float(weights.mean().detach().cpu()) if len(train_indices) else 0.0,
+            "selectors": {},
+        }
+    if args.data_loss_region_weight <= 0.0:
+        raise ValueError("data_loss_region_weight must be positive")
+    selected_indices, selectors = _region_candidate_indices(
+        sample=sample,
+        target=target,
+        train_indices=train_indices,
+        mode=args.data_loss_weighting,
+        hot_quantile=args.data_loss_hot_quantile,
+        gradient_quantile=args.data_loss_gradient_quantile,
+        gradient_reference_indices=train_indices,
+    )
+    selected = set(selected_indices)
+    weights_list = [
+        args.data_loss_region_weight if index in selected else 1.0
+        for index in train_indices
+    ]
+    weights = torch.tensor(weights_list, dtype=torch.float32, device=device).reshape(-1, 1)
+    selected_points = sum(1 for index in train_indices if index in selected)
+    return weights, {
+        "enabled": True,
+        "mode": args.data_loss_weighting,
+        "fit_scope": "train",
+        "normalization": "sum_weights",
+        "train_points": len(train_indices),
+        "selected_points": selected_points,
+        "selected_fraction": selected_points / len(train_indices) if train_indices else 0.0,
+        "region_weight": args.data_loss_region_weight,
+        "hot_quantile": args.data_loss_hot_quantile,
+        "gradient_quantile": args.data_loss_gradient_quantile,
+        "weight_sum": float(weights.sum().detach().cpu()),
+        "mean_weight": float(weights.mean().detach().cpu()) if len(train_indices) else 0.0,
+        "selectors": selectors,
+    }
 
 
 def _build_graph_conditioning(
@@ -787,6 +951,13 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     if float(target_std.detach().cpu()) == 0.0:
         target_std = torch.ones_like(target_std)
     train_target = (target - target_mean) / target_std if args.normalize_target else target
+    data_loss_weights, data_loss_weighting = _data_loss_weight_tensor(
+        sample=sample,
+        target=args.target,
+        train_indices=train_indices,
+        args=args,
+        device=args.device,
+    )
 
     model = MacroPINN(
         coord_dim=coords.shape[-1],
@@ -885,7 +1056,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             pred_physical = pred * target_std + target_mean
         else:
             pred_physical = pred
-        data_loss = torch.mean((pred_for_loss - train_target[train_index]) ** 2)
+        data_error = (pred_for_loss - train_target[train_index]) ** 2
+        data_loss = torch.sum(data_error * data_loss_weights) / data_loss_weights.sum()
         pde_loss = torch.zeros((), dtype=target.dtype, device=target.device)
         closure_loss = torch.zeros((), dtype=target.dtype, device=target.device)
         closure_source = None
@@ -976,6 +1148,9 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                     "closure_stage_active": bool(closure_stage_active),
                     "backbone_frozen": bool(backbone_frozen),
                     "residual_correction_active": bool(residual_correction is not None and residual_correction_active),
+                    "data_loss_region_weighting_enabled": bool(data_loss_weighting["enabled"]),
+                    "data_loss_region_weighted_points": float(data_loss_weighting["selected_points"]),
+                    "data_loss_mean_weight": float(data_loss_weighting["mean_weight"]),
                 }
             )
 
@@ -1047,6 +1222,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "mean": float(target_mean.detach().cpu()),
             "std": float(target_std.detach().cpu()),
         },
+        "data_loss_weighting": data_loss_weighting,
         "input_normalization": {
             "mode": args.input_normalization,
             "coordinate_columns": sample.metadata.get("coordinate_columns"),
@@ -1116,6 +1292,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 "input_features": metrics_payload["input_features"],
                 "spacetime_encoding": metrics_payload["spacetime_encoding"],
                 "residual_correction": metrics_payload["residual_correction"],
+                "data_loss_weighting": metrics_payload["data_loss_weighting"],
             },
         },
         checkpoint_path,
@@ -1255,6 +1432,33 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=0.9,
         help="Train-split gradient-score quantile used by gradient residual sampling modes.",
+    )
+    parser.add_argument(
+        "--data-loss-weighting",
+        choices=["none", "hot", "gradient", "hot_gradient"],
+        default="none",
+        help=(
+            "Optional train-split region weighting for the supervised data loss. "
+            "hot uses high target values, gradient uses high spatial-gradient scores, and hot_gradient uses their union."
+        ),
+    )
+    parser.add_argument(
+        "--data-loss-hot-quantile",
+        type=float,
+        default=0.9,
+        help="Train-split target quantile used by hot data-loss weighting modes.",
+    )
+    parser.add_argument(
+        "--data-loss-gradient-quantile",
+        type=float,
+        default=0.9,
+        help="Train-split gradient-score quantile used by gradient data-loss weighting modes.",
+    )
+    parser.add_argument(
+        "--data-loss-region-weight",
+        type=float,
+        default=2.0,
+        help="Loss multiplier applied to train points selected by --data-loss-weighting.",
     )
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--seed", type=int, default=7)

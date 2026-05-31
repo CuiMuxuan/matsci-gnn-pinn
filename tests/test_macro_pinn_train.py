@@ -269,6 +269,74 @@ def test_macro_pinn_training_cli_supports_learned_residual_correction(tmp_path: 
     assert checkpoint["metadata"]["residual_correction"] == payload["residual_correction"]
 
 
+def test_macro_pinn_training_cli_supports_train_split_data_loss_weighting(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_temperature.csv"
+    table.write_text(
+        "x,y,t,T\n"
+        "0,0,0,0\n"
+        "1,0,0,1\n"
+        "0,1,0,10\n"
+        "1,1,0,11\n"
+        "2,0,0,1000\n"
+        "2,1,0,1001\n",
+        encoding="utf-8",
+    )
+    split = tmp_path / "split.json"
+    split.write_text(
+        '{"splits":{"train":[0,1,2,3],"val":[4],"test":[5]}}',
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "weighted_loss_run"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--split-manifest",
+            str(split),
+            "--input-normalization",
+            "standard",
+            "--data-loss-weighting",
+            "hot",
+            "--data-loss-hot-quantile",
+            "0.75",
+            "--data-loss-region-weight",
+            "4",
+            "--log-every",
+            "1",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    checkpoint = __import__("torch").load(output_dir / "checkpoint.pt", map_location="cpu")
+
+    assert status == 0
+    assert payload["config"]["data_loss_weighting"] == "hot"
+    assert payload["data_loss_weighting"]["enabled"] is True
+    assert payload["data_loss_weighting"]["fit_scope"] == "train"
+    assert payload["data_loss_weighting"]["train_points"] == 4
+    assert payload["data_loss_weighting"]["selected_points"] == 1
+    assert payload["data_loss_weighting"]["region_weight"] == 4.0
+    assert payload["data_loss_weighting"]["weight_sum"] == 7.0
+    assert payload["data_loss_weighting"]["mean_weight"] == 1.75
+    assert payload["data_loss_weighting"]["selectors"]["hot"]["threshold"] < 1000.0
+    assert payload["history"][0]["data_loss_region_weighting_enabled"] is True
+    assert payload["history"][0]["data_loss_region_weighted_points"] == 1.0
+    assert checkpoint["metadata"]["data_loss_weighting"] == payload["data_loss_weighting"]
+
+
 def test_macro_pinn_training_cli_records_process_conditioning_columns(tmp_path: Path):
     from gnnpinn.train.macro_pinn import main
 

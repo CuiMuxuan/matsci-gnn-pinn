@@ -305,24 +305,26 @@ The Phase 32 refinement is documented in [docs/results/ambench_multiline_process
 
 The Phase 33 Fourier diagnostic is documented in [docs/results/ambench_multiline_process_fourier_spacetime_v1.md](docs/results/ambench_multiline_process_fourier_spacetime_v1.md). Fixed Fourier coordinate/time features are implemented behind `--spacetime-encoding fourier`, but broad12 comparable runs were worse than `broad_process_v1` on every split, so raw coordinate/time remains the default.
 
-Phase 34 now tests weak learned residual correction under the broad selector:
+Phase 34 learned residual correction is documented in [docs/results/ambench_multiline_process_residual_correction_v1.md](docs/results/ambench_multiline_process_residual_correction_v1.md). The branch is closed as a negative diagnostic: the default residual MLP changed global test RMSE only `136.309183 -> 136.294049` while degrading hot q90 and gradient q90 metrics, and a weaker residual setting removed the harm but gave no useful gain.
+
+Phase 35 now tests train-split region-weighted data loss under the broad selector:
 
 ```bash
 PROFILE_SPLITS=spot_size DATASET_LIMIT=12 DATASET_ORDER=process_round_robin \
 STEPS=500 N_ESTIMATORS=80 \
-  bash scripts/server/run_phase34_broad_residual_correction_a100.sh \
-  > logs/phase34_broad12_spot_size_residual_mlp_a100_v1.log 2>&1
+  bash scripts/server/run_phase35_broad_region_weighted_loss_a100.sh \
+  > logs/phase35_broad12_spot_size_region_hotgrad_w2_a100_v1.log 2>&1
 
 python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
   --dataset-limit 12 \
   --dataset-order process_round_robin \
   --split spot_size \
-  --include-broad-process-residual \
-  --json-output outputs/reports/phase34_broad12_spot_size_residual_mlp_summary.json \
+  --include-broad-region-weighted \
+  --json-output outputs/reports/phase35_broad12_spot_size_region_hotgrad_w2_summary.json \
   --require-comparable
 ```
 
-The Phase 34 setup is documented in [docs/results/ambench_multiline_process_residual_correction_v1.md](docs/results/ambench_multiline_process_residual_correction_v1.md). It keeps `broad_process_v1` and raw spacetime defaults, then adds `--residual-correction-mode mlp` as a small zero-initialized correction head. This is a low-risk structural probe after direct sparse PDE closure harmed the strongest current `spot_size` route.
+The Phase 35 setup is documented in [docs/results/ambench_multiline_process_region_weighted_loss_v1.md](docs/results/ambench_multiline_process_region_weighted_loss_v1.md). It keeps `broad_process_v1` and raw spacetime defaults, then applies optional train-split-only supervised loss weighting with `--data-loss-weighting hot_gradient`. Defaults remain unchanged.
 
 生成带 `micro_sample_id` 的 prototype thermal 对齐表：
 
@@ -441,7 +443,8 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 31 已完成 broad21 all single-track selector scaling。all-21 结果确认 `broad_process_v1` 能保留 `laser_power`/`spot_size` 正向路由并避免 `scan_speed`/full `process` 负迁移；当前 A100-SXM4-40GB 仍足够。
 - Phase 32 已完成 `broad_process_v2` 诊断。v2 只把 `line_id` 改为 concat/same；它改善 broad21 line，但明显伤害 broad12 line，因此不替代 `broad_process_v1` 默认路线。下一步转向更强 broad-data representation 或 closure/GNN reintegration。
 - Phase 33 已完成 fixed Fourier spacetime representation 诊断。`--spacetime-encoding fourier` 与 `--spacetime-fourier-bands` 已实现并记录到 metrics/checkpoint；但 broad12 同口径结果在所有 split 均弱于 `broad_process_v1`，因此 Fourier 不替代 raw coordinate/time basis，下一步应转向 closure/GNN reintegration 或更结构化的数据表示。
-- Phase 34 已进入 learned residual correction 分支。`--residual-correction-mode mlp` 会在 base Macro PINN 输出上叠加小尺度、零初始化的 residual MLP；默认关闭。首轮 A100 只验证 broad12 `spot_size`，若不能改善 `broad_process_v1`，则关闭该分支并转向弱 closure/GNN coupling 或采样/对齐变更。
+- Phase 34 learned residual correction 已关闭为负结果。默认 residual MLP 只带来 `0.015` 量级的全局 RMSE 改善，却明显伤害 hot q90 和 gradient q90；弱残差设置接近保持区域指标但没有收益。
+- Phase 35 已进入 train-split region-weighted data loss 分支。`--data-loss-weighting hot|gradient|hot_gradient` 只用训练 split 确定热点/梯度权重，默认关闭；首轮 A100 只验证 broad12 `spot_size` 的 `hot_gradient` 权重 2。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -492,7 +495,8 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_multiline_process_broad_selector_broad21_v1.md](docs/results/ambench_multiline_process_broad_selector_broad21_v1.md): Phase 31 all-21 single-track selector scaling 与 broad21 可比性门禁结果。
 - [docs/results/ambench_multiline_process_broad_selector_v2.md](docs/results/ambench_multiline_process_broad_selector_v2.md): Phase 32 `broad_process_v2` line-route diagnostic 与 broad12/broad21 可比性门禁结果。
 - [docs/results/ambench_multiline_process_fourier_spacetime_v1.md](docs/results/ambench_multiline_process_fourier_spacetime_v1.md): Phase 33 fixed Fourier spacetime representation 诊断、broad12 可比性门禁结果与不扩到 broad21 的决策。
-- [docs/results/ambench_multiline_process_residual_correction_v1.md](docs/results/ambench_multiline_process_residual_correction_v1.md): Phase 34 learned residual correction 分支实现、focused `spot_size` 验收命令与后续决策门槛。
+- [docs/results/ambench_multiline_process_residual_correction_v1.md](docs/results/ambench_multiline_process_residual_correction_v1.md): Phase 34 learned residual correction 分支实现、focused `spot_size` 结果与关闭决策。
+- [docs/results/ambench_multiline_process_region_weighted_loss_v1.md](docs/results/ambench_multiline_process_region_weighted_loss_v1.md): Phase 35 train-split region-weighted data loss 实现、focused `spot_size` 验收命令与决策门槛。
 
 Real micro graph closure 对比脚本：
 
