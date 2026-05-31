@@ -512,7 +512,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 41 physics-derived process representation 已关闭为 broad21 正向但 broad12 不迁移的诊断。derived-only `am_energy_v1` 在 broad21 `laser_power` 上将 `broad_process_v1` 的 `178.040331 / 296.909567 / 254.954359` 改到 `171.892969 / 211.624381 / 207.270255`，但 broad12 `laser_power` 退化到 `162.766699 / 303.019663 / 254.346542`，因此不做 seed expansion。
 - Phase 42 validation-selection 检查已关闭简单 selector 路线。validation RMSE/hot/gradient 不能一致预测 raw vs derived-only 的 test-best 表示，下一步转向更强 baseline-facing architecture 或训练目标。
 - Phase 42 prediction-anchor 训练目标已关闭为 broad12-local positive、broad21 negative 诊断。`--prediction-anchor-weight=0.01/0.05` 都改善 broad12 `laser_power`，但 broad21 global RMSE 退化，因此不做 seed expansion。
-- Phase 43 当前进入 `process_encoder_v1`：`--input-process-encoder-mode linear` 将 raw process scalars + `am_energy_v1` 编码为低维 latent 后再进入 `broad_process_v1` 路由，先跑 broad12/broad21 `laser_power` focused validation。
+- Phase 43 `process_encoder_v1` 已关闭为 broad21-positive、broad12-negative 诊断。`--input-process-encoder-mode linear` 将 raw process scalars + `am_energy_v1` 编码为低维 latent 后再进入 `broad_process_v1` 路由，结果是 broad12 `189.137331 / 369.311362 / 293.900869`、broad21 `172.459317 / 264.292100 / 237.096411`，因此不做 seed expansion。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 

@@ -59,3 +59,25 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
 ## Decision Gate
 
 Compare `broad_process_encoder` against mean, kNN, ExtraTrees, no-process Macro PINN, `process_axis_v1`, `broad_process_v1`, derived-only `am_energy_v1`, and Phase 42 prediction-anchor diagnostics. Continue only if it improves or preserves global RMSE while improving hot q90 and gradient q90 on both broad12 and broad21 `laser_power`. If it is only broad12-local or broad21-local, close it as another representation diagnostic before any seed expansion.
+
+## Results
+
+Focused broad12/broad21 `laser_power` validation:
+
+| Dataset | Method | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | Signal |
+| --- | --- | ---: | ---: | ---: | --- |
+| broad12 | `mean` | 132.965887 | 242.427068 | 208.105836 | strongest baseline |
+| broad12 | `broad_process_v1` | 140.753534 | 254.473291 | 215.411533 | route guard |
+| broad12 | `broad_process_encoder` | 189.137331 | 369.311362 | 293.900869 | negative |
+| broad21 | `mean` | 131.741364 | 237.730958 | 205.133029 | strongest baseline |
+| broad21 | `broad_process_v1` | 178.040331 | 296.909567 | 254.954359 | route guard |
+| broad21 | `broad_process_encoder` | 172.459317 | 264.292100 | 237.096411 | positive vs route guard |
+| broad21 | derived-only `am_energy_v1` | 171.892969 | 211.624381 | 207.270255 | stronger broad21 diagnostic |
+
+The encoder is broad21-positive but broad12-negative. It improves broad21 `laser_power` global/hot/gradient metrics against `broad_process_v1`, but it is still weaker than the prior derived-only broad21 diagnostic and fails badly on broad12.
+
+## Decision
+
+Close Phase 43 `process_encoder_v1` as a representation diagnostic, not a paper-facing claim. The branch confirms that trainable raw+derived process fusion can move broad21 in the right direction, but it does not solve transfer stability across broad12 and broad21.
+
+Do not seed-expand this branch. The next branch should target the data/objective side of the transfer split, especially process-group balance or train-split weighting by process condition, before adding more process encoders.

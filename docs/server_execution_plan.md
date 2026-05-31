@@ -1243,6 +1243,10 @@ PROCESS_FEATURE_TAG=proc_enc STEPS=500 N_ESTIMATORS=80 \
 
 验收：先比较 `broad_process_encoder` against mean/kNN/ExtraTrees、no-process、`process_axis_v1`、`broad_process_v1`、derived-only `am_energy_v1` 和 Phase 42 prediction-anchor diagnostics。若 broad12 与 broad21 `laser_power` 同时改善或保持 global RMSE 且改善 hot/gradient，再做 seed expansion；若仍是 split-local，则关闭为 representation diagnostic。
 
+结果：`process_encoder_v1` 是 broad21-positive 但 broad12-negative。`linear`/`7->3` identity-initialized encoder 在 broad12 `laser_power` 上退化到 `189.137331 / 369.311362 / 293.900869`，而 broad21 `laser_power` 相比 `broad_process_v1` 改善到 `172.459317 / 264.292100 / 237.096411`。这比 Phase 41 derived-only 的 broad21 全局表现还弱，因此仍属于 split-local diagnostic，不做 seed expansion。
+
+结论：Phase 43 关闭为 representation diagnostic。编码器能在 broad21 上朝正确方向移动，但 broad12 退化过大，说明当前分支仍不足以处理广12/broad21 transfer split。下一步若继续，应转向更明确的过程-group balance/objective，而不是继续堆 process encoder 宽度。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
