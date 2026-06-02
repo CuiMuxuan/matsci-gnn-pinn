@@ -2097,11 +2097,12 @@ git rev-parse --short origin/main
 
 ## 立即下一步建议
 
-Phase 56 已完成。下一轮服务器工作不要启动新的 source-inversion、route-guard-only seed expansion，或在没有新表格缺口的情况下继续叠加小型训练技巧。
+Phase 57 已完成。下一轮服务器工作先做 Phase 58 clean-checkout reproducibility，不要直接启动新的 source-inversion、route-guard-only seed expansion，或在没有复现门槛的情况下继续叠加小型训练技巧。
 
 优先级：
 
-1. 写 manuscript results text 和 figure caption：主结论只写 broad12/broad21 `spot_size` seed-robust process-conditioned evidence。
-2. route-guard 段落明确：broad12/broad21 `line` 是 no-process fallback evidence；`laser_power`、`scan_speed`、full `process` 是 route-guard-only。
-3. supplement/limitation 段落纳入 Phases 33-53 negative diagnostics，尤其是 source-inversion / Bayesian PINN / source-path branch 的数据兼容性限制。
-4. 下一次 code-active branch 应从论文表格缺口倒推，例如增加外部数据集/额外 AM-Bench split 的独立验证，而不是继续在当前 axes 上叠加小型训练技巧。
+1. 在 A100 上从 GitHub 建立独立 clean checkout，使用 clean checkout 的代码重建 Phase 55/56/57 reports；训练 artifacts 可以从主服务器仓库只读引用，因为 `outputs/` 不进入 GitHub。
+2. 复查 frozen floor：broad12/broad21 `spot_size` seed-robust process-conditioned evidence 必须仍能从 reports 重建。
+3. route-guard 段落明确：broad12/broad21 `line` 是 no-process fallback evidence；`laser_power`、`scan_speed`、full `process` 是 route-guard-only。
+4. supplement/limitation 段落纳入 Phases 33-53 negative diagnostics，尤其是 source-inversion / Bayesian PINN / source-path branch 的数据兼容性限制。
+5. 下一次 code-active branch 应从 Phase 58 的复现/压力测试缺口倒推，例如增加 stronger tabular baseline、额外 AM-Bench split、或独立 process-balanced subset；新模型候选必须先通过 Phase 57 frozen-floor gate。

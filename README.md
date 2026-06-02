@@ -526,6 +526,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 54 paper-facing route guard claim boundary 已完成并补齐 broad21 `spot_size` hot q90。`broad_process_v1` 的 clean process-conditioned strong-baseline-positive 证据是 broad12 `spot_size` FiLM/global-standard：`136.309183 / 165.228535 / 169.049295`，优于 mean `151.850578 / 252.554440 / 233.119660`；以及 broad21 `spot_size` FiLM/global-standard：`147.389475 / 163.081706 / 177.908136`，优于 mean `149.185412 / 251.976794 / 231.072566`。`line` 在 broad12/broad21 也为 strong-baseline-positive，但它是 no-process fallback，不能写成 process-conditioning 改善。`laser_power`、`scan_speed`、full `process` 是 route-guard-only。
 - Phase 55 `spot_size` transferable seed validation 已通过。`broad_process_v1` 的 FiLM/global-standard route 在 broad12 和 broad21 上以 seeds 7/1/2 同时压过 no-process Macro PINN 和 strong baselines：broad12 三 seed 为 `136.384782 / 162.125337 / 165.282182`，broad21 三 seed 为 `146.002303 / 164.313888 / 174.735839`，对应 test RMSE / hot q90 RMSE / gradient q90 RMSE。当前 paper-facing 模型贡献应写作 explicit broad-data process route guard + stable `spot_size` process-conditioned branch。
 - Phase 56 manuscript-facing package 已生成。主表、route-guard 边界表、负诊断 appendix 和 `spot_size` 三指标对比图位于 `docs/results/phase56_manuscript_package/`，全部由 Phase 54/55 JSON reports 自动生成。
+- Phase 57 claim governance 已生成。`docs/results/phase57_claim_governance/` 固化了 frozen floor、future branch gate contract 和 living claim ledger：当前只有 broad12/broad21 `spot_size` 是 `paper_positive_seed_robust`，`line` 是 no-process fallback evidence，`laser_power`、`scan_speed`、full `process` 仍是 route-guard-only。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -599,6 +600,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_multiline_process_route_claim_boundary_v1.md](docs/results/ambench_multiline_process_route_claim_boundary_v1.md): Phase 54 broad12/broad21 `broad_process_v1` claim-boundary summary、strong-baseline-positive vs route-guard-only 分类与下一步表格边界。
 - [docs/results/ambench_multiline_process_spot_size_seed_validation_v1.md](docs/results/ambench_multiline_process_spot_size_seed_validation_v1.md): Phase 55 broad12/broad21 `spot_size` 三 seed transferable validation、strong-baseline/no-process gate 与 paper-facing model-claim 边界。
 - [docs/results/phase56_manuscript_package/phase56_manuscript_table_figure_package.md](docs/results/phase56_manuscript_package/phase56_manuscript_table_figure_package.md): Phase 56 manuscript-facing 主表、route-guard 表、负诊断 appendix、figure/caption/source trace package。
+- [docs/results/phase57_claim_governance/phase57_claim_governance.md](docs/results/phase57_claim_governance/phase57_claim_governance.md): Phase 57 frozen floor、claim ledger、no-test-leakage contract 和 future branch seed-expansion gate。
 
 Real micro graph closure 对比脚本：
 

@@ -1,0 +1,77 @@
+{
+  "inputs": {
+    "phase54": "C:\\code\\matsci-gnn-pinn\\outputs\\reports\\phase54_process_route_claim_boundary_summary.json",
+    "phase55": "C:\\code\\matsci-gnn-pinn\\outputs\\reports\\phase55_spot_size_route_seed_check_summary.json",
+    "phase56_negative_table": "C:\\code\\matsci-gnn-pinn\\docs\\results\\phase56_manuscript_package\\phase56_negative_diagnostic_appendix_table.csv"
+  },
+  "ledger_counts": {
+    "blocked_by_data": 1,
+    "diagnostic_negative": 11,
+    "paper_positive_seed_robust": 2,
+    "route_guard_no_process_positive": 2,
+    "route_guard_only": 6
+  },
+  "objective": "long_term_claim_and_experiment_governance",
+  "outputs": {
+    "contract": "C:\\code\\matsci-gnn-pinn\\docs\\results\\phase57_claim_governance\\phase57_claim_contract.json",
+    "ledger": "C:\\code\\matsci-gnn-pinn\\docs\\results\\phase57_claim_governance\\phase57_claim_ledger.csv",
+    "manifest": "C:\\code\\matsci-gnn-pinn\\docs\\results\\phase57_claim_governance\\phase57_claim_governance_manifest.json",
+    "markdown": "C:\\code\\matsci-gnn-pinn\\docs\\results\\phase57_claim_governance\\phase57_claim_governance.md"
+  },
+  "phase": 57,
+  "root": "C:\\code\\matsci-gnn-pinn",
+  "seed_expansion_self_check": {
+    "checks": [
+      {
+        "candidate": 136.38478198713665,
+        "dataset": "broad12",
+        "delta_vs_floor": 0.0,
+        "frozen_floor": 136.38478198713665,
+        "metric": "rmse",
+        "pass": true
+      },
+      {
+        "candidate": 162.12533706531732,
+        "dataset": "broad12",
+        "delta_vs_floor": 0.0,
+        "frozen_floor": 162.12533706531732,
+        "metric": "hot_q90_rmse",
+        "pass": true
+      },
+      {
+        "candidate": 165.2821822720331,
+        "dataset": "broad12",
+        "delta_vs_floor": 0.0,
+        "frozen_floor": 165.2821822720331,
+        "metric": "gradient_q90_rmse",
+        "pass": true
+      },
+      {
+        "candidate": 146.00230263668138,
+        "dataset": "broad21",
+        "delta_vs_floor": 0.0,
+        "frozen_floor": 146.00230263668138,
+        "metric": "rmse",
+        "pass": true
+      },
+      {
+        "candidate": 164.31388799034224,
+        "dataset": "broad21",
+        "delta_vs_floor": 0.0,
+        "frozen_floor": 164.31388799034224,
+        "metric": "hot_q90_rmse",
+        "pass": true
+      },
+      {
+        "candidate": 174.73583873860284,
+        "dataset": "broad21",
+        "delta_vs_floor": 0.0,
+        "frozen_floor": 174.73583873860284,
+        "metric": "gradient_q90_rmse",
+        "pass": true
+      }
+    ],
+    "decision": "allow_seed_expansion",
+    "pass": true
+  }
+}

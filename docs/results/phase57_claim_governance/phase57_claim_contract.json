@@ -1,0 +1,136 @@
+{
+  "comparison_methods_required_for_future_branches": [
+    "mean",
+    "knn_coords",
+    "knn_process",
+    "extra_trees_coords",
+    "extra_trees_process",
+    "no_process",
+    "process_axis_v1",
+    "broad_process_v1"
+  ],
+  "current_claim_boundary_counts": {
+    "paper_claim_positive": 4,
+    "route_guard_positive": 6
+  },
+  "current_transfer_gate": {
+    "aggregate_transfer_positive": true,
+    "paired_seed_transfer_positive": true,
+    "paper_claim_status": "seed_robust_transfer_positive"
+  },
+  "frozen_floor": {
+    "datasets": {
+      "broad12": {
+        "metrics": {
+          "gradient_q90_rmse": {
+            "mean": 165.2821822720331,
+            "pstdev": 5.2702359012349635
+          },
+          "hot_q90_rmse": {
+            "mean": 162.12533706531732,
+            "pstdev": 4.909787942841941
+          },
+          "rmse": {
+            "mean": 136.38478198713665,
+            "pstdev": 0.46752630325836325
+          }
+        },
+        "route": {
+          "conditioning_profile": "broad_process_v1",
+          "effective_conditioning_mode": "film",
+          "effective_feature_columns": [
+            "laser_power_W",
+            "scan_speed_mm_s",
+            "spot_size_um"
+          ],
+          "selected_conditioning_mode": "film",
+          "selected_feature_normalization": "global_standard"
+        },
+        "status": "seed_robust_transfer_positive"
+      },
+      "broad21": {
+        "metrics": {
+          "gradient_q90_rmse": {
+            "mean": 174.73583873860284,
+            "pstdev": 2.3010048825188956
+          },
+          "hot_q90_rmse": {
+            "mean": 164.31388799034224,
+            "pstdev": 3.5484997742469604
+          },
+          "rmse": {
+            "mean": 146.00230263668138,
+            "pstdev": 1.118698921643794
+          }
+        },
+        "route": {
+          "conditioning_profile": "broad_process_v1",
+          "effective_conditioning_mode": "film",
+          "effective_feature_columns": [
+            "laser_power_W",
+            "scan_speed_mm_s",
+            "spot_size_um"
+          ],
+          "selected_conditioning_mode": "film",
+          "selected_feature_normalization": "global_standard"
+        },
+        "status": "seed_robust_transfer_positive"
+      }
+    },
+    "method": "broad_process_v1",
+    "required_datasets": [
+      "broad12",
+      "broad21"
+    ],
+    "required_metrics": [
+      "rmse",
+      "hot_q90_rmse",
+      "gradient_q90_rmse"
+    ],
+    "seeds": [
+      7,
+      1,
+      2
+    ],
+    "split": "spot_size"
+  },
+  "future_branch_seed_expansion_gate": {
+    "decision": "block unless all required checks pass",
+    "required_datasets": [
+      "broad12",
+      "broad21"
+    ],
+    "required_metrics": [
+      "rmse",
+      "hot_q90_rmse",
+      "gradient_q90_rmse"
+    ],
+    "route_guard_method": "broad_process_v1",
+    "rule": "candidate <= frozen broad_process_v1 floor on every required dataset/metric"
+  },
+  "future_manuscript_claim_gate": {
+    "allowed_main_claim_status": "paper_positive_seed_robust",
+    "requires_route_guard_preservation": true,
+    "requires_seed_aggregate": "seeds 7/1/2 at minimum",
+    "requires_strong_baseline_comparison": true
+  },
+  "metric_labels": {
+    "gradient_q90_rmse": "gradient q90 RMSE",
+    "hot_q90_rmse": "hot q90 RMSE",
+    "rmse": "test RMSE"
+  },
+  "missing_floor_datasets": [],
+  "no_test_leakage_rules": [
+    "Route selection, hyperparameters, feature-family selection, and seed expansion must be decided from train/validation evidence only.",
+    "Test metrics may be used only once for reporting the predeclared candidate.",
+    "New candidates must preserve manifest/split comparability with the route guard before comparison.",
+    "Focused seed-7 gates may only justify seeds 1/2; they do not justify manuscript claims."
+  ],
+  "objective": "Freeze claim boundaries and future branch gates after Phase 56.",
+  "phase": 57,
+  "required_metrics": [
+    "rmse",
+    "hot_q90_rmse",
+    "gradient_q90_rmse"
+  ]
+}
