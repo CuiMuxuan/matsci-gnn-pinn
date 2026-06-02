@@ -1,0 +1,14 @@
+artifact_id,manuscript_role,artifact_path,source_phase,status,caption_or_use
+T1,main_table,docs/results/phase60_manuscript_evidence_package/phase60_main_spot_size_seed_positive_table.csv,Phase 60,ready,Main spot_size seed-positive table.
+T2,route_guard_table,docs/results/phase60_manuscript_evidence_package/phase60_route_guard_boundary_table.csv,Phase 60,ready,Route-guard and no-process fallback boundary table.
+T3,stress_boundary_table,docs/results/phase60_manuscript_evidence_package/phase60_stress_boundary_table.csv,Phase 60,ready,Stress and density-boundary table.
+T4,appendix_negative_table,docs/results/phase60_manuscript_evidence_package/phase60_appendix_negative_diagnostic_table.csv,Phase 60,ready,Appendix negative diagnostics and blocked branches.
+T5,next_branch_gate_table,docs/results/phase60_manuscript_evidence_package/phase60_next_branch_gate_table.csv,Phase 60,ready,Next-branch gate table.
+M1,results_v0_source,docs/results/phase61_manuscript_draft_package/phase61_results_draft.md,Phase 61,ready,Results draft source for v0 assembly.
+M2,methods_v0_source,docs/results/phase61_manuscript_draft_package/phase61_methods_draft.md,Phase 61,ready,Methods draft source for v0 assembly.
+M3,captions,docs/results/phase61_manuscript_draft_package/phase61_table_figure_captions.md,Phase 61,ready,Caption package for manuscript tables/figures.
+A1,claim_crosswalk,docs/results/phase61_manuscript_draft_package/phase61_claim_evidence_crosswalk.csv,Phase 61,ready,Claim-to-evidence crosswalk.
+A2,candidate_signal_scorecard,docs/results/phase68_validation_signal_scorecard/phase68_candidate_signal_scorecard.csv,Phase 68,ready,Model candidate gate scorecard.
+A3,candidate_a_gate,docs/results/phase69_spot_size_signal_probe/phase69_candidate_a_gate.json,Phase 69,ready,Candidate A non-training gate.
+A4,candidate_b_gate,docs/results/phase70_route_policy_audit/phase70_candidate_b_gate.json,Phase 70,ready,Candidate B non-training gate.
+A5,candidate_c_gate,docs/results/phase71_data_registration_audit/phase71_candidate_c_gate.json,Phase 71,ready,Candidate C data-registration gate.

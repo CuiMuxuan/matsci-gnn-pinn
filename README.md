@@ -535,6 +535,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 69 `spot_size` non-training signal probe 已生成。`docs/results/phase69_spot_size_signal_probe/` 显示 fixed-sampling broad12/broad21 与 broad15 支持当前 floor，但 alternate-density broad21 仍有 3 个 boundary rows，且 Phase 59 upper-bound 从 validation 回退到 mean；Candidate A 保持 `paused_no_training_signal`，不进入 A100 seed-7 训练。
 - Phase 70 route-policy non-training audit 已生成。`docs/results/phase70_route_policy_audit/` 显示当前 route guard 能保留 `spot_size` floor 和 no-process line fallback，但 boundary axes 仍落后 strong baseline，Phase 59 density upper-bound 也阻塞 route-policy 扩展；Candidate B 为 `blocked_no_validation_visible_route_policy_signal`。
 - Phase 71 data-registration non-training audit 已生成。`docs/results/phase71_data_registration_audit/` 汇总 Phase 52/53/60/68 证据，确认当前 AM-Bench bundle 有 pad XYPT 但没有 paper-facing single-track registration 或 pad camera-to-galvo mapping；Candidate C 为 `blocked_by_registration_data`，不进入 heat-kernel/Green's-function/source-path A100 训练。
+- Phase 74 manuscript v0 claim-audit package 已生成。`docs/results/phase74_manuscript_v0_claim_audit/` 将 Phase 60/61/68-71 证据锁定为内部可审阅 v0：主 claim 保持 fixed-sampling broad12/broad21 `spot_size` floor，文献/venue claim 仍锁在 gap register 中，当前没有 trainable model branch 打开。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -617,6 +618,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/phase69_spot_size_signal_probe/phase69_spot_size_signal_probe.md](docs/results/phase69_spot_size_signal_probe/phase69_spot_size_signal_probe.md): Phase 69 non-training `spot_size` signal probe，记录 Candidate A 是否允许进入 A100 seed-7 gate 的判断。
 - [docs/results/phase70_route_policy_audit/phase70_route_policy_audit.md](docs/results/phase70_route_policy_audit/phase70_route_policy_audit.md): Phase 70 route-policy non-training audit，记录 Candidate B 是否允许进入低容量 route-policy gate 的判断。
 - [docs/results/phase71_data_registration_audit/phase71_data_registration_audit.md](docs/results/phase71_data_registration_audit/phase71_data_registration_audit.md): Phase 71 data-registration non-training audit，记录 Candidate C 是否允许进入 heat-kernel/Green's-function/source-path fixed-feature gate 的判断。
+- [docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_claim_audit_package.md](docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_claim_audit_package.md): Phase 74 manuscript v0 evidence-locked package，包含 v0 draft、claim audit、table/figure inventory 和 model boundary register。
 
 Real micro graph closure 对比脚本：
 

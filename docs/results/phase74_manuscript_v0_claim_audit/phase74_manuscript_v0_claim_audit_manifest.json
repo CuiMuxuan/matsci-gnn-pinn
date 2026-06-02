@@ -1,0 +1,93 @@
+{
+  "claim_boundary": {
+    "excluded_claims": [
+      "density-invariant robustness",
+      "universal process-conditioning success",
+      "laser_power, scan_speed, or full-process strong-baseline wins",
+      "source-path or Green's-function broad12/broad21 success under current data registration"
+    ],
+    "main_claim": "fixed-sampling broad12/broad21 spot_size under broad_process_v1, seeds 7/1/2"
+  },
+  "counts": {
+    "boundary_rows": 9,
+    "claim_audit_rows": 13,
+    "inventory_rows": 13,
+    "literature_gap_rows": 3,
+    "supported_claim_rows": 12,
+    "unsupported_v0_claim_rows": 1
+  },
+  "inputs": {
+    "phase57_ledger": "docs/results/phase57_claim_governance/phase57_claim_ledger.csv",
+    "phase60_appendix": "docs/results/phase60_manuscript_evidence_package/phase60_appendix_negative_diagnostic_table.csv",
+    "phase60_main": "docs/results/phase60_manuscript_evidence_package/phase60_main_spot_size_seed_positive_table.csv",
+    "phase60_manifest": "docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package_manifest.json",
+    "phase60_next_gate": "docs/results/phase60_manuscript_evidence_package/phase60_next_branch_gate_table.csv",
+    "phase60_route": "docs/results/phase60_manuscript_evidence_package/phase60_route_guard_boundary_table.csv",
+    "phase60_stress": "docs/results/phase60_manuscript_evidence_package/phase60_stress_boundary_table.csv",
+    "phase61_captions": "docs/results/phase61_manuscript_draft_package/phase61_table_figure_captions.md",
+    "phase61_crosswalk": "docs/results/phase61_manuscript_draft_package/phase61_claim_evidence_crosswalk.csv",
+    "phase61_gaps": "docs/results/phase61_manuscript_draft_package/phase61_literature_gap_register.csv",
+    "phase61_manifest": "docs/results/phase61_manuscript_draft_package/phase61_manuscript_draft_package_manifest.json",
+    "phase61_methods": "docs/results/phase61_manuscript_draft_package/phase61_methods_draft.md",
+    "phase61_results": "docs/results/phase61_manuscript_draft_package/phase61_results_draft.md",
+    "phase68_manifest": "docs/results/phase68_validation_signal_scorecard/phase68_validation_signal_scorecard_manifest.json",
+    "phase68_scorecard": "docs/results/phase68_validation_signal_scorecard/phase68_candidate_signal_scorecard.csv",
+    "phase69_gate": "docs/results/phase69_spot_size_signal_probe/phase69_candidate_a_gate.json",
+    "phase70_gate": "docs/results/phase70_route_policy_audit/phase70_candidate_b_gate.json",
+    "phase71_gate": "docs/results/phase71_data_registration_audit/phase71_candidate_c_gate.json",
+    "phase71_manifest": "docs/results/phase71_data_registration_audit/phase71_data_registration_audit_manifest.json"
+  },
+  "model_expansion_gate": {
+    "decision": "block_density_failure_driven_model_expansion",
+    "reason": "validation-visible correction does not beat the reference on the analysis split",
+    "selected_variant": "blend:broad_process_v1->mean:alpha=1",
+    "uses_test_for_selection": false
+  },
+  "objective": "manuscript_v0_evidence_locked_claim_audit",
+  "outputs": {
+    "claim_audit_table": "docs/results/phase74_manuscript_v0_claim_audit/phase74_claim_audit_table.csv",
+    "manifest": "docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_claim_audit_manifest.json",
+    "manuscript_v0": "docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_evidence_locked.md",
+    "model_boundary_register": "docs/results/phase74_manuscript_v0_claim_audit/phase74_model_boundary_register.csv",
+    "package_markdown": "docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_claim_audit_package.md",
+    "table_figure_inventory": "docs/results/phase74_manuscript_v0_claim_audit/phase74_table_figure_inventory.csv"
+  },
+  "phase": 74,
+  "phase61_writing_gate": {
+    "active_gate": "draft_ready_for_internal_results_methods; needs_verification_for_literature_context",
+    "blocked_work": [
+      "final Introduction or Related Work without verified literature",
+      "target-venue style claims without target examples or author guide"
+    ],
+    "evidence_status": "phase60_tables_writing_ready",
+    "mode": "section_draft"
+  },
+  "phase71_candidate_c_gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "aligned_target_count": 0,
+    "blocking_row_count": 5,
+    "candidate": "Candidate C: data-aligned heat-kernel or Green's-function features",
+    "diagnostic_row_count": 2,
+    "fixed_feature_gate_allowed": false,
+    "next_action": "do not train Candidate C; continue manuscript v0 audit or external data-registration planning",
+    "open_aligned_feature_gate": false,
+    "phase68_trainable_model_opened": false,
+    "reason": "Current AM-Bench evidence has pad XYPT but no paper-facing single-track registration or pad camera-to-galvo mapping.",
+    "seed7_gate": "if reopened in the future, seed 7 must be non-worse than broad_process_v1 on broad12 and broad21 for rmse, hot_q90_rmse, and gradient_q90_rmse",
+    "status": "blocked_by_registration_data"
+  },
+  "writing_stage_gate": {
+    "candidate_a_status": "paused_no_training_signal",
+    "candidate_b_status": "blocked_no_validation_visible_route_policy_signal",
+    "candidate_c_status": "blocked_by_registration_data",
+    "literature_gap_rows": 3,
+    "main_claim_locked": true,
+    "missing_inventory_rows": 0,
+    "mode": "evidence_locked_manuscript_v0",
+    "next_action": "resolve literature/venue gaps or start Phase 75 local identifiability gate; do not start A100 model training from current gates",
+    "status": "ready_for_internal_manuscript_review",
+    "trainable_model_opened_now": false,
+    "unsupported_v0_claim_rows": 1
+  }
+}

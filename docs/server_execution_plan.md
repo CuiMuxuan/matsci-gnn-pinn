@@ -15,6 +15,7 @@
 - Phase 69 已完成 non-training `spot_size` signal probe；Candidate A 保持 `paused_no_training_signal`，当前不进入 A100 seed-7 训练，也不请求 A100-SXM4-80GB。
 - Phase 70 已完成 route-policy non-training audit；Candidate B 为 `blocked_no_validation_visible_route_policy_signal`，当前不进入 route-policy 或 mixture-of-experts 训练。
 - Phase 71 已完成 data-registration non-training audit；Candidate C 为 `blocked_by_registration_data`，当前不进入 heat-kernel/Green's-function/source-path A100 训练。
+- Phase 74 已生成 manuscript v0 claim-audit package；当前主张锁定为 fixed-sampling broad12/broad21 `spot_size` floor，文献/venue claim 仍需后续核验，当前没有 trainable model branch 打开。
 - 当前 A100-SXM4-40GB 仍足够处理 package regeneration、非训练审计和首轮小门槛实验；只有进入大规模 learned image encoder、更大多线表、多模型 ensemble 或 40GB 显存实测不足时，才向用户请求 A100-SXM4-80GB。
 
 当前已完成节点：
@@ -2126,6 +2127,31 @@ docs/results/phase71_data_registration_audit/phase71_data_registration_audit_man
 
 结论：Candidate C 当前 gate 为 `blocked_by_registration_data`。不要运行 heat-kernel、Green's-function、source-path broad12/broad21 A100 训练；下一步应进入 manuscript v0 claim audit，或单独规划外部/新增 registered target 数据卡。
 
+#### Phase 74：manuscript v0 evidence-locked claim audit
+
+目标：把 Phase 60/61/68-71 的 evidence boundary 汇总成内部可审阅 manuscript v0 包。该阶段不新增训练证据，不新增未核验文献 claim，不打开 A100 训练分支。
+
+生成命令：
+
+```bash
+python -X utf8 scripts/server/build_phase74_manuscript_v0_claim_audit.py
+```
+
+输出：
+
+```text
+docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_evidence_locked.md
+docs/results/phase74_manuscript_v0_claim_audit/phase74_claim_audit_table.csv
+docs/results/phase74_manuscript_v0_claim_audit/phase74_table_figure_inventory.csv
+docs/results/phase74_manuscript_v0_claim_audit/phase74_model_boundary_register.csv
+docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_claim_audit_package.md
+docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_claim_audit_manifest.json
+```
+
+当前 manifest 记录 claim-audit rows `13`、supported claim rows `12`、unsupported v0 claim rows `1`、inventory rows `13`、boundary rows `9`、literature gap rows `3`。Writing gate 为 `ready_for_internal_manuscript_review`，但 Introduction/Related Work 与 target-venue style claim 仍需后续文献和目标期刊核验。
+
+结论：当前 paper-facing 主线应写成 route-guarded Macro PINN + fixed-sampling `spot_size` transfer floor。Candidate A/B/C、大架构和 source-path 分支只能作为 gated future work 或 appendix/boundary evidence；不要从当前 Phase 74 直接进入 A100 训练。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
@@ -2307,12 +2333,12 @@ git rev-parse --short origin/main
 
 ## 立即下一步建议
 
-Phase 71 data-registration non-training audit 已生成。Candidate A/B/C 都没有通过开训门槛；下一步不要直接启动模型训练，应进入 manuscript v0 claim audit，或单独规划外部/新增 registered target 数据卡。
+Phase 74 manuscript v0 claim-audit package 已生成。Candidate A/B/C 都没有通过开训门槛；下一步不要直接启动 broad12/broad21 A100 训练，应进入 Phase 75 local/synthetic identifiability gate，或先解决 Phase 74 的 literature/venue gaps。
 
 优先级：
 
-1. 本地和 A100 服务器复现 Phase 71 data-registration audit，确认 audit rows `7`、Candidate C gate 为 `blocked_by_registration_data`。
-2. 进入 manuscript v0 claim audit：把 Phase 60/61/68-71 证据写成主文 v0，并保持 density boundary、route guard、data-registration blocker 和负诊断边界。
-3. 若继续模型创新，先做 Phase 75 local/synthetic identifiability gate；不要直接启动 broad12/broad21 A100 训练。
+1. 本地和 A100 服务器复现 Phase 74 manuscript v0 claim-audit package，确认 claim-audit rows `13`、boundary rows `9`、trainable model opened `false`。
+2. 若继续模型创新，进入 Phase 75 local/synthetic identifiability gate：选择一个候选方向，先做小型可识别性/机制有效性验证。
+3. 若继续论文写作，解决 Phase 74/61 的 literature gaps 和 target-venue style gaps，再进入 Introduction/Related Work 写作。
 4. Candidate A/B/C 只有在新的 train/validation-visible signal 或 registered target 出现并通过各自非训练 gate 时才重新打开。
 5. 只有当已通过门槛的训练分支实测或明确预计超过当前 40GB 显存时，才向用户请求 A100-SXM4-80GB。
