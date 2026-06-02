@@ -531,6 +531,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 59 residual anatomy 已完成。broad21 density failure 的 no-test-leakage upper-bound probe 从 validation 选择 `blend:broad_process_v1->mean:alpha=1`，说明该失败不支持直接扩展新模型分支。
 - Phase 60 manuscript evidence package 已生成。`docs/results/phase60_manuscript_evidence_package/` 汇总主表、route-guard 表、stress/boundary 表、扩展 appendix 和 next-branch gate；manifest 决策为 `block_density_failure_driven_model_expansion`。
 - Phase 61 manuscript draft package 已生成。`docs/results/phase61_manuscript_draft_package/` 包含 results/methods/caption 草稿、claim-evidence crosswalk、literature gap register 和 manifest。当前 writing gate 是 `draft_ready_for_internal_results_methods; needs_verification_for_literature_context`；下一步应先做 Phase 61 closeout/sync，然后组装 claim-audited manuscript v0，再从 train/validation-visible signal mining 决定是否重启模型创新分支。
+- Phase 68 validation-visible signal scorecard 已生成。`docs/results/phase68_validation_signal_scorecard/` 将 Candidate A/B/C、大架构分支和外部数据分支转成可审计 action queue；当前 `opened_trainable_candidates=0`，不立即请求 A100-SXM4-80GB，下一步应先做 non-training `spot_size` signal probe 或 manuscript v0 claim audit。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -609,6 +610,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_phase59_residual_anatomy_v1.md](docs/results/ambench_phase59_residual_anatomy_v1.md): Phase 59 broad21 alternate-density residual anatomy、upper-bound probe 与模型扩展 gate 结论。
 - [docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package.md](docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package.md): Phase 60 post-Phase-59 manuscript evidence package，包含主表、route-guard 表、stress/boundary 表、appendix 和 next-branch gate。
 - [docs/results/phase61_manuscript_draft_package/phase61_manuscript_draft_package.md](docs/results/phase61_manuscript_draft_package/phase61_manuscript_draft_package.md): Phase 61 manuscript results/methods/caption draft package，包含 claim-to-evidence crosswalk、literature gap register 和 writing-stage gate。
+- [docs/results/phase68_validation_signal_scorecard/phase68_validation_signal_scorecard.md](docs/results/phase68_validation_signal_scorecard/phase68_validation_signal_scorecard.md): Phase 68 validation-visible signal mining scorecard，记录候选模型创新分支、下一步 action queue 和 A100-SXM4-80GB 触发条件。
 
 Real micro graph closure 对比脚本：
 

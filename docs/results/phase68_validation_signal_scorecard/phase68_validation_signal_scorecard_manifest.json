@@ -1,0 +1,37 @@
+{
+  "counts": {
+    "action_rows": 5,
+    "blocked_or_paused_candidates": 4,
+    "candidate_rows": 6,
+    "opened_trainable_candidates": 0
+  },
+  "current_decision": {
+    "a100_80gb_request_now": false,
+    "next_step": "non_training_signal_probe_or_manuscript_v0_claim_audit",
+    "reason": "current evidence opens no trainable branch directly and current 40GB A100 is sufficient for package and signal-mining work",
+    "trainable_model_opened": false
+  },
+  "inherited_model_expansion_gate": {
+    "decision": "block_density_failure_driven_model_expansion",
+    "reason": "validation-visible correction does not beat the reference on the analysis split",
+    "selected_variant": "blend:broad_process_v1->mean:alpha=1",
+    "uses_test_for_selection": false
+  },
+  "inputs": {
+    "phase59_upper": "docs/results/phase59_residual_anatomy/phase59_broad21_density_residual_upper_bound.json",
+    "phase60_appendix": "docs/results/phase60_manuscript_evidence_package/phase60_appendix_negative_diagnostic_table.csv",
+    "phase60_manifest": "docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package_manifest.json",
+    "phase60_next_gate": "docs/results/phase60_manuscript_evidence_package/phase60_next_branch_gate_table.csv",
+    "phase60_stress": "docs/results/phase60_manuscript_evidence_package/phase60_stress_boundary_table.csv",
+    "phase61_crosswalk": "docs/results/phase61_manuscript_draft_package/phase61_claim_evidence_crosswalk.csv",
+    "phase61_manifest": "docs/results/phase61_manuscript_draft_package/phase61_manuscript_draft_package_manifest.json"
+  },
+  "objective": "validation_visible_signal_mining_scorecard",
+  "outputs": {
+    "candidate_signal_scorecard": "docs/results/phase68_validation_signal_scorecard/phase68_candidate_signal_scorecard.csv",
+    "manifest": "docs/results/phase68_validation_signal_scorecard/phase68_validation_signal_scorecard_manifest.json",
+    "markdown": "docs/results/phase68_validation_signal_scorecard/phase68_validation_signal_scorecard.md",
+    "next_action_queue": "docs/results/phase68_validation_signal_scorecard/phase68_next_action_queue.csv"
+  },
+  "phase": 68
+}

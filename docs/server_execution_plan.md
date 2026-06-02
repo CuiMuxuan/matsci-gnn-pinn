@@ -10,8 +10,9 @@
 - Phase 58 stronger-baseline stress 和 broad15 auxiliary panel 支持该 fixed-sampling floor，但 alternate-density broad21 暴露 density-sensitive boundary。
 - Phase 59 no-test-leakage upper-bound probe 选择 `blend:broad_process_v1->mean:alpha=1`，因此 density failure 不能直接驱动新模型分支。
 - Phase 60 已生成 manuscript evidence package，并记录 `block_density_failure_driven_model_expansion`。
-- Phase 61 已生成 manuscript results/methods/caption draft package；下一步是 Phase 66 closeout/sync，然后进入 claim-audited manuscript v0 与 validation-visible signal mining。
-- 当前 A100-SXM4-40GB 仍足够处理 Phase 61/66 和下一轮信号挖掘；只有进入大规模 learned image encoder、更大多线表、多模型 ensemble 或 40GB 显存实测不足时，才向用户请求 A100-SXM4-80GB。
+- Phase 61 已生成 manuscript results/methods/caption draft package，并已完成 Phase 66 local/GitHub/server closeout/sync。
+- Phase 68 已生成 validation-visible signal scorecard；当前 `opened_trainable_candidates=0`，下一步是 non-training `spot_size` signal probe 或 manuscript v0 claim audit。
+- 当前 A100-SXM4-40GB 仍足够处理 Phase 68 信号挖掘和首轮小门槛实验；只有进入大规模 learned image encoder、更大多线表、多模型 ensemble 或 40GB 显存实测不足时，才向用户请求 A100-SXM4-80GB。
 
 当前已完成节点：
 
@@ -2030,6 +2031,29 @@ docs/results/phase61_manuscript_draft_package/phase61_manuscript_draft_package_m
 
 结论：Phase 61 是 manuscript-facing package，不是模型扩展入口。下一步 Phase 66 应先完成 local/GitHub/server 三端同步和服务器可复现检查，再进入 manuscript v0 claim audit 与 validation-visible signal mining。
 
+#### Phase 68：validation-visible signal mining scorecard
+
+目标：把 Phase 59-61 的 evidence boundary 转成候选模型创新分支的 machine-readable scorecard 和 next action queue。该阶段不新增训练证据，也不直接打开 A100 训练分支。
+
+生成命令：
+
+```bash
+python -X utf8 scripts/server/build_phase68_validation_signal_scorecard.py
+```
+
+输出：
+
+```text
+docs/results/phase68_validation_signal_scorecard/phase68_candidate_signal_scorecard.csv
+docs/results/phase68_validation_signal_scorecard/phase68_next_action_queue.csv
+docs/results/phase68_validation_signal_scorecard/phase68_validation_signal_scorecard.md
+docs/results/phase68_validation_signal_scorecard/phase68_validation_signal_scorecard_manifest.json
+```
+
+当前 manifest 记录 candidate rows `6`、action rows `5`、opened trainable candidates `0`。Candidate A 仍是 `paused_no_training_signal`，Candidate B 是 `blocked_by_phase59_validation_gate`，Candidate C 是 `blocked_by_registration_data`，larger architecture branch 需要先过 local/synthetic identifiability gate，external dataset branch 只开放 data planning。
+
+结论：Phase 68 允许后续继续尝试更多模型创新和模型架构，但必须先从 non-training signal probe 或 local/synthetic gate 进入，不能从 Phase 58/59 density failure 直接开训。A100-SXM4-80GB 的触发条件是已通过门槛的训练分支实测或明确预计超过当前 40GB 显存。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
@@ -2211,12 +2235,12 @@ git rev-parse --short origin/main
 
 ## 立即下一步建议
 
-Phase 61 draft package 已在本地生成并通过 targeted validation。下一步执行 Phase 66 closeout/sync，不要从 Phase 58/59 density failure 直接启动新模型训练分支。
+Phase 68 validation-visible signal scorecard 已生成。下一步不要直接启动模型训练；先做 non-training `spot_size` signal probe，或进入 manuscript v0 claim audit。
 
 优先级：
 
-1. 本地重新生成 Phase 61 package，并确认 manifest counts、claim anchors、literature gaps 和 repository-relative paths。
-2. 本地运行 Phase 60/61 targeted tests、`py_compile` 和 `git diff --check`。
-3. 提交并 push Phase 61 package、builder、tests、README 和本服务器执行方案。
-4. A100 服务器从 GitHub fast-forward 到同一 commit，运行 Phase 61 `py_compile`、pytest 和 package regeneration。
-5. 进入 manuscript v0 claim audit；若继续模型创新，先做 train/validation-visible signal mining，再决定 Candidate A/B/C 是否重新打开。
+1. 本地和 A100 服务器复现 Phase 68 scorecard，确认 candidate rows `6`、action rows `5`、opened trainable candidates `0`。
+2. 执行 `P68-SPOT-SIGNAL`：从 broad12/broad21 fixed-sampling `spot_size` artifacts 和 density stress summaries 中挖掘 train/validation-only physical `spot_size` signal。
+3. 如果 `P68-SPOT-SIGNAL` 同时在 broad12/broad21 出现验证可见信号，再打开 Candidate A seed-7 focused A100 gate。
+4. 如果没有信号，转入 manuscript v0 claim audit，并把 Candidate A 保持为 paused。
+5. 只有当已通过门槛的训练分支实测或明确预计超过当前 40GB 显存时，才向用户请求 A100-SXM4-80GB。
