@@ -1,0 +1,2 @@
+queue_id,category,needed_input,reason,blocks_submission,suggested_user_action
+P89-MANUAL-001,target_venue_alignment,"No target venue, author guide, or accepted-paper benchmark set has been provided.","Final section order, citation density, and caption style match the target journal or conference.",true,User should provide target venue or 3-10 benchmark papers before final formatting/citation-density claims.
