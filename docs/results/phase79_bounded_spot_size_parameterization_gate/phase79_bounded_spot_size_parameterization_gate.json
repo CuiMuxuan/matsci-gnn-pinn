@@ -1,0 +1,16 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_seed7_allowed": false,
+  "candidate": "bounded_spot_size_parameterization_v1",
+  "candidate_a_phase69_open": false,
+  "density_debt_exceeds_floor_margin": true,
+  "density_debt_row_count": 3,
+  "fixed_floor_preserved": true,
+  "local_surrogate_allowed": true,
+  "maximum_density_debt_vs_best_strong": 18.739040967662646,
+  "minimum_fixed_margin_vs_best_strong": 3.1831094691341377,
+  "next_action": "build a local surrogate gate for bounded_spot_size_parameterization_v1; do not run broad12/broad21 A100 training yet",
+  "phase75_candidate_open": false,
+  "reason": "fixed-sampling margins are positive, but density debt and Phase 69 still block direct A100 seed-7 validation",
+  "status": "local_surrogate_required_before_a100"
+}

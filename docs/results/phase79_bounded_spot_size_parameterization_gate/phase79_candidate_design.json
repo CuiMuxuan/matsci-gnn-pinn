@@ -1,0 +1,18 @@
+{
+  "allowed_changes": [
+    "bounded scalar or two-parameter spot-size response",
+    "identity-initialized modulation around the existing FiLM route",
+    "train/validation-selected bounds only",
+    "explicit report of global, hot q90, and gradient q90 deltas"
+  ],
+  "candidate_family": "bounded process/spot-size parameterization",
+  "candidate_id": "bounded_spot_size_parameterization_v1",
+  "forbidden_shortcuts": [
+    "test-set route selection",
+    "unbounded mixture-of-experts",
+    "density-failure-driven A100 training without a local gate",
+    "claiming density-invariant robustness from fixed-sampling evidence"
+  ],
+  "gate_contract": "A100 seed-7 validation is allowed only if fixed-sampling margins remain positive and density/stress debt does not exceed the frozen floor margin. Otherwise the candidate must first pass a local surrogate gate.",
+  "mechanism": "Add a constrained, low-capacity spot-size response inside the existing `broad_process_v1` FiLM/global-standard route, with identity initialization and bounded modulation so the frozen `spot_size` floor cannot be silently replaced."
+}
