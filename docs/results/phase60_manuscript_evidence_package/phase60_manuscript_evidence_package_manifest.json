@@ -1,0 +1,59 @@
+{
+  "claim_boundary": {
+    "excluded_claims": [
+      "density-invariant robustness",
+      "universal process-conditioning success",
+      "laser_power, scan_speed, or full-process strong-baseline wins",
+      "source-path or Green's-function broad12/broad21 success under current data registration"
+    ],
+    "main_claim": "fixed-sampling broad12/broad21 spot_size under broad_process_v1, seeds 7/1/2"
+  },
+  "counts": {
+    "appendix_rows": 14,
+    "claim_ledger_status_counts": {
+      "blocked_by_data": 1,
+      "diagnostic_negative": 11,
+      "paper_positive_seed_robust": 2,
+      "route_guard_no_process_positive": 2,
+      "route_guard_only": 6
+    },
+    "main_rows": 6,
+    "next_branch_gate_rows": 4,
+    "route_guard_rows": 8,
+    "stress_boundary_rows": 19,
+    "stress_status_counts": {
+      "blocks_model_expansion": 1,
+      "boundary": 6,
+      "pass": 12
+    }
+  },
+  "inputs": {
+    "phase56_appendix": "docs/results/phase56_manuscript_package/phase56_negative_diagnostic_appendix_table.csv",
+    "phase56_main": "docs/results/phase56_manuscript_package/phase56_main_spot_size_seed_positive_table.csv",
+    "phase56_route": "docs/results/phase56_manuscript_package/phase56_route_guard_boundary_table.csv",
+    "phase57_contract": "docs/results/phase57_claim_governance/phase57_claim_contract.json",
+    "phase57_ledger": "docs/results/phase57_claim_governance/phase57_claim_ledger.csv",
+    "phase58_density": "docs/results/phase58_sampling_panel_stress/phase58_sampling_density_stress_summary.json",
+    "phase58_panel": "docs/results/phase58_sampling_panel_stress/phase58_process_panel_stress_summary.json",
+    "phase58_stronger": "docs/results/phase58_stronger_baseline_stress/phase58_stronger_baseline_stress_summary.json",
+    "phase59_anatomy": "docs/results/phase59_residual_anatomy/phase59_broad21_density_residual_anatomy.json",
+    "phase59_upper": "docs/results/phase59_residual_anatomy/phase59_broad21_density_residual_upper_bound.json"
+  },
+  "model_expansion_gate": {
+    "decision": "block_density_failure_driven_model_expansion",
+    "reason": "validation-visible correction does not beat the reference on the analysis split",
+    "selected_variant": "blend:broad_process_v1->mean:alpha=1",
+    "uses_test_for_selection": false
+  },
+  "objective": "post_phase59_manuscript_evidence_package",
+  "outputs": {
+    "appendix_table": "docs/results/phase60_manuscript_evidence_package/phase60_appendix_negative_diagnostic_table.csv",
+    "main_table": "docs/results/phase60_manuscript_evidence_package/phase60_main_spot_size_seed_positive_table.csv",
+    "manifest": "docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package_manifest.json",
+    "markdown": "docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package.md",
+    "next_branch_gate_table": "docs/results/phase60_manuscript_evidence_package/phase60_next_branch_gate_table.csv",
+    "route_guard_table": "docs/results/phase60_manuscript_evidence_package/phase60_route_guard_boundary_table.csv",
+    "stress_boundary_table": "docs/results/phase60_manuscript_evidence_package/phase60_stress_boundary_table.csv"
+  },
+  "phase": 60
+}

@@ -527,6 +527,9 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 55 `spot_size` transferable seed validation 已通过。`broad_process_v1` 的 FiLM/global-standard route 在 broad12 和 broad21 上以 seeds 7/1/2 同时压过 no-process Macro PINN 和 strong baselines：broad12 三 seed 为 `136.384782 / 162.125337 / 165.282182`，broad21 三 seed 为 `146.002303 / 164.313888 / 174.735839`，对应 test RMSE / hot q90 RMSE / gradient q90 RMSE。当前 paper-facing 模型贡献应写作 explicit broad-data process route guard + stable `spot_size` process-conditioned branch。
 - Phase 56 manuscript-facing package 已生成。主表、route-guard 边界表、负诊断 appendix 和 `spot_size` 三指标对比图位于 `docs/results/phase56_manuscript_package/`，全部由 Phase 54/55 JSON reports 自动生成。
 - Phase 57 claim governance 已生成。`docs/results/phase57_claim_governance/` 固化了 frozen floor、future branch gate contract 和 living claim ledger：当前只有 broad12/broad21 `spot_size` 是 `paper_positive_seed_robust`，`line` 是 no-process fallback evidence，`laser_power`、`scan_speed`、full `process` 仍是 route-guard-only。
+- Phase 58 stress tests 已完成。stronger-baseline stress 支持固定采样 Phase 55 floor，auxiliary broad15 panel 为正；但 alternate-density broad21 `spot_size` 退化为 density-sensitive boundary，不能写成 density-invariant robustness。
+- Phase 59 residual anatomy 已完成。broad21 density failure 的 no-test-leakage upper-bound probe 从 validation 选择 `blend:broad_process_v1->mean:alpha=1`，说明该失败不支持直接扩展新模型分支。
+- Phase 60 manuscript evidence package 已生成。`docs/results/phase60_manuscript_evidence_package/` 汇总主表、route-guard 表、stress/boundary 表、扩展 appendix 和 next-branch gate；manifest 决策为 `block_density_failure_driven_model_expansion`。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -601,6 +604,9 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/ambench_multiline_process_spot_size_seed_validation_v1.md](docs/results/ambench_multiline_process_spot_size_seed_validation_v1.md): Phase 55 broad12/broad21 `spot_size` 三 seed transferable validation、strong-baseline/no-process gate 与 paper-facing model-claim 边界。
 - [docs/results/phase56_manuscript_package/phase56_manuscript_table_figure_package.md](docs/results/phase56_manuscript_package/phase56_manuscript_table_figure_package.md): Phase 56 manuscript-facing 主表、route-guard 表、负诊断 appendix、figure/caption/source trace package。
 - [docs/results/phase57_claim_governance/phase57_claim_governance.md](docs/results/phase57_claim_governance/phase57_claim_governance.md): Phase 57 frozen floor、claim ledger、no-test-leakage contract 和 future branch seed-expansion gate。
+- [docs/results/ambench_phase58_clean_repro_stress_plan_v1.md](docs/results/ambench_phase58_clean_repro_stress_plan_v1.md): Phase 58 clean repro、stronger-baseline stress、sampling-density stress 和 auxiliary process-panel stress 结论。
+- [docs/results/ambench_phase59_residual_anatomy_v1.md](docs/results/ambench_phase59_residual_anatomy_v1.md): Phase 59 broad21 alternate-density residual anatomy、upper-bound probe 与模型扩展 gate 结论。
+- [docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package.md](docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package.md): Phase 60 post-Phase-59 manuscript evidence package，包含主表、route-guard 表、stress/boundary 表、appendix 和 next-branch gate。
 
 Real micro graph closure 对比脚本：
 

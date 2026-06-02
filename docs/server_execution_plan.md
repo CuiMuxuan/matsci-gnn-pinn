@@ -1916,6 +1916,85 @@ outputs/reports/phase56_manuscript_package_manifest.json
 
 结论：Phase 56 完成结果包装，不新增训练证据。下一步进入 results text / figure caption / discussion boundary drafting。
 
+#### Phase 57：claim governance and future-branch contract
+
+目标：在继续任何新模型分支前，把当前 paper-facing floor、claim ledger 和 no-test-leakage gate 固化成机器可读合同。
+
+生成命令：
+
+```bash
+python -X utf8 scripts/server/build_phase57_claim_governance.py
+```
+
+输出：
+
+```text
+docs/results/phase57_claim_governance/phase57_claim_contract.json
+docs/results/phase57_claim_governance/phase57_claim_ledger.csv
+docs/results/phase57_claim_governance/phase57_claim_governance.md
+docs/results/phase57_claim_governance/phase57_claim_governance_manifest.json
+```
+
+结论：Phase 57 将 broad12/broad21 fixed-sampling `spot_size` seeds 7/1/2 固化为 frozen floor。未来任何模型候选都必须在 broad12 和 broad21 上同时守住 test RMSE、hot q90 RMSE 和 gradient q90 RMSE，且 route selection、hyperparameter selection、seed expansion 不能使用 test labels。
+
+#### Phase 58：clean repro and stress evidence
+
+目标：先证明当前 Phase 55/56/57 package 可从 GitHub clean checkout 重建，再用 stronger baselines、sampling density 和 auxiliary process panel 压测固定采样 `spot_size` claim。
+
+关键输出：
+
+```text
+docs/results/phase58_clean_repro/phase58_clean_repro_manifest.json
+docs/results/phase58_stronger_baseline_stress/phase58_stronger_baseline_stress_summary.md
+docs/results/phase58_sampling_panel_stress/phase58_sampling_density_stress_summary.md
+docs/results/phase58_sampling_panel_stress/phase58_process_panel_stress_summary.md
+docs/results/ambench_phase58_clean_repro_stress_plan_v1.md
+```
+
+结论：
+
+- Stronger-baseline stress 通过；random forest 和 histogram gradient boosting 没有压过 frozen Phase 55 `spot_size` floor。
+- Auxiliary broad15 panel seed-7 为正：`138.855456 / 158.622677 / 165.869192`，优于 mean baseline。
+- Alternate-density broad21 `spot_size` 为边界失败：`153.259455 / 270.628922 / 250.519935`，弱于 mean `139.725646 / 253.129723 / 231.780894`。因此 fixed-sampling claim 可保留，但不能写成 density-invariant robustness。
+
+#### Phase 59：residual anatomy and upper-bound gate
+
+目标：解释 Phase 58 alternate-density broad21 失败是否提供可学习的新模型信号，或只是 route boundary。
+
+关键输出：
+
+```text
+docs/results/phase59_residual_anatomy/phase59_broad21_density_residual_anatomy.md
+docs/results/phase59_residual_anatomy/phase59_broad21_density_residual_upper_bound.md
+docs/results/ambench_phase59_residual_anatomy_v1.md
+```
+
+结论：失败是结构化的，但不是当前 no-test-leakage gate 下可支持模型扩展的信号。Worst slices 集中在 `Line_1_1_1`、hot q90、low time/frame bins 和 `Line_1_1_2`；但 train/val-only upper-bound probe 选择 `blend:broad_process_v1->mean:alpha=1`，且 `uses_test_for_selection=false`。因此不要从 density failure 直接进入 Candidate A/B 训练分支。
+
+#### Phase 60：post-Phase-59 manuscript evidence package
+
+目标：把 Phase 55-59 证据合成当前主文/补充材料的可审计入口，并给后续模型创新分支写入 gate。
+
+生成命令：
+
+```bash
+python -X utf8 scripts/server/build_phase60_manuscript_evidence_package.py
+```
+
+输出：
+
+```text
+docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package.md
+docs/results/phase60_manuscript_evidence_package/phase60_main_spot_size_seed_positive_table.csv
+docs/results/phase60_manuscript_evidence_package/phase60_route_guard_boundary_table.csv
+docs/results/phase60_manuscript_evidence_package/phase60_stress_boundary_table.csv
+docs/results/phase60_manuscript_evidence_package/phase60_appendix_negative_diagnostic_table.csv
+docs/results/phase60_manuscript_evidence_package/phase60_next_branch_gate_table.csv
+docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package_manifest.json
+```
+
+结论：Phase 60 不新增训练证据。当前 manifest 记录 main rows `6`、route rows `8`、stress/boundary rows `19`、appendix rows `14`，并给出 `block_density_failure_driven_model_expansion`。下一步优先进入 Phase 61 manuscript results/methods/caption draft package；若用户要求继续模型创新，则只能从 Phase 60 next-branch gate 中未阻塞的新验证信号进入。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
@@ -2097,12 +2176,12 @@ git rev-parse --short origin/main
 
 ## 立即下一步建议
 
-Phase 57 已完成。下一轮服务器工作先做 Phase 58 clean-checkout reproducibility，不要直接启动新的 source-inversion、route-guard-only seed expansion，或在没有复现门槛的情况下继续叠加小型训练技巧。
+Phase 60 已完成。下一步先进入 Phase 61 manuscript results/methods/caption draft package，不要从 Phase 58/59 density failure 直接启动新模型训练分支。
 
 优先级：
 
-1. 在 A100 上从 GitHub 建立独立 clean checkout，使用 clean checkout 的代码重建 Phase 55/56/57 reports；训练 artifacts 可以从主服务器仓库只读引用，因为 `outputs/` 不进入 GitHub。
-2. 复查 frozen floor：broad12/broad21 `spot_size` seed-robust process-conditioned evidence 必须仍能从 reports 重建。
-3. route-guard 段落明确：broad12/broad21 `line` 是 no-process fallback evidence；`laser_power`、`scan_speed`、full `process` 是 route-guard-only。
-4. supplement/limitation 段落纳入 Phases 33-53 negative diagnostics，尤其是 source-inversion / Bayesian PINN / source-path branch 的数据兼容性限制。
-5. 下一次 code-active branch 应从 Phase 58 的复现/压力测试缺口倒推，例如增加 stronger tabular baseline、额外 AM-Bench split、或独立 process-balanced subset；新模型候选必须先通过 Phase 57 frozen-floor gate。
+1. 用 `docs/results/phase60_manuscript_evidence_package/phase60_main_spot_size_seed_positive_table.csv` 写主文主表和结果段落。
+2. 用 `phase60_route_guard_boundary_table.csv` 写 route-guard/no-process fallback 边界，明确 `laser_power`、`scan_speed`、full `process` 不是 strong-baseline wins。
+3. 用 `phase60_stress_boundary_table.csv` 写 stronger-baseline stress、broad15 support、broad21 density boundary。
+4. 用 `phase60_appendix_negative_diagnostic_table.csv` 写 Phases 33-53 负诊断，加上 Phase 58/59 density-sensitive boundary。
+5. 若继续模型创新，先查 `phase60_next_branch_gate_table.csv`：Candidate A 处于 paused，Candidate B 被 Phase 59 density gate 阻塞，Candidate C 被 registration data 阻塞；只有出现新的 validation-visible signal 时才进入 A100 focused validation。
