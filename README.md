@@ -536,6 +536,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - Phase 70 route-policy non-training audit 已生成。`docs/results/phase70_route_policy_audit/` 显示当前 route guard 能保留 `spot_size` floor 和 no-process line fallback，但 boundary axes 仍落后 strong baseline，Phase 59 density upper-bound 也阻塞 route-policy 扩展；Candidate B 为 `blocked_no_validation_visible_route_policy_signal`。
 - Phase 71 data-registration non-training audit 已生成。`docs/results/phase71_data_registration_audit/` 汇总 Phase 52/53/60/68 证据，确认当前 AM-Bench bundle 有 pad XYPT 但没有 paper-facing single-track registration 或 pad camera-to-galvo mapping；Candidate C 为 `blocked_by_registration_data`，不进入 heat-kernel/Green's-function/source-path A100 训练。
 - Phase 74 manuscript v0 claim-audit package 已生成。`docs/results/phase74_manuscript_v0_claim_audit/` 将 Phase 60/61/68-71 证据锁定为内部可审阅 v0：主 claim 保持 fixed-sampling broad12/broad21 `spot_size` floor，文献/venue claim 仍锁在 gap register 中，当前没有 trainable model branch 打开。
+- Phase 75 Bayesian inverse-closure local identifiability gate 已生成。`bayesian_inverse_closure_v1` 在 synthetic heat-source known-parameter gate 上通过，但 local AM-Bench `Line_0_1` gate 仍出现 global RMSE 与 hot/gradient 区域之间的转移损失：synthetic gain 为 `0.111717 / 0.106836 / 0.294485`，local gate 为 `-50.403261 / 75.802315 / 19.402300`，对应 RMSE / hot q90 RMSE / gradient q90 RMSE gain vs random。当前状态为 `blocked_by_local_ambench_gate`，不进入 Phase 76 broad12/broad21 A100 seed-7 训练，也不请求 A100-SXM4-80GB。
 
 详细命令见 [docs/server_runbook.md](docs/server_runbook.md)，完整推进方案见 [docs/server_execution_plan.md](docs/server_execution_plan.md)。
 
@@ -619,6 +620,7 @@ conda run -n gnnpinn-cu130 python -m pytest -q --basetemp .pytest_tmp
 - [docs/results/phase70_route_policy_audit/phase70_route_policy_audit.md](docs/results/phase70_route_policy_audit/phase70_route_policy_audit.md): Phase 70 route-policy non-training audit，记录 Candidate B 是否允许进入低容量 route-policy gate 的判断。
 - [docs/results/phase71_data_registration_audit/phase71_data_registration_audit.md](docs/results/phase71_data_registration_audit/phase71_data_registration_audit.md): Phase 71 data-registration non-training audit，记录 Candidate C 是否允许进入 heat-kernel/Green's-function/source-path fixed-feature gate 的判断。
 - [docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_claim_audit_package.md](docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_claim_audit_package.md): Phase 74 manuscript v0 evidence-locked package，包含 v0 draft、claim audit、table/figure inventory 和 model boundary register。
+- [docs/results/phase75_bayesian_inverse_closure_gate/phase75_bayesian_inverse_closure_gate.md](docs/results/phase75_bayesian_inverse_closure_gate/phase75_bayesian_inverse_closure_gate.md): Phase 75 Bayesian inverse-closure local identifiability gate，记录 synthetic-positive/local-AM-Bench-negative 结果和阻断 Phase 76 A100 seed-7 的判断。
 
 Real micro graph closure 对比脚本：
 

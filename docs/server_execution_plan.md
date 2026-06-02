@@ -16,6 +16,7 @@
 - Phase 70 已完成 route-policy non-training audit；Candidate B 为 `blocked_no_validation_visible_route_policy_signal`，当前不进入 route-policy 或 mixture-of-experts 训练。
 - Phase 71 已完成 data-registration non-training audit；Candidate C 为 `blocked_by_registration_data`，当前不进入 heat-kernel/Green's-function/source-path A100 训练。
 - Phase 74 已生成 manuscript v0 claim-audit package；当前主张锁定为 fixed-sampling broad12/broad21 `spot_size` floor，文献/venue claim 仍需后续核验，当前没有 trainable model branch 打开。
+- Phase 75 已完成 `bayesian_inverse_closure_v1` local/synthetic identifiability gate；synthetic heat-source gate 为正，但 local AM-Bench `Line_0_1` gate 为 `blocked_by_local_ambench_gate`，当前不进入 Phase 76 broad12/broad21 A100 seed-7 训练。
 - 当前 A100-SXM4-40GB 仍足够处理 package regeneration、非训练审计和首轮小门槛实验；只有进入大规模 learned image encoder、更大多线表、多模型 ensemble 或 40GB 显存实测不足时，才向用户请求 A100-SXM4-80GB。
 
 当前已完成节点：
@@ -2152,6 +2153,31 @@ docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_claim_audit
 
 结论：当前 paper-facing 主线应写成 route-guarded Macro PINN + fixed-sampling `spot_size` transfer floor。Candidate A/B/C、大架构和 source-path 分支只能作为 gated future work 或 appendix/boundary evidence；不要从当前 Phase 74 直接进入 A100 训练。
 
+#### Phase 75：Bayesian inverse-closure local/synthetic identifiability gate
+
+目标：选择一个可证伪的新模型贡献候选 `bayesian_inverse_closure_v1`，先做 synthetic known-parameter recovery 和 local AM-Bench `Line_0_1` region-preservation gate。该阶段不启动 broad12/broad21 训练，只判断是否允许进入 Phase 76 A100 seed-7 focused validation。
+
+生成命令：
+
+```bash
+python -X utf8 scripts/server/build_phase75_bayesian_inverse_closure_gate.py
+```
+
+输出：
+
+```text
+docs/results/phase75_bayesian_inverse_closure_gate/phase75_candidate_design.json
+docs/results/phase75_bayesian_inverse_closure_gate/phase75_synthetic_identifiability_probe.json
+docs/results/phase75_bayesian_inverse_closure_gate/phase75_local_ambench_probe.json
+docs/results/phase75_bayesian_inverse_closure_gate/phase75_bayesian_inverse_closure_gate_table.csv
+docs/results/phase75_bayesian_inverse_closure_gate/phase75_bayesian_inverse_closure_gate.md
+docs/results/phase75_bayesian_inverse_closure_gate/phase75_bayesian_inverse_closure_gate_manifest.json
+```
+
+当前 manifest 记录 gate rows `2`，其中 synthetic gate 为 positive，local AM-Bench gate 为 negative。Synthetic gain vs random 为 `0.111717 / 0.106836 / 0.294485`；local AM-Bench gain vs random 为 `-50.403261 / 75.802315 / 19.402300`，对应 RMSE / hot q90 RMSE / gradient q90 RMSE。
+
+结论：`bayesian_inverse_closure_v1` 仍是 synthetic-identifiable but local-AM-Bench-negative。它改善 hot/gradient 区域但损害 global RMSE，因此 Phase 75 gate 为 `blocked_by_local_ambench_gate`。不要进入 Phase 76 broad12/broad21 A100 seed-7 validation，也不要请求 A100-SXM4-80GB。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
@@ -2333,12 +2359,12 @@ git rev-parse --short origin/main
 
 ## 立即下一步建议
 
-Phase 74 manuscript v0 claim-audit package 已生成。Candidate A/B/C 都没有通过开训门槛；下一步不要直接启动 broad12/broad21 A100 训练，应进入 Phase 75 local/synthetic identifiability gate，或先解决 Phase 74 的 literature/venue gaps。
+Phase 75 Bayesian inverse-closure local/synthetic identifiability gate 已生成。`bayesian_inverse_closure_v1` 没有通过 local AM-Bench gate；当前没有 eligible Phase 76 broad12/broad21 A100 seed-7 候选。
 
 优先级：
 
-1. 本地和 A100 服务器复现 Phase 74 manuscript v0 claim-audit package，确认 claim-audit rows `13`、boundary rows `9`、trainable model opened `false`。
-2. 若继续模型创新，进入 Phase 75 local/synthetic identifiability gate：选择一个候选方向，先做小型可识别性/机制有效性验证。
+1. 本地和 A100 服务器复现 Phase 75 Bayesian inverse-closure gate，确认 synthetic gate positive、local gate negative、Phase 76 allowed `false`。
+2. 若继续模型创新，不要 seed-expand `bayesian_inverse_closure_v1`；只能重新设计一个更保 global/hot/gradient 平衡的 local gate，或转向外部 registered-target 数据卡。
 3. 若继续论文写作，解决 Phase 74/61 的 literature gaps 和 target-venue style gaps，再进入 Introduction/Related Work 写作。
 4. Candidate A/B/C 只有在新的 train/validation-visible signal 或 registered target 出现并通过各自非训练 gate 时才重新打开。
 5. 只有当已通过门槛的训练分支实测或明确预计超过当前 40GB 显存时，才向用户请求 A100-SXM4-80GB。

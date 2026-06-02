@@ -1,0 +1,20 @@
+{
+  "a100_40gb_policy": "Use A100-SXM4-40GB only after the Phase 75 local gate passes.",
+  "a100_80gb_policy": "Request A100-SXM4-80GB only if a Phase 75/76-passing branch is blocked by measured A100-SXM4-40GB memory or runtime.",
+  "candidate_family": "lightweight Bayesian inverse-closure PINN gate",
+  "candidate_id": "bayesian_inverse_closure_v1",
+  "deterministic_controls": [
+    "random sparse acquisition with the same selected sample budget",
+    "region_quota_uncertainty acquisition",
+    "uncertainty_source acquisition",
+    "existing broad_process_v1 route guard before any broad12/broad21 promotion"
+  ],
+  "go_no_go_rule": "Synthetic known-parameter recovery must be positive, and the local AM-Bench gate must preserve or improve RMSE, hot q90 RMSE, and gradient q90 RMSE. A synthetic-only positive is not enough for Phase 76 A100 validation.",
+  "mechanism": {
+    "adaptive_sampling": "validation-selected region policy over uncertainty, source-prior, and gradient proxies",
+    "feature_family": "moving heat-kernel / Green's-function proxy closure basis",
+    "inference": "closed-form Bayesian linear regression over interpretable closure coefficients",
+    "uncertainty": "posterior predictive standard deviation with conformal90 validation calibration"
+  },
+  "paper_facing_hypothesis": "A low-dimensional Bayesian inverse closure can provide uncertainty-aware adaptive sampling and interpretable source/closure coefficients, but it must preserve global, hot-zone, and gradient-band errors before broad-data training."
+}

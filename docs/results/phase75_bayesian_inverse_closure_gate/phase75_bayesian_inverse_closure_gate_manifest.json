@@ -1,0 +1,56 @@
+{
+  "candidate": "bayesian_inverse_closure_v1",
+  "counts": {
+    "gate_rows": 2,
+    "negative_gate_rows": 1,
+    "positive_gate_rows": 1
+  },
+  "gate_status": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "local_gate_passed": false,
+    "next_action": "Close this candidate as a Phase 75 appendix diagnostic or redesign the local gate before any broad12/broad21 training.",
+    "phase76_seed7_allowed": false,
+    "reason": "The candidate is identifiable on synthetic heat-source data, but the local AM-Bench gate still shifts error between global, hot q90, and gradient q90 metrics. Do not run broad12/broad21 A100 validation yet.",
+    "status": "blocked_by_local_ambench_gate",
+    "synthetic_gate_passed": true
+  },
+  "inputs": {
+    "local_split": "outputs/data_splits/ambench_line_0_1_temperature_medium_probe_split.json",
+    "local_split_snapshot": "docs/results/phase75_bayesian_inverse_closure_gate/phase75_line0_1_temperature_medium_probe_split_snapshot.json",
+    "local_table": "data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_medium_probe.csv",
+    "local_table_snapshot": "docs/results/phase75_bayesian_inverse_closure_gate/phase75_line0_1_temperature_medium_probe_snapshot.csv",
+    "phase74_manifest": "docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_claim_audit_manifest.json"
+  },
+  "objective": "bayesian_inverse_closure_local_identifiability_gate",
+  "outputs": {
+    "candidate_design": "docs/results/phase75_bayesian_inverse_closure_gate/phase75_candidate_design.json",
+    "gate_table": "docs/results/phase75_bayesian_inverse_closure_gate/phase75_bayesian_inverse_closure_gate_table.csv",
+    "local_ambench_probe": "docs/results/phase75_bayesian_inverse_closure_gate/phase75_local_ambench_probe.json",
+    "manifest": "docs/results/phase75_bayesian_inverse_closure_gate/phase75_bayesian_inverse_closure_gate_manifest.json",
+    "markdown": "docs/results/phase75_bayesian_inverse_closure_gate/phase75_bayesian_inverse_closure_gate.md",
+    "synthetic_probe": "docs/results/phase75_bayesian_inverse_closure_gate/phase75_synthetic_identifiability_probe.json"
+  },
+  "phase": 75,
+  "phase74_writing_stage_gate": {
+    "candidate_a_status": "paused_no_training_signal",
+    "candidate_b_status": "blocked_no_validation_visible_route_policy_signal",
+    "candidate_c_status": "blocked_by_registration_data",
+    "literature_gap_rows": 3,
+    "main_claim_locked": true,
+    "missing_inventory_rows": 0,
+    "mode": "evidence_locked_manuscript_v0",
+    "next_action": "resolve literature/venue gaps or start Phase 75 local identifiability gate; do not start A100 model training from current gates",
+    "status": "ready_for_internal_manuscript_review",
+    "trainable_model_opened_now": false,
+    "unsupported_v0_claim_rows": 1
+  },
+  "probe_config": {
+    "active_strategy": "validation_selected_region_policy",
+    "calibration_mode": "conformal90",
+    "feature_mode": "heat_kernel",
+    "repeats": 2,
+    "require_region_preservation": true,
+    "seed": 75
+  }
+}
