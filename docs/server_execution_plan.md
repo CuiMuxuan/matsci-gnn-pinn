@@ -13,6 +13,7 @@
 - Phase 61 已生成 manuscript results/methods/caption draft package，并已完成 Phase 66 local/GitHub/server closeout/sync。
 - Phase 68 已生成 validation-visible signal scorecard；当前 `opened_trainable_candidates=0`，下一步是 non-training `spot_size` signal probe 或 manuscript v0 claim audit。
 - Phase 69 已完成 non-training `spot_size` signal probe；Candidate A 保持 `paused_no_training_signal`，当前不进入 A100 seed-7 训练，也不请求 A100-SXM4-80GB。
+- Phase 70 已完成 route-policy non-training audit；Candidate B 为 `blocked_no_validation_visible_route_policy_signal`，当前不进入 route-policy 或 mixture-of-experts 训练。
 - 当前 A100-SXM4-40GB 仍足够处理 Phase 68 信号挖掘和首轮小门槛实验；只有进入大规模 learned image encoder、更大多线表、多模型 ensemble 或 40GB 显存实测不足时，才向用户请求 A100-SXM4-80GB。
 
 当前已完成节点：
@@ -2078,6 +2079,29 @@ docs/results/phase69_spot_size_signal_probe/phase69_spot_size_signal_probe_manif
 
 结论：Candidate A 当前 gate 为 `paused_no_training_signal`，不进入 A100 seed-7 训练，也不请求 A100-SXM4-80GB。下一步应进入 manuscript v0 claim audit，或继续做 non-training route-policy/data-registration 探测。
 
+#### Phase 70：route-policy non-training audit
+
+目标：执行 Phase 68 的 `P68-ROUTE-POLICY` action，用现有 main table、route-guard table、stress/boundary table 和 Phase 59 upper-bound 证据判断 Candidate B 是否能进入 validation-auditable route policy gate。该阶段不新增训练证据，也不启动 mixture-of-experts 或 trainable policy。
+
+生成命令：
+
+```bash
+python -X utf8 scripts/server/build_phase70_route_policy_audit.py
+```
+
+输出：
+
+```text
+docs/results/phase70_route_policy_audit/phase70_route_policy_audit_table.csv
+docs/results/phase70_route_policy_audit/phase70_candidate_b_gate.json
+docs/results/phase70_route_policy_audit/phase70_route_policy_audit.md
+docs/results/phase70_route_policy_audit/phase70_route_policy_audit_manifest.json
+```
+
+当前 manifest 记录 audit rows `29`。Route guard 能保留 fixed-sampling `spot_size` floor，并保留 no-process `line` fallback；但 `laser_power`、`scan_speed`、full `process` 等 boundary axes 仍落后 strong baselines，Phase 59 density upper-bound 也选择 mean fallback。Candidate B gate 为 `blocked_no_validation_visible_route_policy_signal`。
+
+结论：不要实现 trainable route policy、mixture-of-experts 或更高容量路由器。下一步应进入 manuscript v0 claim audit，或执行 `P68-DATA-REGISTRATION`，检查 Candidate C 是否有新的物理注册数据入口。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
@@ -2259,12 +2283,12 @@ git rev-parse --short origin/main
 
 ## 立即下一步建议
 
-Phase 69 `spot_size` non-training signal probe 已生成。Candidate A 没有通过开训门槛；下一步不要直接启动模型训练，应进入 manuscript v0 claim audit，或继续做 route-policy/data-registration 的非训练探测。
+Phase 70 route-policy non-training audit 已生成。Candidate A/B 都没有通过开训门槛；下一步不要直接启动模型训练，应进入 manuscript v0 claim audit，或继续做 Candidate C data-registration 非训练探测。
 
 优先级：
 
-1. 本地和 A100 服务器复现 Phase 69 signal probe，确认 signal rows `15`、status counts `pass=12/boundary=3`、Candidate A gate 为 `paused_no_training_signal`。
+1. 本地和 A100 服务器复现 Phase 70 route-policy audit，确认 audit rows `29`、Candidate B gate 为 `blocked_no_validation_visible_route_policy_signal`。
 2. 进入 manuscript v0 claim audit：把 Phase 60/61 证据写成主文 v0，并保持 density boundary、route guard 和负诊断边界。
-3. 若继续模型创新，优先做 `P68-ROUTE-POLICY` 或 `P68-DATA-REGISTRATION` 的非训练探测；只有探测打开 gate 后才进入 A100 seed-7 训练。
-4. Candidate A 只有在新的 train/validation-visible `spot_size` signal 同时出现在 broad12/broad21 时才重新打开。
+3. 若继续模型创新，执行 `P68-DATA-REGISTRATION`，检查 aligned scan-path 或 pad-thermography target 是否能打开 Candidate C。
+4. Candidate A/B 只有在新的 train/validation-visible signal 出现并通过各自非训练 gate 时才重新打开。
 5. 只有当已通过门槛的训练分支实测或明确预计超过当前 40GB 显存时，才向用户请求 A100-SXM4-80GB。

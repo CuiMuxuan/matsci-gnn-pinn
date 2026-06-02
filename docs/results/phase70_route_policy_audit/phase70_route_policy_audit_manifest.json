@@ -1,0 +1,57 @@
+{
+  "candidate_b_gate": {
+    "a100_80gb_request_now": false,
+    "boundary_blocker_count": 13,
+    "candidate": "Candidate B: validation-auditable route policy",
+    "candidate_a_open_for_seed7": false,
+    "next_action": "do not train Candidate B; continue manuscript v0 audit or data-registration probe",
+    "open_low_capacity_policy_gate": false,
+    "phase59_upper_blocks_route_policy": true,
+    "preserves_spot_size_floor": true,
+    "process_route_signal_count": 0,
+    "reason": "The current route guard preserves spot_size and no-process line fallback, but boundary axes still trail strong baselines and the Phase 59 density upper-bound selects mean fallback.",
+    "seed7_gate": "if reopened in the future, seed 7 must preserve broad12/broad21 spot_size and improve a boundary axis without using test labels for route selection",
+    "status": "blocked_no_validation_visible_route_policy_signal"
+  },
+  "counts": {
+    "audit_rows": 29,
+    "signal_counts": {
+      "blocked_for_policy_training": 6,
+      "blocks_policy_training": 1,
+      "boundary_not_policy_signal": 6,
+      "preserve_fallback": 2,
+      "preserve_only": 2,
+      "supports_current_floor": 12
+    },
+    "status_counts": {
+      "blocks_density_route_policy": 1,
+      "fallback_positive_not_policy_upgrade": 2,
+      "preserve_main_floor": 2,
+      "route_boundary_no_policy_signal": 6,
+      "stress_boundary": 6,
+      "stress_support": 12
+    }
+  },
+  "inputs": {
+    "phase59_upper": "docs/results/phase59_residual_anatomy/phase59_broad21_density_residual_upper_bound.json",
+    "phase60_main": "docs/results/phase60_manuscript_evidence_package/phase60_main_spot_size_seed_positive_table.csv",
+    "phase60_route": "docs/results/phase60_manuscript_evidence_package/phase60_route_guard_boundary_table.csv",
+    "phase60_stress": "docs/results/phase60_manuscript_evidence_package/phase60_stress_boundary_table.csv",
+    "phase68_manifest": "docs/results/phase68_validation_signal_scorecard/phase68_validation_signal_scorecard_manifest.json",
+    "phase69_gate": "docs/results/phase69_spot_size_signal_probe/phase69_candidate_a_gate.json"
+  },
+  "objective": "route_policy_non_training_audit",
+  "outputs": {
+    "audit_table": "docs/results/phase70_route_policy_audit/phase70_route_policy_audit_table.csv",
+    "candidate_b_gate": "docs/results/phase70_route_policy_audit/phase70_candidate_b_gate.json",
+    "manifest": "docs/results/phase70_route_policy_audit/phase70_route_policy_audit_manifest.json",
+    "markdown": "docs/results/phase70_route_policy_audit/phase70_route_policy_audit.md"
+  },
+  "phase": 70,
+  "phase68_decision": {
+    "a100_80gb_request_now": false,
+    "next_step": "non_training_signal_probe_or_manuscript_v0_claim_audit",
+    "reason": "current evidence opens no trainable branch directly and current 40GB A100 is sufficient for package and signal-mining work",
+    "trainable_model_opened": false
+  }
+}
