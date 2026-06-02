@@ -1,0 +1,22 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "baseline_rows": 4,
+  "eligible_smoke_mechanisms": 2,
+  "mechanism_rows": 3,
+  "metric_rows": 4,
+  "next_action": "implement Phase 96 local smoke only; do not start A100 training",
+  "phase96_local_smoke_allowed": true,
+  "protocol_rows": 5,
+  "required_before_a100_training": [
+    "Phase 96 local smoke results",
+    "baseline deltas",
+    "non-worse global metric",
+    "focused metric improvement",
+    "explicit AM-Bench transfer gate before broad12/broad21 validation"
+  ],
+  "source_candidate": "P94-CAND-PFHUB-PINN",
+  "source_phase94_status": "opened_local_design_gate_no_a100",
+  "status": "local_design_ready_no_a100",
+  "submission_ready": false
+}

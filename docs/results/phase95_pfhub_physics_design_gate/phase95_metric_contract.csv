@@ -1,0 +1,5 @@
+metric_id,metric,scope,pass_rule,regression_guard,paper_use
+P95-MET-001,global_rmse,held-out validation/test grid,non-worse than the strongest baseline,any global collapse closes the candidate,"gate only, not AM-Bench manuscript evidence"
+P95-MET-002,pde_residual_rmse,collocation grid,improves over vanilla PINN/RBF comparator,must not hide worse prediction RMSE,mechanism evidence
+P95-MET-003,hot_or_top_gradient_region_rmse,predeclared high-value/high-gradient region,improves while global RMSE is non-worse,same Phase 75 region-gain/global-collapse guard,focused-mechanism evidence
+P95-MET-004,coverage_or_adaptation_efficiency,Bayesian or meta-learning subgate only,coverage within tolerance or fewer adaptation steps,does not override RMSE guards,secondary mechanism evidence

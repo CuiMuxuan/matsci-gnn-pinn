@@ -1,0 +1,73 @@
+{
+  "counts": {
+    "baseline_rows": 4,
+    "mechanism_rows": 3,
+    "metric_rows": 4,
+    "phase94_queue_rows": 1,
+    "protocol_rows": 5
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "baseline_rows": 4,
+    "eligible_smoke_mechanisms": 2,
+    "mechanism_rows": 3,
+    "metric_rows": 4,
+    "next_action": "implement Phase 96 local smoke only; do not start A100 training",
+    "phase96_local_smoke_allowed": true,
+    "protocol_rows": 5,
+    "required_before_a100_training": [
+      "Phase 96 local smoke results",
+      "baseline deltas",
+      "non-worse global metric",
+      "focused metric improvement",
+      "explicit AM-Bench transfer gate before broad12/broad21 validation"
+    ],
+    "source_candidate": "P94-CAND-PFHUB-PINN",
+    "source_phase94_status": "opened_local_design_gate_no_a100",
+    "status": "local_design_ready_no_a100",
+    "submission_ready": false
+  },
+  "inputs": {
+    "phase94_candidate_triage": "docs/results/phase94_external_registered_target_candidate_gate/phase94_external_candidate_triage.csv",
+    "phase94_design_queue": "docs/results/phase94_external_registered_target_candidate_gate/phase94_local_design_queue.csv",
+    "phase94_gate": "docs/results/phase94_external_registered_target_candidate_gate/phase94_external_registered_target_candidate_gate.json"
+  },
+  "objective": "pfhub_style_local_physics_design_gate",
+  "outputs": {
+    "baseline_contract": "docs/results/phase95_pfhub_physics_design_gate/phase95_baseline_contract.csv",
+    "candidate_design": "docs/results/phase95_pfhub_physics_design_gate/phase95_candidate_design.json",
+    "design_protocol": "docs/results/phase95_pfhub_physics_design_gate/phase95_design_protocol.csv",
+    "gate_json": "docs/results/phase95_pfhub_physics_design_gate/phase95_pfhub_physics_design_gate.json",
+    "manifest": "docs/results/phase95_pfhub_physics_design_gate/phase95_pfhub_physics_design_gate_manifest.json",
+    "markdown": "docs/results/phase95_pfhub_physics_design_gate/phase95_pfhub_physics_design_gate.md",
+    "mechanism_matrix": "docs/results/phase95_pfhub_physics_design_gate/phase95_mechanism_matrix.csv",
+    "metric_contract": "docs/results/phase95_pfhub_physics_design_gate/phase95_metric_contract.csv"
+  },
+  "phase": 95,
+  "phase94_gate": {
+    "a100_training_allowed_now": false,
+    "phase95_local_gate_allowed": true,
+    "preferred_next_candidate": "P94-CAND-PFHUB-PINN",
+    "status": "opened_local_design_gate_no_a100"
+  },
+  "source_candidate": {
+    "a100_80gb_request_now": "false",
+    "a100_training_allowed": "false",
+    "allowed_next_gate": "phase95_local_synthetic_benchmark_design",
+    "candidate_family": "external_physics_benchmark",
+    "candidate_id": "P94-CAND-PFHUB-PINN",
+    "evidence": "PFHub gives public physics benchmark definitions that can test model mechanisms before A100 validation.",
+    "model_innovation_fit": "Bayesian/adaptive PINN, Green's-function features, meta-learning quick adaptation precheck",
+    "next_action": "build a local/no-training Phase 95 design gate for one PFHub-style physics benchmark",
+    "priority": "2",
+    "public_reproducibility": "public_benchmark_specs",
+    "registration_status": "synthetic_or_benchmark_registered_by_problem_definition",
+    "source_name": "PFHub phase-field benchmark problems",
+    "source_type": "official_benchmark_collection",
+    "source_url": "https://pages.nist.gov/pfhub/benchmarks/",
+    "status": "open_for_local_design_gate",
+    "stop_condition": "cannot preserve global/hot/gradient metrics on AM-Bench after synthetic success",
+    "target_relevance": "supports mechanism testing, not a direct AM-Bench process-transfer replacement"
+  }
+}

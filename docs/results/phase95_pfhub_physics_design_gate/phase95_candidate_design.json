@@ -1,0 +1,27 @@
+{
+  "a100_80gb_policy": "A100-SXM4-80GB is not justified by design-gate work.",
+  "a100_policy": "A100 training is not allowed from Phase 95; at most Phase 96 local smoke may be opened.",
+  "candidate_family": "PFHub-style local physics benchmark precheck",
+  "candidate_id": "phase95_pfhub_local_physics_v1",
+  "candidate_mechanisms": [
+    "fixed Green's-function / heat-kernel feature augmentation",
+    "Bayesian active collocation selection with uncertainty and residual proxies",
+    "small meta-initialization/adaptation probe over related PDE coefficients"
+  ],
+  "leakage_controls": [
+    "fixed analytic train/validation/test grids before selecting mechanism",
+    "validation-only mechanism choice",
+    "no test-set selection of acquisition strategy or hyperparameters",
+    "all random seeds and generated fields written to manifest"
+  ],
+  "not_a_claim": [
+    "not AM-Bench performance evidence",
+    "not submission-ready venue alignment",
+    "not a replacement for Phase 55/60/74 spot_size floor",
+    "not permission for A100 broad12/broad21 training"
+  ],
+  "paper_facing_hypothesis": "A lightweight physics benchmark can test whether Green's-function features, Bayesian/adaptive sampling, or meta-learning adaptation have a measurable mechanistic signal before any AM-Bench or A100 validation.",
+  "selected_benchmark_style": "PFHub benchmark-derived Allen-Cahn / heat-diffusion surrogate",
+  "source_candidate": "P94-CAND-PFHUB-PINN",
+  "source_url": "https://pages.nist.gov/pfhub/benchmarks/"
+}

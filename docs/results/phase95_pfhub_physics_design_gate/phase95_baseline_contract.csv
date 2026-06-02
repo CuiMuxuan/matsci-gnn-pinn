@@ -1,0 +1,5 @@
+baseline_id,baseline,purpose,required_for_gate,status
+P95-BASE-001,analytic_or_manufactured_solution_prior,sanity-check generated benchmark fields and residuals,true,required
+P95-BASE-002,mean_or_low_order_interpolation,simple non-neural comparator,true,required
+P95-BASE-003,vanilla_pinn_same_budget,physics-informed neural comparator without candidate mechanism,true,required
+P95-BASE-004,random_collocation_same_budget,adaptive-sampling comparator,true,required_for_bayesian_sampling
