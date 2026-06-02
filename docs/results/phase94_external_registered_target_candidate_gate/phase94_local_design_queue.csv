@@ -1,0 +1,2 @@
+queue_id,priority,candidate_id,design_task,minimum_artifact,pass_condition,stop_condition,allowed_compute
+P94-DESIGN-001,P1,P94-CAND-PFHUB-PINN,write candidate_design.json and local/no-training benchmark protocol,docs/results/phase95_* candidate design package with pass/fail metrics,mechanism has a measurable target and does not depend on test-set selection,cannot preserve global/hot/gradient metrics on AM-Bench after synthetic success,local CPU/GPU smoke only; no A100 training
