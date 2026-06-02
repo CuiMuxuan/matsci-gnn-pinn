@@ -21,6 +21,7 @@ from typing import Any
 
 LOCAL_TABLE_SNAPSHOT = "phase75_line0_1_temperature_medium_probe_snapshot.csv"
 LOCAL_SPLIT_SNAPSHOT = "phase75_line0_1_temperature_medium_probe_split_snapshot.json"
+FLOAT_DIGITS = 6
 
 GATE_FIELDS = (
     "gate_id",
@@ -42,8 +43,18 @@ GATE_FIELDS = (
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
-        json.dump(payload, handle, indent=2, sort_keys=True)
+        json.dump(_stable_json_value(payload), handle, indent=2, sort_keys=True)
         handle.write("\n")
+
+
+def _stable_json_value(value: Any) -> Any:
+    if isinstance(value, float):
+        return round(value, FLOAT_DIGITS)
+    if isinstance(value, dict):
+        return {key: _stable_json_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_stable_json_value(item) for item in value]
+    return value
 
 
 def _write_csv(path: Path, rows: list[dict[str, Any]], fields: tuple[str, ...]) -> None:
