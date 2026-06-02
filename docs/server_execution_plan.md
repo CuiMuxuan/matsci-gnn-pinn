@@ -14,7 +14,8 @@
 - Phase 68 已生成 validation-visible signal scorecard；当前 `opened_trainable_candidates=0`，下一步是 non-training `spot_size` signal probe 或 manuscript v0 claim audit。
 - Phase 69 已完成 non-training `spot_size` signal probe；Candidate A 保持 `paused_no_training_signal`，当前不进入 A100 seed-7 训练，也不请求 A100-SXM4-80GB。
 - Phase 70 已完成 route-policy non-training audit；Candidate B 为 `blocked_no_validation_visible_route_policy_signal`，当前不进入 route-policy 或 mixture-of-experts 训练。
-- 当前 A100-SXM4-40GB 仍足够处理 Phase 68 信号挖掘和首轮小门槛实验；只有进入大规模 learned image encoder、更大多线表、多模型 ensemble 或 40GB 显存实测不足时，才向用户请求 A100-SXM4-80GB。
+- Phase 71 已完成 data-registration non-training audit；Candidate C 为 `blocked_by_registration_data`，当前不进入 heat-kernel/Green's-function/source-path A100 训练。
+- 当前 A100-SXM4-40GB 仍足够处理 package regeneration、非训练审计和首轮小门槛实验；只有进入大规模 learned image encoder、更大多线表、多模型 ensemble 或 40GB 显存实测不足时，才向用户请求 A100-SXM4-80GB。
 
 当前已完成节点：
 
@@ -2102,6 +2103,29 @@ docs/results/phase70_route_policy_audit/phase70_route_policy_audit_manifest.json
 
 结论：不要实现 trainable route policy、mixture-of-experts 或更高容量路由器。下一步应进入 manuscript v0 claim audit，或执行 `P68-DATA-REGISTRATION`，检查 Candidate C 是否有新的物理注册数据入口。
 
+#### Phase 71：data-registration non-training audit
+
+目标：执行 Phase 68 的 `P68-DATA-REGISTRATION` action，用 Phase 52/53 注册阻塞证据、Phase 60 next-branch gate 和 Phase 68 scorecard 判断 Candidate C 是否能进入 heat-kernel、Green's-function 或 source-path fixed-feature gate。该阶段不新增训练证据，也不启动 A100 模型训练。
+
+生成命令：
+
+```bash
+python -X utf8 scripts/server/build_phase71_data_registration_audit.py
+```
+
+输出：
+
+```text
+docs/results/phase71_data_registration_audit/phase71_data_registration_audit_table.csv
+docs/results/phase71_data_registration_audit/phase71_candidate_c_gate.json
+docs/results/phase71_data_registration_audit/phase71_data_registration_audit.md
+docs/results/phase71_data_registration_audit/phase71_data_registration_audit_manifest.json
+```
+
+当前 manifest 记录 audit rows `7`，其中 blocking rows `5`、diagnostic rows `2`、aligned target count `0`。当前 AM-Bench bundle 有 `XYPT/Xpad` 和 `XYPT/Ypad`，也有 pad thermography tables，但没有 paper-facing single-track scan-path registration，也没有 pad camera-pixel 到 galvo-mm 的 HDF5 注册元数据。`X_pad1/Y_pad1` independent-rescale diagnostics 仍是 appendix negative/boundary evidence。
+
+结论：Candidate C 当前 gate 为 `blocked_by_registration_data`。不要运行 heat-kernel、Green's-function、source-path broad12/broad21 A100 训练；下一步应进入 manuscript v0 claim audit，或单独规划外部/新增 registered target 数据卡。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
@@ -2283,12 +2307,12 @@ git rev-parse --short origin/main
 
 ## 立即下一步建议
 
-Phase 70 route-policy non-training audit 已生成。Candidate A/B 都没有通过开训门槛；下一步不要直接启动模型训练，应进入 manuscript v0 claim audit，或继续做 Candidate C data-registration 非训练探测。
+Phase 71 data-registration non-training audit 已生成。Candidate A/B/C 都没有通过开训门槛；下一步不要直接启动模型训练，应进入 manuscript v0 claim audit，或单独规划外部/新增 registered target 数据卡。
 
 优先级：
 
-1. 本地和 A100 服务器复现 Phase 70 route-policy audit，确认 audit rows `29`、Candidate B gate 为 `blocked_no_validation_visible_route_policy_signal`。
-2. 进入 manuscript v0 claim audit：把 Phase 60/61 证据写成主文 v0，并保持 density boundary、route guard 和负诊断边界。
-3. 若继续模型创新，执行 `P68-DATA-REGISTRATION`，检查 aligned scan-path 或 pad-thermography target 是否能打开 Candidate C。
-4. Candidate A/B 只有在新的 train/validation-visible signal 出现并通过各自非训练 gate 时才重新打开。
+1. 本地和 A100 服务器复现 Phase 71 data-registration audit，确认 audit rows `7`、Candidate C gate 为 `blocked_by_registration_data`。
+2. 进入 manuscript v0 claim audit：把 Phase 60/61/68-71 证据写成主文 v0，并保持 density boundary、route guard、data-registration blocker 和负诊断边界。
+3. 若继续模型创新，先做 Phase 75 local/synthetic identifiability gate；不要直接启动 broad12/broad21 A100 训练。
+4. Candidate A/B/C 只有在新的 train/validation-visible signal 或 registered target 出现并通过各自非训练 gate 时才重新打开。
 5. 只有当已通过门槛的训练分支实测或明确预计超过当前 40GB 显存时，才向用户请求 A100-SXM4-80GB。

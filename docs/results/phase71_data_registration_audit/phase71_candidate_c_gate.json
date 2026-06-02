@@ -1,0 +1,15 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "aligned_target_count": 0,
+  "blocking_row_count": 5,
+  "candidate": "Candidate C: data-aligned heat-kernel or Green's-function features",
+  "diagnostic_row_count": 2,
+  "fixed_feature_gate_allowed": false,
+  "next_action": "do not train Candidate C; continue manuscript v0 audit or external data-registration planning",
+  "open_aligned_feature_gate": false,
+  "phase68_trainable_model_opened": false,
+  "reason": "Current AM-Bench evidence has pad XYPT but no paper-facing single-track registration or pad camera-to-galvo mapping.",
+  "seed7_gate": "if reopened in the future, seed 7 must be non-worse than broad_process_v1 on broad12 and broad21 for rmse, hot_q90_rmse, and gradient_q90_rmse",
+  "status": "blocked_by_registration_data"
+}
