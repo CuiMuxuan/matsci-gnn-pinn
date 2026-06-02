@@ -1,0 +1,46 @@
+{
+  "candidate_a_gate": {
+    "a100_80gb_request_now": false,
+    "alternate_density_broad12_pass": true,
+    "alternate_density_broad21_pass": false,
+    "auxiliary_panel_broad15_pass": true,
+    "broad21_density_boundary": true,
+    "candidate": "Candidate A: bounded physical spot-size parameterization",
+    "fixed_sampling_broad12_pass": true,
+    "fixed_sampling_broad21_pass": true,
+    "next_action": "do not train Candidate A; continue manuscript v0 audit or non-training route/data probes",
+    "open_for_seed7_a100_gate": false,
+    "phase59_upper_blocks_density_driven_expansion": true,
+    "reason": "fixed-sampling broad12/broad21 and broad15 support the current floor, but broad21 alternate-density is a strong-baseline boundary and Phase 59 validation-selected correction falls back to the mean",
+    "seed7_gate": "if reopened in the future, seed 7 must be non-worse than broad_process_v1 on broad12 and broad21 for rmse, hot_q90_rmse, and gradient_q90_rmse",
+    "status": "paused_no_training_signal"
+  },
+  "counts": {
+    "signal_rows": 15,
+    "status_counts": {
+      "boundary": 3,
+      "pass": 12
+    }
+  },
+  "inputs": {
+    "phase55_fixed": "docs/results/phase58_stronger_baseline_stress/phase58_stronger_baseline_stress_summary.json",
+    "phase58_density": "docs/results/phase58_sampling_panel_stress/phase58_sampling_density_stress_summary.json",
+    "phase58_panel": "docs/results/phase58_sampling_panel_stress/phase58_process_panel_stress_summary.json",
+    "phase59_upper": "docs/results/phase59_residual_anatomy/phase59_broad21_density_residual_upper_bound.json",
+    "phase68_manifest": "docs/results/phase68_validation_signal_scorecard/phase68_validation_signal_scorecard_manifest.json"
+  },
+  "objective": "spot_size_non_training_signal_probe",
+  "outputs": {
+    "candidate_a_gate": "docs/results/phase69_spot_size_signal_probe/phase69_candidate_a_gate.json",
+    "manifest": "docs/results/phase69_spot_size_signal_probe/phase69_spot_size_signal_probe_manifest.json",
+    "markdown": "docs/results/phase69_spot_size_signal_probe/phase69_spot_size_signal_probe.md",
+    "signal_table": "docs/results/phase69_spot_size_signal_probe/phase69_spot_size_signal_probe_table.csv"
+  },
+  "phase": 69,
+  "phase68_decision": {
+    "a100_80gb_request_now": false,
+    "next_step": "non_training_signal_probe_or_manuscript_v0_claim_audit",
+    "reason": "current evidence opens no trainable branch directly and current 40GB A100 is sufficient for package and signal-mining work",
+    "trainable_model_opened": false
+  }
+}

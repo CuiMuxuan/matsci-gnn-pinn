@@ -1,0 +1,16 @@
+evidence_source,dataset,split,metric,candidate,best_strong_baseline,best_strong_baseline_method,no_process,delta_vs_best_strong,delta_vs_no_process,beats_best_strong_baseline,beats_no_process,n_seeds,status,interpretation
+fixed_sampling_phase55,broad12,,rmse,136.384782,151.850578,mean,,-15.465796,,True,True,,pass,supports_current_floor
+fixed_sampling_phase55,broad12,,hot_q90_rmse,162.125337,252.554440,mean,,-90.429103,,True,True,,pass,supports_current_floor
+fixed_sampling_phase55,broad12,,gradient_q90_rmse,165.282182,233.119660,mean,,-67.837478,,True,True,,pass,supports_current_floor
+alternate_density_phase58,broad12,spot_size,rmse,139.085217,140.201362,mean,260.807865,-1.116145,-121.722647,True,True,1,pass,supports_current_floor
+alternate_density_phase58,broad12,spot_size,hot_q90_rmse,235.696768,253.374499,mean,478.337515,-17.677731,-242.640747,True,True,1,pass,supports_current_floor
+alternate_density_phase58,broad12,spot_size,gradient_q90_rmse,221.604222,234.028899,mean,434.594412,-12.424677,-212.990190,True,True,1,pass,supports_current_floor
+fixed_sampling_phase55,broad21,,rmse,146.002303,149.185412,mean,,-3.183109,,True,True,,pass,supports_current_floor
+fixed_sampling_phase55,broad21,,hot_q90_rmse,164.313888,251.976794,mean,,-87.662906,,True,True,,pass,supports_current_floor
+fixed_sampling_phase55,broad21,,gradient_q90_rmse,174.735839,231.072566,mean,,-56.336727,,True,True,,pass,supports_current_floor
+alternate_density_phase58,broad21,spot_size,rmse,153.259455,139.725646,mean,226.518789,13.533809,-73.259334,False,True,1,boundary,beats_no_process_but_not_strong_baseline
+alternate_density_phase58,broad21,spot_size,hot_q90_rmse,270.628922,253.129723,mean,421.639304,17.499198,-151.010383,False,True,1,boundary,beats_no_process_but_not_strong_baseline
+alternate_density_phase58,broad21,spot_size,gradient_q90_rmse,250.519935,231.780894,mean,374.684937,18.739041,-124.165002,False,True,1,boundary,beats_no_process_but_not_strong_baseline
+auxiliary_panel_phase58,broad15,spot_size,rmse,138.855456,151.850578,mean,206.100512,-12.995122,-67.245057,True,True,1,pass,supports_current_floor
+auxiliary_panel_phase58,broad15,spot_size,hot_q90_rmse,158.622677,252.554440,mean,363.828210,-93.931762,-205.205533,True,True,1,pass,supports_current_floor
+auxiliary_panel_phase58,broad15,spot_size,gradient_q90_rmse,165.869192,233.732337,mean,330.201687,-67.863145,-164.332495,True,True,1,pass,supports_current_floor

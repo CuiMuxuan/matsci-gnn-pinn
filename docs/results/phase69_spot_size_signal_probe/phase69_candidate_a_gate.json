@@ -1,0 +1,16 @@
+{
+  "a100_80gb_request_now": false,
+  "alternate_density_broad12_pass": true,
+  "alternate_density_broad21_pass": false,
+  "auxiliary_panel_broad15_pass": true,
+  "broad21_density_boundary": true,
+  "candidate": "Candidate A: bounded physical spot-size parameterization",
+  "fixed_sampling_broad12_pass": true,
+  "fixed_sampling_broad21_pass": true,
+  "next_action": "do not train Candidate A; continue manuscript v0 audit or non-training route/data probes",
+  "open_for_seed7_a100_gate": false,
+  "phase59_upper_blocks_density_driven_expansion": true,
+  "reason": "fixed-sampling broad12/broad21 and broad15 support the current floor, but broad21 alternate-density is a strong-baseline boundary and Phase 59 validation-selected correction falls back to the mean",
+  "seed7_gate": "if reopened in the future, seed 7 must be non-worse than broad_process_v1 on broad12 and broad21 for rmse, hot_q90_rmse, and gradient_q90_rmse",
+  "status": "paused_no_training_signal"
+}

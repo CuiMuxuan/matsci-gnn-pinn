@@ -12,6 +12,7 @@
 - Phase 60 已生成 manuscript evidence package，并记录 `block_density_failure_driven_model_expansion`。
 - Phase 61 已生成 manuscript results/methods/caption draft package，并已完成 Phase 66 local/GitHub/server closeout/sync。
 - Phase 68 已生成 validation-visible signal scorecard；当前 `opened_trainable_candidates=0`，下一步是 non-training `spot_size` signal probe 或 manuscript v0 claim audit。
+- Phase 69 已完成 non-training `spot_size` signal probe；Candidate A 保持 `paused_no_training_signal`，当前不进入 A100 seed-7 训练，也不请求 A100-SXM4-80GB。
 - 当前 A100-SXM4-40GB 仍足够处理 Phase 68 信号挖掘和首轮小门槛实验；只有进入大规模 learned image encoder、更大多线表、多模型 ensemble 或 40GB 显存实测不足时，才向用户请求 A100-SXM4-80GB。
 
 当前已完成节点：
@@ -2054,6 +2055,29 @@ docs/results/phase68_validation_signal_scorecard/phase68_validation_signal_score
 
 结论：Phase 68 允许后续继续尝试更多模型创新和模型架构，但必须先从 non-training signal probe 或 local/synthetic gate 进入，不能从 Phase 58/59 density failure 直接开训。A100-SXM4-80GB 的触发条件是已通过门槛的训练分支实测或明确预计超过当前 40GB 显存。
 
+#### Phase 69：spot-size non-training signal probe
+
+目标：执行 Phase 68 的 `P68-SPOT-SIGNAL` action，用已有 fixed-sampling、density stress、auxiliary panel 和 Phase 59 upper-bound 证据判断 Candidate A 是否能进入 bounded physical `spot_size` parameterization 的 A100 seed-7 gate。该阶段不新增训练证据。
+
+生成命令：
+
+```bash
+python -X utf8 scripts/server/build_phase69_spot_size_signal_probe.py
+```
+
+输出：
+
+```text
+docs/results/phase69_spot_size_signal_probe/phase69_spot_size_signal_probe_table.csv
+docs/results/phase69_spot_size_signal_probe/phase69_candidate_a_gate.json
+docs/results/phase69_spot_size_signal_probe/phase69_spot_size_signal_probe.md
+docs/results/phase69_spot_size_signal_probe/phase69_spot_size_signal_probe_manifest.json
+```
+
+当前 manifest 记录 signal rows `15`，其中 `pass=12`、`boundary=3`。Fixed-sampling broad12/broad21 和 broad15 auxiliary panel 支持当前 floor，但 alternate-density broad21 的 RMSE、hot q90 RMSE、gradient q90 RMSE 都是 strong-baseline boundary；Phase 59 upper-bound 继续从 validation 选择 `blend:broad_process_v1->mean:alpha=1`。
+
+结论：Candidate A 当前 gate 为 `paused_no_training_signal`，不进入 A100 seed-7 训练，也不请求 A100-SXM4-80GB。下一步应进入 manuscript v0 claim audit，或继续做 non-training route-policy/data-registration 探测。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
@@ -2235,12 +2259,12 @@ git rev-parse --short origin/main
 
 ## 立即下一步建议
 
-Phase 68 validation-visible signal scorecard 已生成。下一步不要直接启动模型训练；先做 non-training `spot_size` signal probe，或进入 manuscript v0 claim audit。
+Phase 69 `spot_size` non-training signal probe 已生成。Candidate A 没有通过开训门槛；下一步不要直接启动模型训练，应进入 manuscript v0 claim audit，或继续做 route-policy/data-registration 的非训练探测。
 
 优先级：
 
-1. 本地和 A100 服务器复现 Phase 68 scorecard，确认 candidate rows `6`、action rows `5`、opened trainable candidates `0`。
-2. 执行 `P68-SPOT-SIGNAL`：从 broad12/broad21 fixed-sampling `spot_size` artifacts 和 density stress summaries 中挖掘 train/validation-only physical `spot_size` signal。
-3. 如果 `P68-SPOT-SIGNAL` 同时在 broad12/broad21 出现验证可见信号，再打开 Candidate A seed-7 focused A100 gate。
-4. 如果没有信号，转入 manuscript v0 claim audit，并把 Candidate A 保持为 paused。
+1. 本地和 A100 服务器复现 Phase 69 signal probe，确认 signal rows `15`、status counts `pass=12/boundary=3`、Candidate A gate 为 `paused_no_training_signal`。
+2. 进入 manuscript v0 claim audit：把 Phase 60/61 证据写成主文 v0，并保持 density boundary、route guard 和负诊断边界。
+3. 若继续模型创新，优先做 `P68-ROUTE-POLICY` 或 `P68-DATA-REGISTRATION` 的非训练探测；只有探测打开 gate 后才进入 A100 seed-7 训练。
+4. Candidate A 只有在新的 train/validation-visible `spot_size` signal 同时出现在 broad12/broad21 时才重新打开。
 5. 只有当已通过门槛的训练分支实测或明确预计超过当前 40GB 显存时，才向用户请求 A100-SXM4-80GB。
