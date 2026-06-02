@@ -57,6 +57,41 @@ def _stable_json_value(value: Any) -> Any:
     return value
 
 
+def _stable_probe_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Persist only the stable, gate-relevant part of a Phase 46 probe.
+
+    The raw Phase 46 `runs` array includes posterior coefficients and per-run
+    floating point diagnostics that can drift by a few ulps across BLAS/Python
+    builds. Phase 75 needs the gate summary and decision, not a full numerical
+    trace, so the committed artifact is intentionally compact and reproducible.
+    """
+
+    keys = (
+        "label",
+        "feature_names",
+        "n_points",
+        "split_sizes",
+        "initial_size",
+        "acquisition_size",
+        "repeats",
+        "strategies",
+        "active_strategy",
+        "feature_mode",
+        "calibration_mode",
+        "summary",
+        "decision",
+    )
+    compact = {key: payload[key] for key in keys if key in payload}
+    compact["raw_run_count"] = len(payload.get("runs") or [])
+    compact["raw_runs_persisted"] = False
+    compact["artifact_stability_note"] = (
+        "Raw per-run posterior traces are omitted from the committed Phase 75 "
+        "probe artifact because they are not used for the gate decision and "
+        "can show cross-platform floating-point drift."
+    )
+    return compact
+
+
 def _write_csv(path: Path, rows: list[dict[str, Any]], fields: tuple[str, ...]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
@@ -392,8 +427,8 @@ def build_package(
     manifest_path = output_dir / "phase75_bayesian_inverse_closure_gate_manifest.json"
 
     _write_json(design_path, candidate_design)
-    _write_json(synthetic_path, synthetic_payload)
-    _write_json(local_path, local_payload)
+    _write_json(synthetic_path, _stable_probe_payload(synthetic_payload))
+    _write_json(local_path, _stable_probe_payload(local_payload))
     rows = [
         _gate_row(
             gate_id="P75-SYNTH",

@@ -119,3 +119,24 @@ def test_phase75_candidate_design_records_compute_governance(tmp_path: Path):
     assert "Synthetic known-parameter recovery" in design["go_no_go_rule"]
     assert "A100-SXM4-40GB" in design["a100_40gb_policy"]
     assert "A100-SXM4-80GB" in design["a100_80gb_policy"]
+
+
+def test_phase75_probe_artifacts_omit_raw_runs(tmp_path: Path):
+    module = _load_module()
+
+    manifest = module.build_package(
+        Path(".").resolve(),
+        tmp_path / "out",
+        paths=_paths(tmp_path),
+        seed=75,
+        repeats=1,
+    )
+
+    for key in ("synthetic_probe", "local_ambench_probe"):
+        probe_path = Path(".").resolve() / manifest["outputs"][key]
+        probe = json.loads(probe_path.read_text(encoding="utf-8"))
+        assert "runs" not in probe
+        assert probe["raw_runs_persisted"] is False
+        assert probe["raw_run_count"] > 0
+        assert "summary" in probe
+        assert "decision" in probe
