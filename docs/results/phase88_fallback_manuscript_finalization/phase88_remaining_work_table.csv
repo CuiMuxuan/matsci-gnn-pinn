@@ -1,0 +1,5 @@
+work_id,category,status,required_input_or_gate,blocks_submission,blocks_experimental_claim,next_action
+P88-WORK-LIT,literature_verification,open,3 Phase 61 literature or target-style gaps,true,false,"verify AM-Bench, PINN/process-conditioned modeling, and target-venue sources before final Introduction/Related Work"
+P88-WORK-VENUE,target_venue_alignment,open,"target venue, author guide, or accepted benchmark papers",true,false,"select venue and align manuscript structure, citation density, and caption style"
+P88-WORK-REGISTERED-DATA,future_registered_target,blocked_no_registered_target,"pad camera-to-galvo registration, aligned single-track scan path, or external public registered-target data card",false,false,do not run A100 model training; pursue pad camera-to-galvo registration or an external registered-target data card
+P88-WORK-A100,compute,blocked_no_training_gate,Phase 84/85 passing candidate plus measured 40GB blockage for 80GB request,false,false,do not request A100-SXM4-80GB now

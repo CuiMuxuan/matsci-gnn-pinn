@@ -1,0 +1,14 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "claim_lock_rows": 7,
+  "experimental_claim_complete": true,
+  "main_claim": "fixed-sampling broad12/broad21 spot_size under broad_process_v1, seeds 7/1/2",
+  "next_action": "resolve literature/venue gaps, then polish and format the fallback manuscript",
+  "open_submission_blockers": 2,
+  "phase75_status": "blocked_by_local_ambench_gate",
+  "phase80_status": "blocked_by_local_surrogate_gate",
+  "phase81_status": "blocked_no_registered_target",
+  "status": "fallback_experimental_claim_complete",
+  "submission_ready": false
+}

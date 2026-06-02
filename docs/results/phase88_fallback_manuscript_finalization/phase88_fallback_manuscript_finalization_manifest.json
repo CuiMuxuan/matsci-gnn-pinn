@@ -1,0 +1,55 @@
+{
+  "counts": {
+    "appendix_rows": 18,
+    "base_phase60_appendix_rows": 14,
+    "claim_lock_rows": 7,
+    "literature_gap_rows": 3,
+    "remaining_work_rows": 4,
+    "remaining_work_status_counts": {
+      "blocked_no_registered_target": 1,
+      "blocked_no_training_gate": 1,
+      "open": 2
+    }
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "claim_lock_rows": 7,
+    "experimental_claim_complete": true,
+    "main_claim": "fixed-sampling broad12/broad21 spot_size under broad_process_v1, seeds 7/1/2",
+    "next_action": "resolve literature/venue gaps, then polish and format the fallback manuscript",
+    "open_submission_blockers": 2,
+    "phase75_status": "blocked_by_local_ambench_gate",
+    "phase80_status": "blocked_by_local_surrogate_gate",
+    "phase81_status": "blocked_no_registered_target",
+    "status": "fallback_experimental_claim_complete",
+    "submission_ready": false
+  },
+  "inputs": {
+    "phase60_appendix": "docs/results/phase60_manuscript_evidence_package/phase60_appendix_negative_diagnostic_table.csv",
+    "phase60_main": "docs/results/phase60_manuscript_evidence_package/phase60_main_spot_size_seed_positive_table.csv",
+    "phase60_manifest": "docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package_manifest.json",
+    "phase60_route": "docs/results/phase60_manuscript_evidence_package/phase60_route_guard_boundary_table.csv",
+    "phase60_stress": "docs/results/phase60_manuscript_evidence_package/phase60_stress_boundary_table.csv",
+    "phase61_literature_gaps": "docs/results/phase61_manuscript_draft_package/phase61_literature_gap_register.csv",
+    "phase61_manifest": "docs/results/phase61_manuscript_draft_package/phase61_manuscript_draft_package_manifest.json",
+    "phase74_boundary": "docs/results/phase74_manuscript_v0_claim_audit/phase74_model_boundary_register.csv",
+    "phase74_claim_audit": "docs/results/phase74_manuscript_v0_claim_audit/phase74_claim_audit_table.csv",
+    "phase74_manifest": "docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_claim_audit_manifest.json",
+    "phase75_manifest": "docs/results/phase75_bayesian_inverse_closure_gate/phase75_bayesian_inverse_closure_gate_manifest.json",
+    "phase79_manifest": "docs/results/phase79_bounded_spot_size_parameterization_gate/phase79_bounded_spot_size_parameterization_gate_manifest.json",
+    "phase80_manifest": "docs/results/phase80_bounded_spot_size_local_surrogate_gate/phase80_bounded_spot_size_local_surrogate_gate_manifest.json",
+    "phase81_manifest": "docs/results/phase81_registered_target_intake_gate/phase81_registered_target_intake_gate_manifest.json",
+    "phase81_table": "docs/results/phase81_registered_target_intake_gate/phase81_registered_target_intake_table.csv"
+  },
+  "objective": "fallback_manuscript_finalization",
+  "outputs": {
+    "appendix_diagnostic_table": "docs/results/phase88_fallback_manuscript_finalization/phase88_appendix_diagnostic_table.csv",
+    "claim_lock_table": "docs/results/phase88_fallback_manuscript_finalization/phase88_claim_lock_table.csv",
+    "gate_json": "docs/results/phase88_fallback_manuscript_finalization/phase88_fallback_finalization_gate.json",
+    "manifest": "docs/results/phase88_fallback_manuscript_finalization/phase88_fallback_manuscript_finalization_manifest.json",
+    "markdown": "docs/results/phase88_fallback_manuscript_finalization/phase88_fallback_manuscript_finalization.md",
+    "remaining_work_table": "docs/results/phase88_fallback_manuscript_finalization/phase88_remaining_work_table.csv"
+  },
+  "phase": 88
+}
