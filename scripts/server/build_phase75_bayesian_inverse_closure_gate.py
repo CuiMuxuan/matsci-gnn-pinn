@@ -21,7 +21,7 @@ from typing import Any
 
 LOCAL_TABLE_SNAPSHOT = "phase75_line0_1_temperature_medium_probe_snapshot.csv"
 LOCAL_SPLIT_SNAPSHOT = "phase75_line0_1_temperature_medium_probe_split_snapshot.json"
-JSON_FLOAT_DIGITS = 5
+JSON_FLOAT_DIGITS = 4
 
 GATE_FIELDS = (
     "gate_id",
