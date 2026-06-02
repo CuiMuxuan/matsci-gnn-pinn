@@ -12,9 +12,12 @@ def test_phase58_clean_repro_runner_rebuilds_governance_stack():
     assert "summarize_phase55_spot_size_seed_check.py" in text
     assert "build_phase56_manuscript_package.py" in text
     assert "build_phase57_claim_governance.py" in text
+    assert "phase58_phase56_dir" in text
+    assert "phase58_phase57_dir" in text
     assert "--require-complete" in text
     assert "--require-pass" in text
     assert "copy_required_artifact" in text
     assert "_seed${seed}_macro_pinn_minmax_${run_tag}_v1/metrics.json" in text
     assert "${base_run_id}_${tag}_regions_q90.json" in text
     assert "phase58_clean_repro_manifest.json" in text
+    assert "cat > \"${manifest_py}\"" in text

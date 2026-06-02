@@ -98,39 +98,51 @@ done
   --require-pass \
   > docs/results/phase58_clean_repro/phase58_phase55_rebuild.log
 
+phase58_dir="docs/results/phase58_clean_repro"
+phase58_phase56_dir="${phase58_dir}/phase56_manuscript_package"
+phase58_phase57_dir="${phase58_dir}/phase57_claim_governance"
+
 "${python_bin[@]}" scripts/server/build_phase56_manuscript_package.py \
   --root . \
-  --output-dir docs/results/phase56_manuscript_package \
+  --output-dir "${phase58_phase56_dir}" \
   --manifest-output outputs/reports/phase56_manuscript_package_manifest.json \
   > docs/results/phase58_clean_repro/phase58_phase56_rebuild.log
 
 "${python_bin[@]}" scripts/server/build_phase57_claim_governance.py \
   --root . \
-  --output-dir docs/results/phase57_claim_governance \
+  --phase56-negative-table "${phase58_phase56_dir}/phase56_negative_diagnostic_appendix_table.csv" \
+  --output-dir "${phase58_phase57_dir}" \
   > docs/results/phase58_clean_repro/phase58_phase57_rebuild.log
 
-"${python_bin[@]}" - <<'PY'
+manifest_py="${phase58_dir}/_phase58_manifest.py"
+cat > "${manifest_py}" <<'PY'
 import json
+import os
+import subprocess
 from pathlib import Path
 
 root = Path(".")
 phase55 = json.loads((root / "outputs/reports/phase55_spot_size_route_seed_check_summary.json").read_text())
-phase57 = json.loads((root / "docs/results/phase57_claim_governance/phase57_claim_governance_manifest.json").read_text())
+phase57 = json.loads((root / "docs/results/phase58_clean_repro/phase57_claim_governance/phase57_claim_governance_manifest.json").read_text())
 summary = {
     "phase": 58,
     "objective": "clean_checkout_rebuild_phase55_56_57",
-    "commit": __import__("subprocess").check_output(["git", "rev-parse", "--short", "HEAD"], text=True).strip(),
-    "source_repo": str(Path(__import__("os").environ.get("SOURCE_REPO", "/root/matsci-gnn-pinn"))),
+    "commit": subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], text=True).strip(),
+    "source_repo": str(Path(os.environ.get("SOURCE_REPO", "/root/matsci-gnn-pinn"))),
     "transfer_gate": phase55.get("transfer_gate"),
     "ledger_counts": phase57.get("ledger_counts"),
+    "git_status_short": subprocess.check_output(["git", "status", "--short"], text=True).splitlines(),
     "outputs": {
         "phase54_summary": "outputs/reports/phase54_process_route_claim_boundary_summary.json",
         "phase55_summary": "outputs/reports/phase55_spot_size_route_seed_check_summary.json",
         "phase56_manifest": "outputs/reports/phase56_manuscript_package_manifest.json",
-        "phase57_manifest": "docs/results/phase57_claim_governance/phase57_claim_governance_manifest.json",
+        "phase56_package": "docs/results/phase58_clean_repro/phase56_manuscript_package",
+        "phase57_manifest": "docs/results/phase58_clean_repro/phase57_claim_governance/phase57_claim_governance_manifest.json",
     },
 }
 out = root / "docs/results/phase58_clean_repro/phase58_clean_repro_manifest.json"
 out.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 print(json.dumps(summary, indent=2, sort_keys=True))
 PY
+"${python_bin[@]}" "${manifest_py}"
+rm -f "${manifest_py}"
