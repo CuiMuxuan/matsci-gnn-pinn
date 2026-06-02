@@ -118,3 +118,5 @@ def test_phase58_runner_uses_temp_python_file_instead_of_stdin():
     assert "artifact_index_py=" in text
     assert "python - <<'PY'" not in text
     assert "phase58_stronger_baseline_stress_summary.json" in text
+    assert '[[ -z "${dataset_label}${base_run_id}${table}${split_manifest}" ]]' in text
+    assert "incomplete artifact index row" in text

@@ -54,6 +54,13 @@ PY
 rm -f "$artifact_index_py"
 
 while IFS=$'\t' read -r dataset_label base_run_id table split_manifest; do
+  if [[ -z "${dataset_label}${base_run_id}${table}${split_manifest}" ]]; then
+    continue
+  fi
+  if [[ -z "$dataset_label" || -z "$base_run_id" || -z "$table" || -z "$split_manifest" ]]; then
+    echo "[phase58] incomplete artifact index row: ${dataset_label:-<empty>} ${base_run_id:-<empty>} ${table:-<empty>} ${split_manifest:-<empty>}" >&2
+    exit 2
+  fi
   run_stress_baseline "$dataset_label" "$base_run_id" "$table" "$split_manifest" random_forest coords \
     --feature-column x --feature-column y --feature-column t
   run_stress_baseline "$dataset_label" "$base_run_id" "$table" "$split_manifest" random_forest process \
