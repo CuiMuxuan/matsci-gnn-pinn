@@ -1301,6 +1301,13 @@ STEPS=500 N_ESTIMATORS=80 WEIGHT_STEP=0.1 \
 
 验收：只有 prediction stack 在 broad12 与 broad21 `laser_power` 上同时改善或保持 global RMSE，并改善 hot q90 与 gradient q90，且能面对最强 classical baseline，才进入 `baseline_guarded_expert_v1` 训练模型实现。若 stack probe 失败，则不要实现 MoE；应转向数据/任务定义或其他有真实可学习剩余误差的 paper-facing 方向。
 
+验收结果：Phase 45 Gate 1 已关闭为负向诊断。两个 summary 均生成：
+
+- broad12 `laser_power`: stack 使用 `0.4` ExtraTrees process + `0.6` `broad_process_v1`，test 为 `143.594749 / 286.768169 / 229.955382`，弱于 mean `132.965887 / 242.427068 / 208.105836` 和 `broad_process_v1` `140.753540 / 254.473291 / 215.411533`。
+- broad21 `laser_power`: stack 使用 `0.1` mean + `0.4` ExtraTrees process + `0.3` no-process Macro PINN + `0.2` derived-only，test 为 `160.353180 / 321.588710 / 255.299857`，弱于 mean `131.741364 / 237.730958 / 205.133029`，且 hot/gradient 弱于 `broad_process_v1` `178.040335 / 296.909567 / 254.954359`。
+
+结论：不要实现 `baseline_guarded_expert_v1`，不要 seed expansion，也不需要 A100-SXM4-80GB。当前 expert pool 没有可由 train/validation 稳定选择并迁移到 broad12+broad21 `laser_power` 的组合优势。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

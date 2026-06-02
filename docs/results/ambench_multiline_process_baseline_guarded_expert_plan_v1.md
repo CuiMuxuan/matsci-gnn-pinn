@@ -2,7 +2,7 @@
 
 ## Status
 
-Gate 1 infrastructure is implemented locally after Phase 44. A100 focused execution is pending.
+Closed after Gate 1 A100 validation. The prediction-level stack probe failed, so `baseline_guarded_expert_v1` should not be implemented from the current expert pool.
 
 ## Why Phase 45 Changes Direction
 
@@ -127,7 +127,7 @@ Current A100-SXM4-40GB remains sufficient for Phase 45. Do not request A100-SXM4
 2. Done: `scripts/server/phase45_prediction_stack_probe.py` consumes aligned prediction CSV files plus a split manifest.
 3. Done: local tests cover no-test-leakage stack fitting and prediction export.
 4. Done locally: `scripts/server/run_phase45_prediction_stack_probe_a100.sh` generates broad12/broad21 `laser_power` prediction CSVs and stack summaries without overwriting Phase 41-44 artifacts.
-5. Pending: run the Phase 45 A100 script and summarize Gate 1 before any trainable model code is added.
+5. Done: Phase 45 A100 Gate 1 was run before adding any trainable guarded-expert model code.
 
 Focused A100 command:
 
@@ -138,3 +138,37 @@ STEPS=500 N_ESTIMATORS=80 WEIGHT_STEP=0.1 \
   bash scripts/server/run_phase45_prediction_stack_probe_a100.sh \
   > logs/phase45_prediction_stack_probe_a100_v1.log 2>&1
 ```
+
+The first launch failed before training because nested shell quoting split `DATASET_LIMITS="12 21"`. The corrected run used a server-side launch script and wrote:
+
+```text
+logs/phase45_prediction_stack_probe_a100_v2.log
+outputs/reports/phase45_broad12_laser_power_prediction_stack_probe_summary.json
+outputs/reports/phase45_broad21_laser_power_prediction_stack_probe_summary.json
+```
+
+## Gate 1 Results
+
+Metric order is test RMSE / hot q90 RMSE / gradient q90 RMSE.
+
+| Dataset/Split | Method | Metrics | Notes |
+| --- | --- | ---: | --- |
+| broad12 `laser_power` | mean | `132.965887 / 242.427068 / 208.105836` | strongest comparator |
+| broad12 `laser_power` | `broad_process_v1` | `140.753540 / 254.473291 / 215.411533` | route guard |
+| broad12 `laser_power` | derived-only `am_energy_v1` | `154.314105 / 304.601093 / 240.661628` | diagnostic expert in this run |
+| broad12 `laser_power` | convex stack | `143.594749 / 286.768169 / 229.955382` | train/val selected weights: `0.4` ExtraTrees process + `0.6` `broad_process_v1` |
+| broad21 `laser_power` | mean | `131.741364 / 237.730958 / 205.133029` | strongest comparator |
+| broad21 `laser_power` | `broad_process_v1` | `178.040335 / 296.909567 / 254.954359` | route guard |
+| broad21 `laser_power` | derived-only `am_energy_v1` | `168.884344 / 331.570769 / 269.841575` | diagnostic expert in this run |
+| broad21 `laser_power` | convex stack | `160.353180 / 321.588710 / 255.299857` | train/val selected weights: `0.1` mean + `0.4` ExtraTrees process + `0.3` no-process Macro PINN + `0.2` derived-only |
+
+The stack probe correctly records `uses_test_for_selection=false`, but the selected stacks do not pass the gate:
+
+- broad12 stack is worse than mean and worse than `broad_process_v1`;
+- broad21 stack is worse than mean on all reported metrics and worse than `broad_process_v1` on hot/gradient metrics.
+
+## Decision
+
+Gate 1 fails. Do not implement `baseline_guarded_expert_v1`, do not seed-expand, and do not request larger hardware. The current expert pool does not contain a validation-selectable transferable improvement for broad12+broad21 `laser_power`.
+
+The next paper-facing move should not be a trainable wrapper over the same predictions. It should change the problem framing more substantially: target/split design, richer physically aligned data, a different model class with a clearer advantage, or a paper narrative that separates global mean-dominated reconstruction from hot-zone/gradient process sensitivity.
