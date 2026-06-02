@@ -2,7 +2,7 @@
 
 ## Status
 
-In progress. Phase 44 starts after `process_encoder_v1` improved broad21 `laser_power` but failed broad12. The next branch keeps `broad_process_v1` as the route guard and changes the supervised objective before adding another process encoder.
+Closed as a negative objective diagnostic. Phase 44 started after `process_encoder_v1` improved broad21 `laser_power` but failed broad12. This branch kept `broad_process_v1` as the route guard and changed the supervised objective before adding another process encoder.
 
 ## Hypothesis
 
@@ -43,6 +43,27 @@ python scripts/server/summarize_phase30_broad_process_selector_smoke.py \
   --include-broad-process-group-balance
 ```
 
+Server artifacts:
+
+- Log: `logs/phase44_broad12_broad21_laser_power_group_balance_a100_v1.log`
+- broad12 summary: `outputs/reports/phase44_broad12_laser_power_group_balance_summary.json`
+- broad21 summary: `outputs/reports/phase44_broad21_laser_power_group_balance_summary.json`
+
+Both summaries passed `--require-comparable`.
+
+## Results
+
+Metric order is test RMSE / hot q90 RMSE / gradient q90 RMSE.
+
+| Split | `broad_process_v1` | `broad_process_group_balance` | Decision |
+|-------|--------------------|-------------------------------|----------|
+| broad12 `laser_power` | `140.753534 / 254.473291 / 215.411533` | `189.364413 / 356.845339 / 289.133792` | Regresses all metrics |
+| broad21 `laser_power` | `178.040331 / 296.909567 / 254.954359` | `212.704856 / 221.878476 / 238.794848` | Improves regions but regresses global RMSE |
+
+The group-balanced run used `process_condition` with strength `1.0`, `am_energy_v1` derived inputs, and the existing `broad_process_v1` route guard. The broad12 train split had only one `process_condition` group for this holdout, so the group-balance component could not reshape broad12 train supervision; broad21 had one held-out train process group as well in the summarized artifact. This makes the branch a useful metadata/objective plumbing check, but not a credible transfer fix.
+
 ## Decision Gate
 
 Continue only if `broad_process_group_balance` improves or preserves global RMSE while improving hot q90 and gradient q90 on both broad12 and broad21 `laser_power`. If the result is only broad12-local or broad21-local, close it as an objective diagnostic before any seed expansion.
+
+The gate fails. Do not run seed expansion. Keep `broad_process_v1` as the broad-data route guard.

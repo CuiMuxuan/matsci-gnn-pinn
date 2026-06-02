@@ -1864,6 +1864,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 "residual_correction": metrics_payload["residual_correction"],
                 "output_affine": metrics_payload["output_affine"],
                 "data_loss_weighting": metrics_payload["data_loss_weighting"],
+                "data_loss_group_balance": metrics_payload["data_loss_group_balance"],
+                "data_loss_objective": metrics_payload["data_loss_objective"],
                 "prediction_anchor": metrics_payload["prediction_anchor"],
                 "target_residual_baseline": metrics_payload["target_residual_baseline"],
             },

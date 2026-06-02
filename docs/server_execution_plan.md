@@ -1271,6 +1271,13 @@ STEPS=500 N_ESTIMATORS=80 \
 
 验收：比较 `broad_process_group_balance` against mean/kNN/ExtraTrees、no-process、`process_axis_v1`、`broad_process_v1`、Phase 41 derived-only、Phase 42 prediction-anchor 与 Phase 43 process encoder。只有 broad12 与 broad21 `laser_power` 同时改善或保持 global RMSE 且改善 hot/gradient，才做 seed expansion；若仍是 split-local，关闭为 objective diagnostic。
 
+验收结果：Phase 44 已关闭为负向 objective diagnostic。两个 summary 均通过 `--require-comparable`：
+
+- broad12 `laser_power`: `broad_process_v1` 为 `140.753534 / 254.473291 / 215.411533`，`broad_process_group_balance` 退化到 `189.364413 / 356.845339 / 289.133792`。
+- broad21 `laser_power`: `broad_process_v1` 为 `178.040331 / 296.909567 / 254.954359`，`broad_process_group_balance` 为 `212.704856 / 221.878476 / 238.794848`。
+
+结论：该分支只在 broad21 region metrics 上有改善，但 global RMSE 明显退化，且 broad12 全部指标退化。不要 seed expansion；继续保留 `broad_process_v1` 作为 broad-data route guard。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
