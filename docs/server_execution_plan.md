@@ -1308,6 +1308,614 @@ STEPS=500 N_ESTIMATORS=80 WEIGHT_STEP=0.1 \
 
 结论：不要实现 `baseline_guarded_expert_v1`，不要 seed expansion，也不需要 A100-SXM4-80GB。当前 expert pool 没有可由 train/validation 稳定选择并迁移到 broad12+broad21 `laser_power` 的组合优势。
 
+#### Phase 46：Bayesian inverse-closure PINN feasibility gate
+
+目标：Phase 45 关闭后，不再继续包装同一批 expert predictions。下一步 paper-facing 方向应改变问题表述：从 full-field global RMSE 竞争，转到 sparse-data inverse closure/source discovery with calibrated uncertainty。
+
+Phase 46 已完成本地 feasibility validation，结果文档为 `docs/results/ambench_bayesian_inverse_closure_pinn_plan_v1.md`。当前结论是不启动 A100 broad12/broad21 扩展。
+
+实现：
+
+- `scripts/server/phase46_bayesian_inverse_closure_probe.py` 实现轻量 Bayesian linear posterior over low-dimensional source/closure proxy features。
+- `tests/test_phase46_bayesian_inverse_closure_probe.py` 覆盖 synthetic parameter recovery 与 table-mode sparse sampling summary。
+- probe 比较 `random` 与 `uncertainty_source` sparse sampling。
+- 不做 full Bayesian neural weights。
+
+本地验证命令：
+
+```bash
+PYTHONPATH=src python -X utf8 scripts/server/phase46_bayesian_inverse_closure_probe.py \
+  --mode synthetic \
+  --synthetic-grid 16 \
+  --synthetic-frames 8 \
+  --synthetic-noise-std 8.0 \
+  --initial-size 48 \
+  --acquisition-size 144 \
+  --repeats 5 \
+  --json-output outputs/reports/phase46_synthetic_bayesian_inverse_closure_probe_summary.json
+
+PYTHONPATH=src python -X utf8 scripts/server/phase46_bayesian_inverse_closure_probe.py \
+  --mode table \
+  --table data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_medium_probe.csv \
+  --target temperature_C \
+  --split-manifest outputs/data_splits/ambench_line_0_1_temperature_medium_probe_split.json \
+  --initial-size 64 \
+  --acquisition-size 192 \
+  --repeats 5 \
+  --json-output outputs/reports/phase46_line0_1_temperature_medium_probe_bayesian_inverse_closure_summary.json
+```
+
+结果：
+
+| Probe | Strategy | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | Coverage / recovery |
+| --- | --- | ---: | ---: | ---: | --- |
+| synthetic | random | 8.002149 | 7.835315 | 8.655339 | coverage `0.913936`, source recovery `1.0` |
+| synthetic | uncertainty_source | 8.195683 | 7.749243 | 8.478088 | coverage `0.907090`, source recovery `1.0` |
+| local AM-Bench `Line_0_1` | random | 171.880449 | 99.651322 | 128.046258 | coverage `0.688421` |
+| local AM-Bench `Line_0_1` | uncertainty_source | 132.956146 | 146.360946 | 131.690693 | coverage `0.629474` |
+
+结论：
+
+```text
+Phase 46 关闭为负向诊断。
+Synthetic source parameters 可辨识，但 uncertainty-guided sampling 没有守住 global/hot/gradient/calibration 联合门槛。
+Local AM-Bench sparse proxy 改善 global RMSE，但 hot q90 明显退化，coverage 不足。
+```
+
+不要将当前 Phase 46 扩展到 A100 broad12/broad21。若以后重启，应先在本地改进 AM-Bench 对齐的 heat-source feature family、posterior calibration 和 multi-objective acquisition，再重新跑本地 gate。
+
+#### Phase 47：lightweight physics-guided closure attention probe
+
+目标：先验证最容易落地的 PINN + attention 思路，即在 Phase 46 的低维 inverse-closure proxy 上加入 deterministic physics-guided gating，而不是直接实现 CNN/GCN/Transformer/meta-learning。
+
+实现：
+
+- 复用 `scripts/server/phase46_bayesian_inverse_closure_probe.py`。
+- 新增 `--feature-mode base|physics_attention`。
+- `physics_attention` 用 source prior 与 source-prior spatial gradient 生成 attention score，并追加 `attn_*` source-like features。
+- Macro PINN 训练路径未改动。
+
+本地验证命令：
+
+```bash
+PYTHONPATH=src python -X utf8 scripts/server/phase46_bayesian_inverse_closure_probe.py \
+  --mode synthetic \
+  --feature-mode base \
+  --synthetic-grid 16 \
+  --synthetic-frames 8 \
+  --synthetic-noise-std 8.0 \
+  --initial-size 48 \
+  --acquisition-size 144 \
+  --repeats 5 \
+  --json-output outputs/reports/phase47_synthetic_base_closure_probe_summary.json
+
+PYTHONPATH=src python -X utf8 scripts/server/phase46_bayesian_inverse_closure_probe.py \
+  --mode synthetic \
+  --feature-mode physics_attention \
+  --synthetic-grid 16 \
+  --synthetic-frames 8 \
+  --synthetic-noise-std 8.0 \
+  --initial-size 48 \
+  --acquisition-size 144 \
+  --repeats 5 \
+  --json-output outputs/reports/phase47_synthetic_physics_attention_closure_probe_summary.json
+
+PYTHONPATH=src python -X utf8 scripts/server/phase46_bayesian_inverse_closure_probe.py \
+  --mode table \
+  --feature-mode base \
+  --table data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_medium_probe.csv \
+  --target temperature_C \
+  --split-manifest outputs/data_splits/ambench_line_0_1_temperature_medium_probe_split.json \
+  --initial-size 64 \
+  --acquisition-size 192 \
+  --repeats 5 \
+  --json-output outputs/reports/phase47_line0_1_base_closure_probe_summary.json
+
+PYTHONPATH=src python -X utf8 scripts/server/phase46_bayesian_inverse_closure_probe.py \
+  --mode table \
+  --feature-mode physics_attention \
+  --table data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_medium_probe.csv \
+  --target temperature_C \
+  --split-manifest outputs/data_splits/ambench_line_0_1_temperature_medium_probe_split.json \
+  --initial-size 64 \
+  --acquisition-size 192 \
+  --repeats 5 \
+  --json-output outputs/reports/phase47_line0_1_physics_attention_closure_probe_summary.json
+```
+
+结果：
+
+| Probe | Feature mode | Strategy | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | Coverage |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| synthetic | base | random | 8.002149 | 7.835315 | 8.655339 | 0.913936 |
+| synthetic | base | uncertainty_source | 8.195683 | 7.749243 | 8.478088 | 0.907090 |
+| synthetic | physics_attention | random | 8.029186 | 8.149420 | 8.846463 | 0.914425 |
+| synthetic | physics_attention | uncertainty_source | 8.178254 | 7.893498 | 8.450195 | 0.911980 |
+| local AM-Bench `Line_0_1` | base | random | 171.880449 | 99.651322 | 128.046258 | 0.688421 |
+| local AM-Bench `Line_0_1` | base | uncertainty_source | 132.956146 | 146.360946 | 131.690693 | 0.629474 |
+| local AM-Bench `Line_0_1` | physics_attention | random | 134.384901 | 155.581884 | 141.281181 | 0.852632 |
+| local AM-Bench `Line_0_1` | physics_attention | uncertainty_source | 108.580442 | 221.871098 | 173.180299 | 0.783158 |
+
+结论：
+
+```text
+Phase 47 关闭为负向诊断。
+physics_attention 在本地 AM-Bench sparse proxy 上改善 global RMSE 和 coverage，
+但显著伤害 hot q90 与 gradient q90；synthetic 上也没有稳定优势。
+```
+
+不要将当前 lightweight attention/gating 分支扩展到 CNN、GCN、Transformer attention、meta-learning 或 A100 broad12/broad21。若以后重启，先设计不牺牲 hot/gradient 的 region-aware source/closure gate。
+
+#### Phase 48：region-preserving Bayesian inverse-closure acquisition gate
+
+目标：修正 Phase 46/47 暴露的核心失败模式：global RMSE 可以改善，但 hot q90 与 gradient q90 被牺牲。Phase 48 只测试 acquisition/calibration 层，不改变 Macro PINN 主训练路径。
+
+实现：
+
+- `region_quota_uncertainty`：为 source-prior hot 和 source-prior-gradient 区域保留采样配额。
+- `pareto_source_gradient`：按 posterior uncertainty、source prior、source-prior gradient 组合打分。
+- `validation_selected_region_policy`：只用 validation objective 在候选策略中选择。
+- `--calibration-mode conformal90`：用 validation residual nonconformity 缩放 90% predictive interval。
+- `--require-region-preservation`：要求 active strategy 同时不恶化 hot q90 与 gradient q90。
+
+本地验证命令：
+
+```bash
+PYTHONPATH=src python -X utf8 scripts/server/phase46_bayesian_inverse_closure_probe.py \
+  --mode synthetic \
+  --feature-mode base \
+  --strategy region_quota_uncertainty \
+  --strategy pareto_source_gradient \
+  --strategy validation_selected_region_policy \
+  --active-strategy validation_selected_region_policy \
+  --calibration-mode conformal90 \
+  --require-region-preservation \
+  --synthetic-grid 16 \
+  --synthetic-frames 8 \
+  --synthetic-noise-std 8.0 \
+  --initial-size 48 \
+  --acquisition-size 144 \
+  --repeats 5 \
+  --json-output outputs/reports/phase48_synthetic_region_preserving_inverse_closure_summary.json
+
+PYTHONPATH=src python -X utf8 scripts/server/phase46_bayesian_inverse_closure_probe.py \
+  --mode table \
+  --feature-mode base \
+  --strategy region_quota_uncertainty \
+  --strategy pareto_source_gradient \
+  --strategy validation_selected_region_policy \
+  --active-strategy validation_selected_region_policy \
+  --calibration-mode conformal90 \
+  --require-region-preservation \
+  --table data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_medium_probe.csv \
+  --target temperature_C \
+  --split-manifest outputs/data_splits/ambench_line_0_1_temperature_medium_probe_split.json \
+  --initial-size 64 \
+  --acquisition-size 192 \
+  --repeats 5 \
+  --json-output outputs/reports/phase48_line0_1_region_preserving_inverse_closure_summary.json
+```
+
+结果：
+
+| Probe | Strategy | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | Coverage |
+| --- | --- | ---: | ---: | ---: | ---: |
+| synthetic | random | 8.002149 | 7.835315 | 8.655339 | 0.914425 |
+| synthetic | uncertainty_source | 8.065546 | 7.722530 | 8.527884 | 0.912469 |
+| synthetic | region_quota_uncertainty | 8.208480 | 7.763360 | 8.467253 | 0.905134 |
+| synthetic | pareto_source_gradient | 8.165143 | 7.749178 | 8.477412 | 0.908068 |
+| synthetic | validation_selected_region_policy | 8.113055 | 7.728250 | 8.458095 | 0.910513 |
+| local AM-Bench `Line_0_1` | random | 171.880449 | 99.651322 | 128.046258 | 0.772632 |
+| local AM-Bench `Line_0_1` | uncertainty_source | 116.038931 | 181.367100 | 148.307919 | 0.922105 |
+| local AM-Bench `Line_0_1` | region_quota_uncertainty | 205.832757 | 60.956245 | 129.545936 | 0.682105 |
+| local AM-Bench `Line_0_1` | pareto_source_gradient | 208.200707 | 69.184290 | 139.286502 | 0.736842 |
+| local AM-Bench `Line_0_1` | validation_selected_region_policy | 205.832757 | 60.956245 | 129.545936 | 0.682105 |
+
+结论：
+
+```text
+Phase 48 关闭为负向诊断。
+Acquisition/calibration 层可以在 global 与 hot 之间做 tradeoff，
+但尚不能同时守住 global/hot/gradient/coverage。
+```
+
+不要将 Phase 48 扩展到 A100 broad12/broad21。下一步应先改物理 source/closure feature family，例如 moving heat-source 参数、heat-kernel/Green's-function basis，或带明确物理参数的 synthetic-to-AM-Bench bridge。
+
+#### Phase 49：heat-kernel / Green's-function physical feature family gate
+
+目标：验证是否能通过更物理的 source/closure feature family 修复 Phase 48 的 tradeoff，而不是继续改 acquisition 或加神经模块。
+
+实现：
+
+- `--feature-mode heat_kernel`
+- 追加多尺度 moving heat-source diffusion-kernel proxy features：
+  - `heat_kernel_d{diffusion}_tau{decay}`
+  - `source_hot_x_gradient`
+- 保持 Bayesian linear inverse-closure proxy，不改变 Macro PINN 主训练路径。
+
+本地验证命令：
+
+```bash
+PYTHONPATH=src python -X utf8 scripts/server/phase46_bayesian_inverse_closure_probe.py \
+  --mode synthetic \
+  --feature-mode heat_kernel \
+  --synthetic-grid 16 \
+  --synthetic-frames 8 \
+  --synthetic-noise-std 8.0 \
+  --initial-size 48 \
+  --acquisition-size 144 \
+  --repeats 5 \
+  --json-output outputs/reports/phase49_synthetic_heat_kernel_inverse_closure_summary.json
+
+PYTHONPATH=src python -X utf8 scripts/server/phase46_bayesian_inverse_closure_probe.py \
+  --mode table \
+  --feature-mode heat_kernel \
+  --table data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_medium_probe.csv \
+  --target temperature_C \
+  --split-manifest outputs/data_splits/ambench_line_0_1_temperature_medium_probe_split.json \
+  --initial-size 64 \
+  --acquisition-size 192 \
+  --repeats 5 \
+  --json-output outputs/reports/phase49_line0_1_heat_kernel_inverse_closure_summary.json
+```
+
+结果摘要：
+
+| Probe | Mode / strategy | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | Coverage |
+| --- | --- | ---: | ---: | ---: | ---: |
+| synthetic | base / uncertainty_source | 8.065546 | 7.722530 | 8.527884 | 0.912469 |
+| synthetic | heat_kernel / uncertainty_source | 8.208595 | 7.927758 | 8.521494 | 0.924205 |
+| synthetic | heat_kernel + validation-selected region | 8.231446 | 8.066628 | 8.625961 | 0.921760 |
+| local AM-Bench `Line_0_1` | base / uncertainty_source | 116.038931 | 181.367100 | 148.307919 | 0.703158 |
+| local AM-Bench `Line_0_1` | heat_kernel / uncertainty_source | 124.831560 | 162.742524 | 140.899931 | 0.682105 |
+| local AM-Bench `Line_0_1` | heat_kernel + validation-selected region | 198.389759 | 74.617728 | 132.642762 | 0.825263 |
+
+结论：
+
+```text
+Phase 49 关闭为 synthetic-positive / AM-Bench-local-negative 诊断。
+Heat-kernel feature family 在 synthetic + region acquisition 下有信号，
+但本地 AM-Bench 仍然在 global RMSE 与 hot/gradient 之间 tradeoff。
+```
+
+不要将 Phase 49 扩展到 A100 broad12/broad21。下一步应转向显式 nonlinear moving-source parameter inversion，例如反演 source center offset、width、temporal decay、amplitude，而不是继续追加线性 proxy features。
+
+#### Phase 50：explicit nonlinear moving-source parameter inversion gate
+
+目标：从 Phase 49 的线性 heat-kernel proxy 转为显式低维 moving-source 参数反演，判断该问题表述是否比 full-field sparse proxy 更适合作为 paper-facing 方向。
+
+实现：
+
+- 新脚本：`scripts/server/phase50_moving_source_inversion_probe.py`
+- 反演参数：
+  - `start_x`
+  - `span_x`
+  - `center_y`
+  - `sine_y_amp`
+  - `core_width`
+  - `tail_width`
+  - `tail_decay`
+- 对每个 nonlinear parameter candidate，在 train selected observations 上拟合 linear amplitude/background coefficients。
+- 只用 validation objective 选 candidate，test labels 不参与拟合或选择。
+
+本地验证命令：
+
+```bash
+PYTHONPATH=src python -X utf8 scripts/server/phase50_moving_source_inversion_probe.py \
+  --mode synthetic \
+  --grid-mode fast \
+  --synthetic-grid 16 \
+  --synthetic-frames 8 \
+  --synthetic-noise-std 8.0 \
+  --initial-size 48 \
+  --acquisition-size 144 \
+  --repeats 5 \
+  --json-output outputs/reports/phase50_synthetic_moving_source_inversion_summary.json
+
+PYTHONPATH=src python -X utf8 scripts/server/phase50_moving_source_inversion_probe.py \
+  --mode table \
+  --grid-mode fast \
+  --table data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_medium_probe.csv \
+  --target temperature_C \
+  --split-manifest outputs/data_splits/ambench_line_0_1_temperature_medium_probe_split.json \
+  --initial-size 64 \
+  --acquisition-size 192 \
+  --repeats 5 \
+  --json-output outputs/reports/phase50_line0_1_moving_source_inversion_summary.json
+```
+
+结果：
+
+| Probe | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | Coverage | Parameter recovery |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| synthetic moving-source inversion | 8.175431 | 8.012787 | 8.291478 | 0.887042 | 1.000000 |
+| local AM-Bench `Line_0_1` moving-source inversion | 149.222337 | 133.745276 | 126.979221 | 0.745263 | n/a |
+
+结论：
+
+```text
+Phase 50 关闭为 synthetic-positive / AM-Bench-local-negative 诊断。
+Synthetic 参数可辨识，但 local AM-Bench sparse proxy 仍不支持稳定 paper-facing claim。
+```
+
+不要将 Phase 50 扩展到 A100 broad12/broad21。下一步应换 gate：用更密的 calibrated AM-Bench subset 先拟合 source parameters，再做 sparse downsampling；或把 paper-facing target 改成 parameter-identifiability + calibrated uncertainty，而不是继续追当前 `Line_0_1` sparse full-field RMSE。
+
+#### Phase 51：dense-to-sparse source-parameter transfer gate
+
+目标：验证 Phase 50 的失败是否只是 sparse observations 不足导致参数不可辨识。如果更密的 AM-Bench `Line_0_1` calibrated table 能先识别 source parameters，并且这些参数能迁移到 sparse coefficient refit，就可以继续设计 broad12/broad21 sparse validation；否则关闭当前 normalized moving-source grid。
+
+实现：
+
+- 新脚本：`scripts/server/phase51_dense_source_parameter_transfer_probe.py`
+- 三条可比路径：
+  - `sparse_search`：sparse observations 上搜索 source parameters 并拟合 coefficients。
+  - `dense_params_sparse_theta`：dense observations 上识别 source parameters，再只用 sparse observations 重拟合 coefficients。
+  - `dense_upper_bound`：dense observations 上识别 source parameters 并拟合 coefficients。
+- gate 同时要求 global RMSE、hot q90 RMSE、gradient q90 RMSE、coverage 通过；coverage-only positive 不算通过。
+
+A100 dense table 生成命令：
+
+```bash
+PYTHONUTF8=1 PYTHONIOENCODING=utf-8 /home/vipuser/miniconda3/bin/conda run -n gnnpinn \
+  python -m gnnpinn.data.loaders.ambench_hdf5 \
+  --sample-id amb2022_03_line_0_1_temperature_phase51_dense_local \
+  --output data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_phase51_dense.csv \
+  --manifest outputs/data_audits/phase51_line0_1_temperature_dense_manifest.json \
+  --split-manifest outputs/data_splits/phase51_line0_1_temperature_dense_split.json \
+  --calibrate-temperature \
+  --split-strategy frame \
+  --min-signal 100 \
+  --frame-step 10 \
+  --max-frames 60 \
+  --row-step 4 \
+  --max-rows 160 \
+  --col-step 2 \
+  --max-cols 152
+```
+
+A100 validation commands:
+
+```bash
+PYTHONPATH=src PYTHONUTF8=1 PYTHONIOENCODING=utf-8 /home/vipuser/miniconda3/bin/conda run -n gnnpinn \
+  python -X utf8 scripts/server/phase51_dense_source_parameter_transfer_probe.py \
+  --mode synthetic \
+  --grid-mode fast \
+  --synthetic-grid 16 \
+  --synthetic-frames 8 \
+  --synthetic-noise-std 8.0 \
+  --sparse-fit-size 192 \
+  --dense-fit-size 512 \
+  --repeats 5 \
+  --json-output outputs/reports/phase51_synthetic_dense_source_parameter_transfer_summary.json
+
+PYTHONPATH=src PYTHONUTF8=1 PYTHONIOENCODING=utf-8 /home/vipuser/miniconda3/bin/conda run -n gnnpinn \
+  python -X utf8 scripts/server/phase51_dense_source_parameter_transfer_probe.py \
+  --mode table \
+  --table data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_phase51_dense.csv \
+  --target temperature_C \
+  --split-manifest outputs/data_splits/phase51_line0_1_temperature_dense_split.json \
+  --grid-mode fast \
+  --sparse-fit-size 512 \
+  --dense-fit-size 4096 \
+  --repeats 5 \
+  --json-output outputs/reports/phase51_line0_1_dense_source_parameter_transfer_summary.json
+```
+
+结果：
+
+| Probe/path | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE | Coverage |
+| --- | ---: | ---: | ---: | ---: |
+| synthetic `sparse_search` | 7.719156 | 8.411110 | 8.336583 | 0.937897 |
+| synthetic `dense_upper_bound` | 7.612343 | 7.882416 | 7.818963 | 0.942298 |
+| AM-Bench `sparse_search` | 132.593587 | 181.224995 | 129.999543 | 0.832464 |
+| AM-Bench `dense_params_sparse_theta` | 132.221241 | 182.115709 | 130.153119 | 0.843128 |
+| AM-Bench `dense_upper_bound` | 128.049763 | 185.851461 | 128.169027 | 0.876540 |
+
+结论：
+
+```text
+Phase 51 关闭为 synthetic-positive / AM-Bench-dense-negative 诊断。
+Dense fitting 不是充分解；当前 normalized moving-source grid 仍将误差推向 hot region。
+```
+
+不要将当前 moving-source grid 扩展到 broad12/broad21。下一步应改变 source representation：读取 `ScanStrategy/AMB2022-03-AMMT-718-Pad_XYPT.h5`，构建 physically registered source-path/time-lag features，并先在同一个 A100 dense `Line_0_1` gate 上验证 global/hot/gradient 是否能同时守住。
+
+#### Phase 52：physically registered source-path feature gate
+
+目标：验证 AM-Bench scan-strategy XYPT 文件是否能为 Phase 51 dense `Line_0_1` table 提供物理注册 source-path features。如果数据对象或坐标系统不兼容，必须先关闭该 gate，不能把 pad scan strategy 硬套到 single-track thermography。
+
+实现：
+
+- 新脚本：`scripts/server/phase52_registered_source_path_probe.py`
+- 先检查兼容性：
+  - XYPT group 是否是 `Xpad/Ypad`；
+  - field table 的 `line_id` 与 `dataset_path` 是 pad 还是 `Line_*`；
+  - XYPT 坐标单位与 table 坐标范围是否可安全重合；
+  - 只有兼容时才构造 registered source-path / time-lag features。
+
+A100 validation command:
+
+```bash
+PYTHONPATH=src PYTHONUTF8=1 PYTHONIOENCODING=utf-8 /home/vipuser/miniconda3/bin/conda run -n gnnpinn \
+  python -X utf8 scripts/server/phase52_registered_source_path_probe.py \
+  --scan-strategy data/raw/ambench/2022_single_track/AMB2022-03/mds2-2716/ScanStrategy/AMB2022-03-AMMT-718-Pad_XYPT.h5 \
+  --table data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_phase51_dense.csv \
+  --target temperature_C \
+  --split-manifest outputs/data_splits/phase51_line0_1_temperature_dense_split.json \
+  --json-output outputs/reports/phase52_line0_1_registered_source_path_summary.json
+```
+
+数据检查结果：
+
+| Source | Points | Power-on points | Power-on segments | X range | Y range |
+| --- | ---: | ---: | ---: | --- | --- |
+| `XYPT/Xpad` | 117,999 | 12,267 | 47 | `[-0.6520, 13.6520]` mm | `[28.2470, 33.2470]` mm |
+| `XYPT/Ypad` | 25,499 | 12,528 | 24 | `[-1.6104, 2.9834]` mm | `[27.0940, 34.3990]` mm |
+| Phase 51 table | 10,205 | n/a | n/a | camera pixels `0..302` | camera pixels `0..636` |
+
+Formal decision:
+
+```text
+negative: scan strategy file contains pad XYPT groups but table is a single-track Line_* dataset
+```
+
+结论：不要将 `AMB2022-03-AMMT-718-Pad_XYPT.h5` 用作 `ThermalData/Line_0_1/Signal` 的 registered source path。source-inversion broad12/broad21 扩展继续阻塞，除非找到 aligned single-track scan-path source，或改为 pad thermography table gate。
+
+#### Phase 53：source-path data pivot gate
+
+目标：完成 Phase 52 后的最后数据兼容性检查，判断当前 `mds2-2716` bundle 是否还有可支撑 paper-facing source-path inversion 的 aligned 数据对象。如果没有，则停止 source-inversion broad12/broad21 扩展，把论文主线转回 broad-data process-conditioned route guard。
+
+新增脚本：
+
+```bash
+python -X utf8 scripts/server/phase53_source_path_data_pivot_gate.py \
+  --json-output outputs/reports/phase53_source_path_data_pivot_summary.json
+
+bash scripts/server/run_phase53_source_path_pivot_gate_a100.sh
+```
+
+关键 inventory：
+
+| Item | Value |
+| --- | --- |
+| Thermography groups | 27 |
+| Single-track thermography groups | 21 `Line_*` groups |
+| Pad thermography groups | `X_pad1`, `X_pad2`, `Y_pad1`, `Y_pad1_SS`, `Y_pad2`, `Y_pad2_SS` |
+| Scan-strategy file | `AMB2022-03-AMMT-718-Pad_XYPT.h5` |
+| XYPT groups | `XYPT/Xpad`, `XYPT/Ypad` |
+| Single-track scan-path groups | none |
+| HDF5 camera-pixel to galvo-mm registration metadata | none found |
+
+Formal inventory decision:
+
+```text
+negative: scan strategy exposes pad XYPT only; thermography has pad tables, but no HDF5 camera-pixel to galvo-mm registration metadata was found
+```
+
+Pad diagnostic-only rescale gate:
+
+| Pad | Rows | Base RMSE / hot / gradient / cov90 | Registered-path diagnostic RMSE / hot / gradient / cov90 | Decision |
+| --- | ---: | --- | --- | --- |
+| `X_pad1` | 101 | `127.723559 / 190.914071 / 178.656473 / 1.000000` | `157.298079 / 170.275221 / 170.508595 / 1.000000` | negative: global RMSE worsens |
+| `Y_pad1` | 372 | `153.859838 / 218.406789 / 183.031892 / 0.966102` | `221.030923 / 241.662999 / 203.527790 / 0.796610` | negative |
+
+Phase 52 guard was also tightened: coordinate compatibility now checks span ratio in addition to range overlap. This prevents camera-pixel spans such as `0..300` / `0..620` from being treated as safely comparable to XYPT galvo-mm spans.
+
+结论：
+
+- 当前 AMB2022-03 bundle 没有 aligned single-track scan-path data。
+- Pad thermography + pad XYPT 只能做 independent-rescale diagnostic，不能作为 paper-facing physical registration。
+- 即使放宽到 rescale diagnostic，`X_pad1/Y_pad1` 也没有通过 combined global/hot/gradient gate。
+- 不运行 source-inversion broad12/broad21 validation。
+- Phase 54 应转向 broad-data process-conditioned route guard / process-axis selector 的论文贡献整合。
+
+#### Phase 54：paper-facing process route claim boundary
+
+目标：把 Phase 46-53 的 source-inversion / Bayesian PINN / registered source-path work 冻结为诊断分支，并把当前可投稿主线收敛到 `broad_process_v1` 的 broad-data route guard 贡献边界。
+
+新增脚本：
+
+```bash
+python -X utf8 scripts/server/summarize_phase54_process_route_claim_boundary.py \
+  --input outputs/reports/phase54_broad12_claim_boundary_input_summary.json \
+  --input outputs/reports/phase54_broad21_claim_boundary_input_summary.json \
+  --json-output outputs/reports/phase54_process_route_claim_boundary_summary.json \
+  --markdown-output outputs/reports/phase54_process_route_claim_boundary_summary.md \
+  --require-comparable
+```
+
+结果分类：
+
+| Classification | Splits |
+| --- | --- |
+| paper-claim positive | `broad12:line`, `broad12:spot_size`, `broad21:line`, `broad21:spot_size` |
+| route-guard positive | `broad12:laser_power`, `broad12:process`, `broad12:scan_speed`, `broad21:laser_power`, `broad21:process`, `broad21:scan_speed` |
+| incomplete metric | none |
+| diagnostic negative | none |
+| incomparable | none |
+
+论文边界：
+
+- Clean process-conditioned strong-baseline-positive splits 是 broad12 和 broad21 `spot_size`。broad12 FiLM/global-standard 为 `136.309183 / 165.228535 / 169.049295`，优于 mean `151.850578 / 252.554440 / 233.119660`；broad21 FiLM/global-standard 为 `147.389475 / 163.081706 / 177.908136`，优于 mean `149.185412 / 251.976794 / 231.072566`。
+- `line` 在 broad12/broad21 也压过 strong baselines，但 route 是 no-process fallback，因此只能支持 route guard，不支持“process conditioning 改善 line holdout”的表述。
+- `laser_power`、`scan_speed` 和 full `process` 是 route-guard-only，不应 seed-expand 为强 baseline claim。
+- broad21 `spot_size` 的 hot q90 已补齐。缺失原因是 target q90 浮点插值阈值略高于观测最大值，导致 region selector 选到 `0` 个 hot 点；`region_metric_tables` 现已将 quantile threshold clamp 到观测 min/max。
+
+结论：Phase 54 关闭为 claim-boundary consolidation。下一步只对 broad12/broad21 `spot_size` 做 seed validation，不扩展 route-guard-only 轴。
+
+#### Phase 55：spot-size transferable route seed validation
+
+目标：把 Phase 54 的 broad12/broad21 `spot_size` 单 seed 正例升级为 seed-robust、可迁移的 paper-facing 模型贡献。
+
+新增脚本：
+
+```bash
+DATASET_LIMITS="12 21" \
+SEEDS="1 2" \
+SUMMARY_SEEDS="7 1 2" \
+STEPS=500 \
+bash scripts/server/run_phase55_spot_size_route_seed_check_a100.sh \
+  > logs/phase55_spot_size_route_seed_check_a100.log 2>&1
+```
+
+验证命令：
+
+```bash
+PYTHONUTF8=1 PYTHONIOENCODING=utf-8 \
+/home/vipuser/miniconda3/bin/conda run -n gnnpinn \
+python -X utf8 scripts/server/summarize_phase55_spot_size_seed_check.py \
+  --dataset-limit 12 \
+  --dataset-limit 21 \
+  --seed 7 \
+  --seed 1 \
+  --seed 2 \
+  --require-complete \
+  --require-pass
+```
+
+结果：
+
+| Dataset | Method | N | Test RMSE | Hot q90 RMSE | Gradient q90 RMSE |
+| --- | --- | ---: | ---: | ---: | ---: |
+| broad12 | no-process | 3 | `238.093690 +/- 29.836097` | `424.409003 +/- 53.733799` | `382.799174 +/- 48.263668` |
+| broad12 | `broad_process_v1` | 3 | `136.384782 +/- 0.467526` | `162.125337 +/- 4.909788` | `165.282182 +/- 5.270236` |
+| broad21 | no-process | 3 | `217.922642 +/- 5.308273` | `401.488520 +/- 15.153059` | `360.868300 +/- 17.032414` |
+| broad21 | `broad_process_v1` | 3 | `146.002303 +/- 1.118699` | `164.313888 +/- 3.548500` | `174.735839 +/- 2.301005` |
+
+结论：Phase 55 通过 `seed_robust_transfer_positive`。当前可写成 paper-facing model contribution 的内容是 explicit broad-data process route guard，其中 `spot_size -> FiLM/global-standard` 是跨 broad12/broad21、跨 seeds 7/1/2 的稳定 process-conditioned 正例。`line` 仍是 no-process fallback route-guard evidence；`laser_power`、`scan_speed` 和 full `process` 仍是 route-guard-only。
+
+#### Phase 56：manuscript-facing table/figure package
+
+目标：把 Phase 54/55 的机器可读结果转换成论文主表、route-guard 边界表、负诊断 appendix 和可编辑 figure assets。
+
+生成命令：
+
+```bash
+python -X utf8 scripts/server/build_phase56_manuscript_package.py \
+  --manifest-output outputs/reports/phase56_manuscript_package_manifest.json
+```
+
+输出：
+
+```text
+docs/results/phase56_manuscript_package/phase56_manuscript_table_figure_package.md
+docs/results/phase56_manuscript_package/phase56_main_spot_size_seed_positive_table.csv
+docs/results/phase56_manuscript_package/phase56_route_guard_boundary_table.csv
+docs/results/phase56_manuscript_package/phase56_negative_diagnostic_appendix_table.csv
+docs/results/phase56_manuscript_package/phase56_spot_size_seed_validation_figure.svg
+docs/results/phase56_manuscript_package/phase56_spot_size_seed_validation_figure.png
+outputs/reports/phase56_manuscript_package_manifest.json
+```
+
+用途：
+
+- 主文主表：`phase56_main_spot_size_seed_positive_table.csv`。
+- 主文或结果图：`phase56_spot_size_seed_validation_figure.svg/png`。
+- supplement/appendix：route-guard boundary 和 negative diagnostic tables。
+- caption/source trace：`phase56_manuscript_table_figure_package.md`。
+
+结论：Phase 56 完成结果包装，不新增训练证据。下一步进入 results text / figure caption / discussion boundary drafting。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
@@ -1489,13 +2097,11 @@ git rev-parse --short origin/main
 
 ## 立即下一步建议
 
-下一轮服务器研发按以下顺序推进：
+Phase 56 已完成。下一轮服务器工作不要启动新的 source-inversion、route-guard-only seed expansion，或在没有新表格缺口的情况下继续叠加小型训练技巧。
 
-1. 实现坐标/时间归一化与数据统计记录。
-2. 增加 kNN/RBF 或 tree ensemble 强 baseline。
-3. 重新跑 dense data-only normalization ablation。
-4. 设计 hot-zone / gradient-band 采样。
-5. 用最优采样和归一化重跑 Macro PINN data-only 与 PDE weight scan。
-6. 若 Macro PINN 接近或超过强 baseline，进入 sparse closure MVP；否则先继续修正数据表示和训练策略。
+优先级：
 
-这条路线优先解决当前真实结果暴露出的短板，比直接进入 GNN/coupling 更稳。GNN 与方向三仍是最终目标，但必须建立在可靠宏观热场基线和可解释 closure 上。
+1. 写 manuscript results text 和 figure caption：主结论只写 broad12/broad21 `spot_size` seed-robust process-conditioned evidence。
+2. route-guard 段落明确：broad12/broad21 `line` 是 no-process fallback evidence；`laser_power`、`scan_speed`、full `process` 是 route-guard-only。
+3. supplement/limitation 段落纳入 Phases 33-53 negative diagnostics，尤其是 source-inversion / Bayesian PINN / source-path branch 的数据兼容性限制。
+4. 下一次 code-active branch 应从论文表格缺口倒推，例如增加外部数据集/额外 AM-Bench split 的独立验证，而不是继续在当前 axes 上叠加小型训练技巧。

@@ -30,3 +30,26 @@ def test_region_metric_tables_hot_and_gradient_regions(tmp_path: Path):
     assert regions["hot_q75"]["metrics"]["rmse"] >= 0
     assert regions["gradient_q75"]["n_points"] >= 1
     assert regions["gradient_q75"]["selector"]["kind"] == "spatial_gradient_quantile"
+
+
+def test_region_metric_tables_hot_quantile_clamps_to_observed_max(tmp_path: Path):
+    table = tmp_path / "field.csv"
+    hot_value = "1450.5594629649443"
+    table.write_text(
+        "x,y,t,T\n"
+        "0,0,0,1065.0048772423042\n"
+        f"1,0,0,{hot_value}\n"
+        f"2,0,0,{hot_value}\n",
+        encoding="utf-8",
+    )
+    sample = load_field_table(table)
+
+    regions = region_metric_tables(
+        sample,
+        target="T",
+        y_pred=[1065.0, 1450.0, 1450.0],
+        hot_quantiles=[0.9],
+    )
+
+    assert regions["hot_q90"]["n_points"] == 2
+    assert "rmse" in regions["hot_q90"]["metrics"]

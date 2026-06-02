@@ -82,7 +82,8 @@ def _quantile(values: list[float], quantile: float) -> float:
     lower = int(position)
     upper = min(lower + 1, len(ordered) - 1)
     fraction = position - lower
-    return ordered[lower] * (1.0 - fraction) + ordered[upper] * fraction
+    value = ordered[lower] * (1.0 - fraction) + ordered[upper] * fraction
+    return min(max(value, ordered[0]), ordered[-1])
 
 
 def _quantile_label(quantile: float) -> str:
