@@ -1,0 +1,73 @@
+{
+  "counts": {
+    "audit_rows": 24,
+    "blocker_rows": 1,
+    "integration_rows": 4,
+    "phase61_claim_rows": 11,
+    "phase89_evidence_rows": 8,
+    "phase89_handoff_rows": 4
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "audit_rows": 24,
+    "blocked_handoff_rows": 1,
+    "core_claims_integrated": true,
+    "core_literature_ready": true,
+    "experimental_claim_complete": true,
+    "integrated_handoff_rows": 3,
+    "next_action": "enter Phase 91 table/figure and appendix freeze; request target venue before final formatting",
+    "status": "manuscript_v1_core_claims_integrated_venue_unresolved",
+    "submission_blockers": 1,
+    "submission_ready": false,
+    "venue_alignment_ready": false
+  },
+  "inputs": {
+    "phase61_captions": "docs/results/phase61_manuscript_draft_package/phase61_table_figure_captions.md",
+    "phase61_crosswalk": "docs/results/phase61_manuscript_draft_package/phase61_claim_evidence_crosswalk.csv",
+    "phase61_methods": "docs/results/phase61_manuscript_draft_package/phase61_methods_draft.md",
+    "phase61_results": "docs/results/phase61_manuscript_draft_package/phase61_results_draft.md",
+    "phase74_boundary": "docs/results/phase74_manuscript_v0_claim_audit/phase74_model_boundary_register.csv",
+    "phase74_manifest": "docs/results/phase74_manuscript_v0_claim_audit/phase74_manuscript_v0_claim_audit_manifest.json",
+    "phase88_gate": "docs/results/phase88_fallback_manuscript_finalization/phase88_fallback_finalization_gate.json",
+    "phase89_evidence": "docs/results/phase89_literature_venue_gap_resolution/phase89_evidence_register.csv",
+    "phase89_gap_resolution": "docs/results/phase89_literature_venue_gap_resolution/phase89_gap_resolution_table.csv",
+    "phase89_handoff": "docs/results/phase89_literature_venue_gap_resolution/phase89_writing_handoff.csv",
+    "phase89_manifest": "docs/results/phase89_literature_venue_gap_resolution/phase89_literature_venue_gap_resolution_manifest.json",
+    "phase89_manual_queue": "docs/results/phase89_literature_venue_gap_resolution/phase89_manual_verification_queue.csv"
+  },
+  "objective": "manuscript_v1_claim_integration",
+  "outputs": {
+    "claim_evidence_audit": "docs/results/phase90_manuscript_v1_claim_integration/phase90_claim_evidence_audit.csv",
+    "gate_json": "docs/results/phase90_manuscript_v1_claim_integration/phase90_manuscript_v1_claim_integration_gate.json",
+    "literature_integration_table": "docs/results/phase90_manuscript_v1_claim_integration/phase90_literature_integration_table.csv",
+    "manifest": "docs/results/phase90_manuscript_v1_claim_integration/phase90_manuscript_v1_claim_integration_manifest.json",
+    "manuscript_v1": "docs/results/phase90_manuscript_v1_claim_integration/phase90_manuscript_v1_claim_integrated.md",
+    "markdown": "docs/results/phase90_manuscript_v1_claim_integration/phase90_manuscript_v1_claim_integration.md",
+    "venue_blocker_queue": "docs/results/phase90_manuscript_v1_claim_integration/phase90_venue_blocker_queue.csv"
+  },
+  "phase": 90,
+  "phase74_claim_boundary": {
+    "excluded_claims": [
+      "density-invariant robustness",
+      "universal process-conditioning success",
+      "laser_power, scan_speed, or full-process strong-baseline wins",
+      "source-path or Green's-function broad12/broad21 success under current data registration"
+    ],
+    "main_claim": "fixed-sampling broad12/broad21 spot_size under broad_process_v1, seeds 7/1/2"
+  },
+  "phase89_gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "core_literature_ready": true,
+    "experimental_claim_complete": true,
+    "next_action": "proceed to manuscript evidence integration, but request target venue before final formatting and submission readiness",
+    "phase88_status": "fallback_experimental_claim_complete",
+    "resolved_gap_rows": 2,
+    "status": "literature_core_resolved_venue_unresolved",
+    "submission_ready": false,
+    "unresolved_submission_blockers": 1,
+    "venue_alignment_ready": false,
+    "verified_evidence_rows": 8
+  }
+}
