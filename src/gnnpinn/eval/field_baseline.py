@@ -11,6 +11,7 @@ from gnnpinn.data.loaders import load_field_table
 from gnnpinn.data.manifest import candidate_files_from_audit, load_audit_report
 from gnnpinn.data.splits import load_split_manifest, split_indices, subset_sequence
 from gnnpinn.eval.baselines import constant_predictions, regression_metric_table
+from gnnpinn.eval.prediction_export import write_prediction_csv
 from gnnpinn.eval.regions import region_metric_tables
 
 
@@ -30,6 +31,7 @@ def evaluate_table(
     random_state: int = 7,
     hot_quantiles: list[float] | None = None,
     gradient_quantiles: list[float] | None = None,
+    prediction_output: Path | None = None,
 ) -> dict[str, Any]:
     observation_columns = [target]
     if prediction_column and prediction_column not in observation_columns:
@@ -88,6 +90,23 @@ def evaluate_table(
             )
             if regions:
                 split_metrics[split_name]["region_metrics"] = regions
+        full_predictions = (
+            model_predictions
+            if model_predictions is not None
+            else pred_values
+            if prediction_column
+            else _constant_predictions_from_fit(y_true, fit_values, strategy)
+        )
+        if prediction_output:
+            write_prediction_csv(
+                prediction_output,
+                sample=sample,
+                target=target,
+                y_true=y_true,
+                y_pred=full_predictions,
+                split_manifest=split_manifest,
+                method=baseline_name,
+            )
         return {
             "sample_id": sample.sample_id,
             "source_path": str(table_path),
@@ -104,6 +123,7 @@ def evaluate_table(
                 n_estimators=n_estimators,
                 random_state=random_state,
             ),
+            "prediction_output": str(prediction_output) if prediction_output else None,
             "metadata": sample.metadata,
         }
     if prediction_column:
@@ -115,6 +135,16 @@ def evaluate_table(
     else:
         y_pred = constant_predictions(y_true, strategy=strategy)
         baseline_name = f"constant:{strategy}"
+    if prediction_output:
+        write_prediction_csv(
+            prediction_output,
+            sample=sample,
+            target=target,
+            y_true=y_true,
+            y_pred=y_pred,
+            split_manifest=None,
+            method=baseline_name,
+        )
     return {
         "sample_id": sample.sample_id,
         "source_path": str(table_path),
@@ -136,6 +166,7 @@ def evaluate_table(
             hot_quantiles=hot_quantiles,
             gradient_quantiles=gradient_quantiles,
         ),
+        "prediction_output": str(prediction_output) if prediction_output else None,
         "metadata": sample.metadata,
     }
 
@@ -266,6 +297,9 @@ def discover_tables(args: argparse.Namespace) -> list[Path]:
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
+    tables = discover_tables(args)
+    if args.prediction_output and len(tables) != 1:
+        raise ValueError("--prediction-output currently supports exactly one table")
     results = [
         evaluate_table(
             table_path=path,
@@ -280,8 +314,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             random_state=args.random_state,
             hot_quantiles=args.hot_quantiles,
             gradient_quantiles=args.gradient_quantiles,
+            prediction_output=args.prediction_output if len(tables) == 1 else None,
         )
-        for path in discover_tables(args)
+        for path in tables
     ]
     return {
         "target": args.target,
@@ -335,6 +370,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Report metrics on spatial-gradient scores above this split-local quantile, e.g. 0.9.",
     )
     parser.add_argument("--output", type=Path, help="Optional JSON output path.")
+    parser.add_argument(
+        "--prediction-output",
+        type=Path,
+        help="Optional row-aligned CSV prediction output path for stacking/probe analysis.",
+    )
     return parser
 
 

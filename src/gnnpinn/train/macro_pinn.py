@@ -13,6 +13,7 @@ from typing import Any
 from gnnpinn.data.loaders import load_field_table
 from gnnpinn.data.splits import load_split_manifest, split_indices
 from gnnpinn.eval.metrics import mae, relative_l2, rmse
+from gnnpinn.eval.prediction_export import write_prediction_csv
 from gnnpinn.eval.regions import _spatial_gradient_scores, region_metric_tables
 from gnnpinn.models.closure import (
     CoordinateRBFGraphConfig,
@@ -1745,9 +1746,21 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 split_metrics[split_name]["region_metrics"] = regions
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
+    prediction_output_path = args.prediction_output
+    if prediction_output_path:
+        write_prediction_csv(
+            prediction_output_path,
+            sample=sample,
+            target=args.target,
+            y_true=y_true,
+            y_pred=pred,
+            split_manifest=split_manifest,
+            method=args.prediction_method_name or "macro_pinn",
+        )
     metrics_payload = {
         "sample_id": sample.sample_id,
         "target": args.target,
+        "prediction_output": str(prediction_output_path) if prediction_output_path else None,
         "n_points": sample.n_points,
         "train_points": len(train_indices),
         "metrics": metrics,
@@ -1877,6 +1890,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         "artifacts": {
             "metrics": str(metrics_path),
             "checkpoint": str(checkpoint_path),
+            "predictions": str(prediction_output_path) if prediction_output_path else None,
         },
         "environment": {
             "python": platform.python_version(),
@@ -1891,6 +1905,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     print(f"Wrote: {metrics_path}")
     print(f"Wrote: {checkpoint_path}")
     print(f"Wrote: {manifest_path}")
+    if prediction_output_path:
+        print(f"Wrote: {prediction_output_path}")
     print(json.dumps(metrics, indent=2))
     return metrics_payload
 
@@ -1900,6 +1916,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--table", required=True, type=Path, help="CSV/JSON field table.")
     parser.add_argument("--target", required=True, help="Observation column to train against.")
     parser.add_argument("--output-dir", required=True, type=Path, help="Run output directory.")
+    parser.add_argument(
+        "--prediction-output",
+        type=Path,
+        help="Optional row-aligned CSV prediction output path for stacking/probe analysis.",
+    )
+    parser.add_argument(
+        "--prediction-method-name",
+        default="",
+        help="Optional method label written into --prediction-output rows.",
+    )
     parser.add_argument("--steps", type=int, default=200)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument(

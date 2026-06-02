@@ -120,6 +120,49 @@ def test_field_baseline_cli_with_split_manifest(tmp_path: Path):
     assert '"hot_q50"' in payload
 
 
+def test_field_baseline_cli_writes_prediction_output(tmp_path: Path):
+    table = tmp_path / "thermal.csv"
+    table.write_text(
+        "x,y,t,T,laser_power_W\n"
+        "0,0,0,0,285\n"
+        "1,0,0,2,285\n"
+        "0,1,0,4,325\n",
+        encoding="utf-8",
+    )
+    split = tmp_path / "split.json"
+    split.write_text(
+        '{"splits":{"train":[0,1],"test":[2]}}',
+        encoding="utf-8",
+    )
+    output = tmp_path / "baseline.json"
+    predictions = tmp_path / "predictions.csv"
+
+    status = field_baseline_main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--strategy",
+            "mean",
+            "--split-manifest",
+            str(split),
+            "--output",
+            str(output),
+            "--prediction-output",
+            str(predictions),
+        ]
+    )
+
+    prediction_text = predictions.read_text(encoding="utf-8")
+    payload = output.read_text(encoding="utf-8")
+    assert status == 0
+    assert '"prediction_output":' in payload
+    assert "row_index,split,sample_id,method,x,y,t,T,prediction,error,abs_error,laser_power_W" in prediction_text
+    assert "0,train,thermal,constant:mean:fit=train" in prediction_text
+    assert ",1.0,1.0," in prediction_text
+
+
 def test_field_baseline_cli_with_knn_model_baseline(tmp_path: Path):
     if importlib.util.find_spec("sklearn") is None:
         pytest.skip("scikit-learn is not installed in this environment")

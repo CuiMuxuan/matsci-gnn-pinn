@@ -61,9 +61,13 @@ DATASET_SELECTION="${DATASET_SELECTION:-representative7}"
 DATASET_REGEX="${DATASET_REGEX:-}"
 DATASET_LIMIT="${DATASET_LIMIT:-}"
 DATASET_ORDER="${DATASET_ORDER:-sorted}"
+PREDICTION_OUTPUT_DIR="${PREDICTION_OUTPUT_DIR:-}"
 
 cd "$REPO_ROOT"
 mkdir -p logs outputs/baselines outputs/data_audits outputs/data_splits outputs/runs
+if [[ -n "$PREDICTION_OUTPUT_DIR" ]]; then
+  mkdir -p "$PREDICTION_OUTPUT_DIR"
+fi
 
 export PYTHONUTF8=1
 export PYTHONIOENCODING=utf-8
@@ -127,6 +131,10 @@ run_baseline() {
   local strategy="$1"
   local tag="$2"
   shift 2
+  local prediction_args=()
+  if [[ -n "$PREDICTION_OUTPUT_DIR" ]]; then
+    prediction_args+=(--prediction-output "$PREDICTION_OUTPUT_DIR/${RUN_ID}_${strategy}_${tag}_predictions.csv")
+  fi
   "$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.eval.field_baseline \
     --table "$TABLE" \
     --target temperature_C \
@@ -138,6 +146,7 @@ run_baseline() {
     --random-state "$SEED" \
     --hot-quantile 0.9 \
     --gradient-quantile 0.9 \
+    "${prediction_args[@]}" \
     --output "outputs/baselines/${RUN_ID}_${strategy}_${tag}_regions_q90.json"
 }
 
@@ -250,11 +259,19 @@ run_macro_pinn() {
       process_graph_args+=(--process-graph-feature-column "$column")
     done
   fi
+  local prediction_args=()
+  if [[ -n "$PREDICTION_OUTPUT_DIR" ]]; then
+    prediction_args+=(
+      --prediction-output "$PREDICTION_OUTPUT_DIR/${RUN_ID}_macro_pinn_minmax_${tag}_v1_predictions.csv"
+      --prediction-method-name "macro_pinn:${tag}"
+    )
+  fi
   "$CONDA_BIN" run -n "$CONDA_ENV" python -m gnnpinn.train.macro_pinn \
     --table "$TABLE" \
     --target temperature_C \
     --split-manifest "$SPLIT" \
     --output-dir "outputs/runs/${RUN_ID}_macro_pinn_minmax_${tag}_v1" \
+    "${prediction_args[@]}" \
     --steps "$STEPS" \
     --hidden-dim "$HIDDEN_DIM" \
     --layers "$LAYERS" \

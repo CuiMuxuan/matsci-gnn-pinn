@@ -1278,6 +1278,29 @@ STEPS=500 N_ESTIMATORS=80 \
 
 结论：该分支只在 broad21 region metrics 上有改善，但 global RMSE 明显退化，且 broad12 全部指标退化。不要 seed expansion；继续保留 `broad_process_v1` 作为 broad-data route guard。
 
+#### Phase 45：baseline-guarded process expert Gate 1
+
+目标：在继续实现任何 trainable MoE 或更复杂 process expert 前，先做 prediction-level 上界验证。Phase 33-44 已经显示小模块/标量目标反复产生 split-local tradeoff；Phase 45 先检查已有专家预测是否包含一个可由 train/validation 选择的、能同时压过 `broad_process_v1` 和强 classical baseline 的组合。
+
+实现：
+
+- `gnnpinn.eval.field_baseline` 新增 `--prediction-output`，可导出 mean/kNN/ExtraTrees 的 row-aligned prediction CSV。
+- `gnnpinn.train.macro_pinn` 新增 `--prediction-output` 与 `--prediction-method-name`，可导出 Macro PINN 变体的 row-aligned prediction CSV。
+- `scripts/server/phase45_prediction_stack_probe.py` 读取多个 prediction CSV，在 train/validation split 上拟合 simplex-constrained nonnegative stack weights，并报告 split/region metrics；输出中显式记录 `uses_test_for_selection=false`。
+- `scripts/server/run_multiline_process_conditioned_thermal_a100.sh` 新增 `PREDICTION_OUTPUT_DIR`，默认空，不改变旧 artifacts。
+- `scripts/server/run_phase45_prediction_stack_probe_a100.sh` 生成 broad12/broad21 `laser_power` 的 mean、kNN process、ExtraTrees process、no-process Macro PINN、`broad_process_v1`、derived-only `am_energy_v1` predictions，并运行 stack probe。
+
+focused A100 命令：
+
+```bash
+PROFILE_SPLITS=laser_power DATASET_LIMITS="12 21" DATASET_ORDER=process_round_robin \
+STEPS=500 N_ESTIMATORS=80 WEIGHT_STEP=0.1 \
+  bash scripts/server/run_phase45_prediction_stack_probe_a100.sh \
+  > logs/phase45_prediction_stack_probe_a100_v1.log 2>&1
+```
+
+验收：只有 prediction stack 在 broad12 与 broad21 `laser_power` 上同时改善或保持 global RMSE，并改善 hot q90 与 gradient q90，且能面对最强 classical baseline，才进入 `baseline_guarded_expert_v1` 训练模型实现。若 stack probe 失败，则不要实现 MoE；应转向数据/任务定义或其他有真实可学习剩余误差的 paper-facing 方向。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP

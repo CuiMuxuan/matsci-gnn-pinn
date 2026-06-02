@@ -69,6 +69,60 @@ def test_macro_pinn_training_cli_writes_artifacts(tmp_path: Path):
     assert payload["target_normalization"]["enabled"] is True
 
 
+def test_macro_pinn_training_cli_writes_prediction_output(tmp_path: Path):
+    from gnnpinn.train.macro_pinn import main
+
+    table = tmp_path / "toy_temperature.csv"
+    table.write_text(
+        "x,y,t,T,laser_power_W\n"
+        "0,0,0,0,285\n"
+        "1,0,0,1,285\n"
+        "0,1,0,1,325\n"
+        "1,1,0,2,325\n",
+        encoding="utf-8",
+    )
+    split = tmp_path / "split.json"
+    split.write_text(
+        '{"splits":{"train":[0,1],"val":[2],"test":[3]}}',
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "run"
+    predictions = tmp_path / "macro_predictions.csv"
+
+    status = main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--output-dir",
+            str(output_dir),
+            "--steps",
+            "2",
+            "--hidden-dim",
+            "8",
+            "--layers",
+            "1",
+            "--split-manifest",
+            str(split),
+            "--prediction-output",
+            str(predictions),
+            "--prediction-method-name",
+            "toy_macro",
+        ]
+    )
+
+    payload = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    manifest = json.loads((output_dir / "artifact_manifest.json").read_text(encoding="utf-8"))
+    prediction_text = predictions.read_text(encoding="utf-8")
+    assert status == 0
+    assert payload["prediction_output"] == str(predictions)
+    assert manifest["artifacts"]["predictions"] == str(predictions)
+    assert "row_index,split,sample_id,method,x,y,t,T,prediction,error,abs_error,laser_power_W" in prediction_text
+    assert "toy_macro" in prediction_text
+    assert ",test," in prediction_text
+
+
 def test_macro_pinn_training_cli_with_split_manifest(tmp_path: Path):
     from gnnpinn.train.macro_pinn import main
 
