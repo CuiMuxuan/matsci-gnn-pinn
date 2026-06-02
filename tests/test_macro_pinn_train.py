@@ -74,11 +74,11 @@ def test_macro_pinn_training_cli_writes_prediction_output(tmp_path: Path):
 
     table = tmp_path / "toy_temperature.csv"
     table.write_text(
-        "x,y,t,T,laser_power_W\n"
-        "0,0,0,0,285\n"
-        "1,0,0,1,285\n"
-        "0,1,0,1,325\n"
-        "1,1,0,2,325\n",
+        "x,y,t,T,row_index,laser_power_W\n"
+        "0,0,0,0,100,285\n"
+        "1,0,0,1,101,285\n"
+        "0,1,0,1,102,325\n"
+        "1,1,0,2,103,325\n",
         encoding="utf-8",
     )
     split = tmp_path / "split.json"
@@ -118,7 +118,7 @@ def test_macro_pinn_training_cli_writes_prediction_output(tmp_path: Path):
     assert status == 0
     assert payload["prediction_output"] == str(predictions)
     assert manifest["artifacts"]["predictions"] == str(predictions)
-    assert "row_index,split,sample_id,method,x,y,t,T,prediction,error,abs_error,laser_power_W" in prediction_text
+    assert "row_index,split,sample_id,method,x,y,t,T,prediction,error,abs_error,laser_power_W,metadata_row_index" in prediction_text
     assert "toy_macro" in prediction_text
     assert ",test," in prediction_text
 

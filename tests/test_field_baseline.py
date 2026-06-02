@@ -123,10 +123,10 @@ def test_field_baseline_cli_with_split_manifest(tmp_path: Path):
 def test_field_baseline_cli_writes_prediction_output(tmp_path: Path):
     table = tmp_path / "thermal.csv"
     table.write_text(
-        "x,y,t,T,laser_power_W\n"
-        "0,0,0,0,285\n"
-        "1,0,0,2,285\n"
-        "0,1,0,4,325\n",
+        "x,y,t,T,row_index,laser_power_W\n"
+        "0,0,0,0,100,285\n"
+        "1,0,0,2,101,285\n"
+        "0,1,0,4,102,325\n",
         encoding="utf-8",
     )
     split = tmp_path / "split.json"
@@ -158,9 +158,10 @@ def test_field_baseline_cli_writes_prediction_output(tmp_path: Path):
     payload = output.read_text(encoding="utf-8")
     assert status == 0
     assert '"prediction_output":' in payload
-    assert "row_index,split,sample_id,method,x,y,t,T,prediction,error,abs_error,laser_power_W" in prediction_text
+    assert "row_index,split,sample_id,method,x,y,t,T,prediction,error,abs_error,laser_power_W,metadata_row_index" in prediction_text
     assert "0,train,thermal,constant:mean:fit=train" in prediction_text
     assert ",1.0,1.0," in prediction_text
+    assert ",100" in prediction_text
 
 
 def test_field_baseline_cli_with_knn_model_baseline(tmp_path: Path):

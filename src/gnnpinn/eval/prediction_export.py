@@ -43,6 +43,27 @@ def write_prediction_csv(
     split_labels = split_name_by_index(split_manifest, sample.n_points)
     row_metadata = sample.metadata.get("row_metadata", {})
     metadata_columns = sorted(str(column) for column in row_metadata)
+    reserved_names = {
+        "row_index",
+        "split",
+        "sample_id",
+        "method",
+        *coordinate_columns,
+        time_column,
+        target,
+        "prediction",
+        "error",
+        "abs_error",
+    }
+    metadata_field_names: dict[str, str] = {}
+    for column in metadata_columns:
+        base_name = column if column not in reserved_names else f"metadata_{column}"
+        export_name = base_name
+        suffix = 2
+        while export_name in reserved_names or export_name in metadata_field_names.values():
+            export_name = f"{base_name}_{suffix}"
+            suffix += 1
+        metadata_field_names[column] = export_name
     fieldnames = [
         "row_index",
         "split",
@@ -54,7 +75,7 @@ def write_prediction_csv(
         "prediction",
         "error",
         "abs_error",
-        *metadata_columns,
+        *[metadata_field_names[column] for column in metadata_columns],
     ]
     with output_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -75,5 +96,5 @@ def write_prediction_csv(
             for coord_index, column in enumerate(coordinate_columns):
                 row[column] = float(sample.coordinates[row_index][coord_index])
             for column in metadata_columns:
-                row[column] = row_metadata[column][row_index]
+                row[metadata_field_names[column]] = row_metadata[column][row_index]
             writer.writerow(row)
