@@ -107,8 +107,46 @@ The panel branch runs an auxiliary broad15 process-balanced `spot_size` panel.
 These results are stress evidence only; they do not replace the Phase 55 frozen
 floor unless they pass the same full seed and baseline gates in a later phase.
 
+## Sampling and Panel Stress Result
+
+Result package:
+
+```text
+docs/results/phase58_sampling_panel_stress/
+```
+
+The alternate-density branch is mixed. The broad12 `spot_size` branch remains
+positive against the strongest baseline and no-process Macro PINN, but broad21
+does not beat the mean baseline under the denser sample. This means the frozen
+Phase 55 claim survives as a fixed-sampling, seed-robust result, but it should
+not be described as density-invariant.
+
+| Dataset | Metric | `broad_process_v1` | Best strong baseline | No-process | Gate |
+|---|---|---:|---:|---:|---|
+| broad12 density | RMSE | 139.085217 | 140.201362 | 260.807865 | pass |
+| broad12 density | hot q90 RMSE | 235.696768 | 253.374499 | 478.337515 | pass |
+| broad12 density | gradient q90 RMSE | 221.604222 | 234.028899 | 434.594412 | pass |
+| broad21 density | RMSE | 153.259455 | 139.725646 | 226.518789 | fail vs strong |
+| broad21 density | hot q90 RMSE | 270.628922 | 253.129723 | 421.639304 | fail vs strong |
+| broad21 density | gradient q90 RMSE | 250.519935 | 231.780894 | 374.684937 | fail vs strong |
+
+The auxiliary broad15 process-balanced panel is positive at seed 7:
+
+| Dataset | Metric | `broad_process_v1` | Best strong baseline | No-process | Gate |
+|---|---|---:|---:|---:|---|
+| broad15 panel | RMSE | 138.855456 | 151.850578 | 206.100512 | pass |
+| broad15 panel | hot q90 RMSE | 158.622677 | 252.554440 | 363.828210 | pass |
+| broad15 panel | gradient q90 RMSE | 165.869192 | 233.732337 | 330.201687 | pass |
+
+The next model-development step should therefore start from Phase 59 residual
+anatomy of the broad21 density failure. A new model branch is justified only if
+the failure is visible from train/validation residual structure and repeats
+under the frozen broad12/broad21 evidence contract.
+
 ## Current Decision
 
-Continue Phase 58 through sampling-density and auxiliary-panel stress before
-implementing a new model branch. The stronger-baseline stress supports keeping
-the current `spot_size` paper-facing floor intact.
+Close Phase 58 as a bounded stress-test phase. The stronger-baseline stress and
+auxiliary broad15 panel support keeping the current `spot_size` paper-facing
+floor intact. The alternate-density broad21 failure must be treated as a claim
+boundary and the first Phase 59 diagnostic target, not hidden or folded into a
+stronger manuscript claim.
