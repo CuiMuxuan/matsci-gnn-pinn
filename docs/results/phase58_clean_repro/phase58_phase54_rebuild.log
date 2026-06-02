@@ -1,0 +1,35 @@
+# Phase 54 Broad Process Route Claim Boundary
+
+## Classification Counts
+
+| classification | count | splits |
+|---|---:|---|
+| paper_claim_positive | 4 | broad12:line, broad12:spot_size, broad21:line, broad21:spot_size |
+| route_guard_positive | 6 | broad12:laser_power, broad12:process, broad12:scan_speed, broad21:laser_power, broad21:process, broad21:scan_speed |
+| incomplete_metric | 0 |  |
+| diagnostic_negative | 0 |  |
+| incomparable | 0 |  |
+
+## Split Table
+
+| dataset | split | class | route | test RMSE | hot q90 RMSE | gradient q90 RMSE | notes |
+|---|---|---|---|---|---|---|---|
+| broad12 | laser_power | route_guard_positive | concat/global_standard | 140.753534 vs mean 132.965887 d=7.787647 | 254.473291 vs mean 242.427068 d=12.046223 | 215.411533 vs mean 208.105836 d=7.305697 | broad_process_v1 supports route-guard evidence but does not beat the best strong baseline on all required metrics. |
+| broad12 | line | paper_claim_positive | none/none | 126.308616 vs mean 134.042138 d=-7.733522 | 217.257126 vs knn_coords 228.525979 d=-11.268853 | 195.314294 vs knn_coords 210.675696 d=-15.361402 | broad_process_v1 beats the best strong baseline and is non-worse than no-process on all required metrics. The selected route is the no-process fallback; do not claim process conditioning improves this split. |
+| broad12 | process | route_guard_positive | none/none | 181.091525 vs mean 147.381589 d=33.709936 | 325.205379 vs mean 251.032500 d=74.172879 | 266.149257 vs mean 213.464819 d=52.684438 | broad_process_v1 supports route-guard evidence but does not beat the best strong baseline on all required metrics. The selected route is the no-process fallback; do not claim process conditioning improves this split. |
+| broad12 | scan_speed | route_guard_positive | none/none | 186.173938 vs mean 145.115776 d=41.058162 | 345.736994 vs mean 250.659348 d=95.077645 | 266.380605 vs mean 209.791354 d=56.589251 | broad_process_v1 supports route-guard evidence but does not beat the best strong baseline on all required metrics. The selected route is the no-process fallback; do not claim process conditioning improves this split. |
+| broad12 | spot_size | paper_claim_positive | film/global_standard | 136.309183 vs mean 151.850578 d=-15.541395 | 165.228535 vs mean 252.554440 d=-87.325905 | 169.049295 vs mean 233.119660 d=-64.070365 | broad_process_v1 beats the best strong baseline and is non-worse than no-process on all required metrics. |
+| broad21 | laser_power | route_guard_positive | concat/global_standard | 178.040331 vs mean 131.741364 d=46.298967 | 296.909567 vs mean 237.730958 d=59.178609 | 254.954359 vs mean 205.133029 d=49.821330 | broad_process_v1 supports route-guard evidence but does not beat the best strong baseline on all required metrics. |
+| broad21 | line | paper_claim_positive | none/none | 126.194921 vs mean 131.161929 d=-4.967008 | 234.351122 vs mean 243.188033 d=-8.836911 | 205.642173 vs mean 214.217962 d=-8.575789 | broad_process_v1 beats the best strong baseline and is non-worse than no-process on all required metrics. A neural reference is better on at least one metric: rmse:process_axis_v1, hot_q90_rmse:process_axis_v1, gradient_q90_rmse:process_axis_v1. The selected route is the no-process fallback; do not claim process conditioning improves this split. |
+| broad21 | process | route_guard_positive | none/none | 166.231596 vs mean 145.350346 d=20.881250 | 308.389105 vs mean 248.754243 d=59.634862 | 251.049837 vs mean 216.442403 d=34.607434 | broad_process_v1 supports route-guard evidence but does not beat the best strong baseline on all required metrics. The selected route is the no-process fallback; do not claim process conditioning improves this split. |
+| broad21 | scan_speed | route_guard_positive | none/none | 227.128663 vs mean 144.014351 d=83.114312 | 392.018079 vs mean 251.407139 d=140.610940 | 304.940054 vs mean 212.910489 d=92.029565 | broad_process_v1 supports route-guard evidence but does not beat the best strong baseline on all required metrics. A neural reference is better on at least one metric: hot_q90_rmse:process_axis_v1. The selected route is the no-process fallback; do not claim process conditioning improves this split. |
+| broad21 | spot_size | paper_claim_positive | film/global_standard | 147.389475 vs mean 149.185412 d=-1.795938 | 163.081706 vs mean 251.976794 d=-88.895089 | 177.908136 vs mean 231.072566 d=-53.164430 | broad_process_v1 beats the best strong baseline and is non-worse than no-process on all required metrics. |
+
+## Claim Boundary
+
+- `paper_claim_positive`: full required metrics beat the best strong baseline and are non-worse than no-process.
+- `route_guard_positive`: useful negative-transfer guard evidence, but not a strong-baseline paper claim.
+- `incomplete_metric`: at least one required metric is missing; rerun metric extraction before a full claim.
+- Source-inversion / registered source-path branches remain diagnostic unless aligned scan-path data appears.
+
+

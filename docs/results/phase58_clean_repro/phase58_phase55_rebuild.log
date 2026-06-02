@@ -1,0 +1,49 @@
+# Phase 55 Spot-Size Route Seed Validation
+
+Transfer gate: `seed_robust_transfer_positive`
+
+| dataset | route | aggregate gate | paired seed gate |
+|---|---|---|---|
+| broad12 | film/global_standard | yes | yes |
+| broad21 | film/global_standard | yes | yes |
+
+## Aggregate Metrics
+
+| dataset | method | n | test RMSE mean +/- std | hot q90 mean +/- std | gradient q90 mean +/- std |
+|---|---|---:|---:|---:|---:|
+| broad12 | no_process | 3 | 238.093690 +/- 29.836097 | 424.409003 +/- 53.733799 | 382.799174 +/- 48.263668 |
+| broad12 | broad_process_v1 | 3 | 136.384782 +/- 0.467526 | 162.125337 +/- 4.909788 | 165.282182 +/- 5.270236 |
+| broad21 | no_process | 3 | 217.922642 +/- 5.308273 | 401.488520 +/- 15.153059 | 360.868300 +/- 17.032414 |
+| broad21 | broad_process_v1 | 3 | 146.002303 +/- 1.118699 | 164.313888 +/- 3.548500 | 174.735839 +/- 2.301005 |
+
+## Strong-Baseline Deltas
+
+| dataset | metric | broad mean | best strong baseline | no-process mean | delta vs strong | delta vs no-process |
+|---|---|---:|---:|---:|---:|---:|
+| broad12 | rmse | 136.384782 | 151.850578 (mean) | 238.093690 | -15.465796 | -101.708908 |
+| broad12 | hot_q90_rmse | 162.125337 | 252.554440 (mean) | 424.409003 | -90.429103 | -262.283666 |
+| broad12 | gradient_q90_rmse | 165.282182 | 233.119660 (mean) | 382.799174 | -67.837478 | -217.516992 |
+| broad21 | rmse | 146.002303 | 149.185412 (mean) | 217.922642 | -3.183109 | -71.920340 |
+| broad21 | hot_q90_rmse | 164.313888 | 251.976794 (mean) | 401.488520 | -87.662906 | -237.174632 |
+| broad21 | gradient_q90_rmse | 174.735839 | 231.072566 (mean) | 360.868300 | -56.336727 | -186.132461 |
+
+## Per-Seed Metrics
+
+| dataset | method | seed | test RMSE | hot q90 RMSE | gradient q90 RMSE |
+|---|---|---:|---:|---:|---:|
+| broad12 | no_process | 7 | 206.100512 | 363.828210 | 329.278428 |
+| broad12 | no_process | 1 | 277.914981 | 494.429203 | 446.243600 |
+| broad12 | no_process | 2 | 230.265576 | 414.969596 | 372.875495 |
+| broad12 | broad_process_v1 | 7 | 136.309183 | 165.228535 | 169.049295 |
+| broad12 | broad_process_v1 | 1 | 135.853737 | 155.194459 | 157.829090 |
+| broad12 | broad_process_v1 | 2 | 136.991427 | 165.953018 | 168.968161 |
+| broad21 | no_process | 7 | 210.423419 | 380.713034 | 337.723910 |
+| broad21 | no_process | 1 | 221.375802 | 407.325747 | 366.660562 |
+| broad21 | no_process | 2 | 221.968706 | 416.426779 | 378.220427 |
+| broad21 | broad_process_v1 | 7 | 147.389475 | 163.081706 | 177.908136 |
+| broad21 | broad_process_v1 | 1 | 145.967539 | 169.142944 | 173.777650 |
+| broad21 | broad_process_v1 | 2 | 144.649895 | 160.717014 | 172.521730 |
+
+Wrote: outputs/reports/phase55_spot_size_route_seed_check_summary.json
+Wrote: outputs/reports/phase55_spot_size_route_seed_check_summary.md
+

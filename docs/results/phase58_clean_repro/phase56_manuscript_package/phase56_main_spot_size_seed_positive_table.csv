@@ -1,0 +1,7 @@
+dataset,split,route,metric,broad_process_v1_mean,broad_process_v1_std,no_process_mean,no_process_std,best_strong_baseline,best_strong_baseline_method,delta_vs_best_strong,delta_vs_no_process,n_seeds,gate
+broad12,spot_size,film/global_standard,Test RMSE,136.384781987,0.467526303258,238.093689584,29.8360965346,151.850577987,mean,-15.4657960003,-101.708907597,3,seed_robust_transfer_positive
+broad12,spot_size,film/global_standard,Hot q90 RMSE,162.125337065,4.90978794284,424.409003012,53.7337985035,252.554439588,mean,-90.4291025223,-262.283665946,3,seed_robust_transfer_positive
+broad12,spot_size,film/global_standard,Gradient q90 RMSE,165.282182272,5.27023590123,382.799173964,48.2636676735,233.119660009,mean,-67.8374777369,-217.516991692,3,seed_robust_transfer_positive
+broad21,spot_size,film/global_standard,Test RMSE,146.002302637,1.11869892164,217.922642391,5.30827321509,149.185412106,mean,-3.18310946913,-71.9203397545,3,seed_robust_transfer_positive
+broad21,spot_size,film/global_standard,Hot q90 RMSE,164.31388799,3.54849977425,401.488520192,15.1530590773,251.976794482,mean,-87.662906492,-237.174632202,3,seed_robust_transfer_positive
+broad21,spot_size,film/global_standard,Gradient q90 RMSE,174.735838739,2.30100488252,360.868299753,17.0324143321,231.072566056,mean,-56.3367273176,-186.132461015,3,seed_robust_transfer_positive

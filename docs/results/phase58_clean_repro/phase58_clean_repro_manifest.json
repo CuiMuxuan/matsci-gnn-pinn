@@ -1,0 +1,28 @@
+{
+  "commit": "35f11b1",
+  "git_status_short": [
+    "?? docs/results/phase58_clean_repro/"
+  ],
+  "ledger_counts": {
+    "blocked_by_data": 1,
+    "diagnostic_negative": 11,
+    "paper_positive_seed_robust": 2,
+    "route_guard_no_process_positive": 2,
+    "route_guard_only": 6
+  },
+  "objective": "clean_checkout_rebuild_phase55_56_57",
+  "outputs": {
+    "phase54_summary": "outputs/reports/phase54_process_route_claim_boundary_summary.json",
+    "phase55_summary": "outputs/reports/phase55_spot_size_route_seed_check_summary.json",
+    "phase56_manifest": "outputs/reports/phase56_manuscript_package_manifest.json",
+    "phase56_package": "docs/results/phase58_clean_repro/phase56_manuscript_package",
+    "phase57_manifest": "docs/results/phase58_clean_repro/phase57_claim_governance/phase57_claim_governance_manifest.json"
+  },
+  "phase": 58,
+  "source_repo": "/root/matsci-gnn-pinn",
+  "transfer_gate": {
+    "aggregate_transfer_positive": true,
+    "paired_seed_transfer_positive": true,
+    "paper_claim_status": "seed_robust_transfer_positive"
+  }
+}

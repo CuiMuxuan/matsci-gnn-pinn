@@ -1,0 +1,12 @@
+{
+  "figure_png": null,
+  "figure_svg": "docs/results/phase58_clean_repro/phase56_manuscript_package/phase56_spot_size_seed_validation_figure.svg",
+  "main_table_csv": "docs/results/phase58_clean_repro/phase56_manuscript_package/phase56_main_spot_size_seed_positive_table.csv",
+  "n_appendix_rows": 12,
+  "n_main_rows": 6,
+  "n_route_guard_rows": 8,
+  "negative_appendix_csv": "docs/results/phase58_clean_repro/phase56_manuscript_package/phase56_negative_diagnostic_appendix_table.csv",
+  "package_markdown": "docs/results/phase58_clean_repro/phase56_manuscript_package/phase56_manuscript_table_figure_package.md",
+  "route_guard_table_csv": "docs/results/phase58_clean_repro/phase56_manuscript_package/phase56_route_guard_boundary_table.csv"
+}
+
