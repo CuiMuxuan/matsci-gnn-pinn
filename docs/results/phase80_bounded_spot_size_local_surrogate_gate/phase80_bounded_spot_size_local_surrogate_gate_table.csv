@@ -1,0 +1,6 @@
+variant,role,selection_split,analysis_split,val_rmse,val_gain_vs_identity,val_gain_vs_reference,test_rmse,test_hot_q90_rmse,test_gradient_q90_rmse,test_gain_vs_identity_rmse,test_gain_vs_reference_rmse,test_preserves_identity_regions,status,interpretation
+broad_process_v1:identity,identity,val,test,162.391962,0.000000,-23.891245,153.259459,270.628922,211.688452,0.000000,-13.533813,true,reference,control row
+mean,strong_reference,val,test,138.500717,23.891245,0.000000,139.725646,253.129723,198.003809,13.533813,0.000000,true,reference,control row
+broad_process_v1:train_global_bias,candidate,val,test,162.142446,0.249517,-23.641728,153.086051,269.693001,211.250815,0.173408,-13.360405,true,insufficient_validation_gain,validation gain over identity is below the pre-declared minimum
+broad_process_v1:train_group_bias:spot_size_um,candidate,val,test,162.142446,0.249517,-23.641728,153.086051,269.693001,211.250815,0.173408,-13.360405,true,insufficient_validation_gain,validation gain over identity is below the pre-declared minimum
+broad_process_v1:train_group_bias:process_tuple,candidate,val,test,162.142446,0.249517,-23.641728,153.086051,269.693001,211.250815,0.173408,-13.360405,true,insufficient_validation_gain,validation gain over identity is below the pre-declared minimum
