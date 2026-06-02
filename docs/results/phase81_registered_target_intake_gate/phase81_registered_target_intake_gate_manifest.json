@@ -1,0 +1,49 @@
+{
+  "counts": {
+    "intake_rows": 4,
+    "status_counts": {
+      "blocked_missing_registration": 2,
+      "blocked_no_data_card": 1,
+      "diagnostic_prior_unstable": 1
+    }
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "blocked_route_count": 3,
+    "candidate": "registered_target_intake",
+    "diagnostic_route_count": 1,
+    "next_action": "do not run A100 model training; pursue pad camera-to-galvo registration or an external registered-target data card",
+    "open_registered_target_count": 0,
+    "phase71_candidate_c_status": "blocked_by_registration_data",
+    "phase80_bounded_spot_size_status": "blocked_by_local_surrogate_gate",
+    "phase82_baseline_smoke_allowed": false,
+    "phase83_registered_feature_gate_allowed": false,
+    "preferred_next_route": "ambench_mds2_2716_pad_thermography_xypt",
+    "reason": "No current route has public reproducibility, split readiness, process metadata, and coordinate-compatible source/target registration at the same time.",
+    "required_before_training": [
+      "public source manifest with checksums",
+      "coordinate-compatible source/target registration",
+      "train/validation/test split manifest",
+      "baseline-first smoke table",
+      "local/no-training feature gate"
+    ],
+    "status": "blocked_no_registered_target"
+  },
+  "inputs": {
+    "mds2_2716_manifest": "configs/data/ambench_mds2_2716_sources.yaml",
+    "mds2_2718_manifest": "configs/data/ambench_mds2_2718_sources.yaml",
+    "phase71_manifest": "docs/results/phase71_data_registration_audit/phase71_data_registration_audit_manifest.json",
+    "phase71_table": "docs/results/phase71_data_registration_audit/phase71_data_registration_audit_table.csv",
+    "phase80_manifest": "docs/results/phase80_bounded_spot_size_local_surrogate_gate/phase80_bounded_spot_size_local_surrogate_gate_manifest.json"
+  },
+  "objective": "registered_target_data_intake_gate",
+  "outputs": {
+    "data_card": "docs/results/phase81_registered_target_intake_gate/phase81_registered_target_data_card.json",
+    "gate_json": "docs/results/phase81_registered_target_intake_gate/phase81_registered_target_gate.json",
+    "intake_table": "docs/results/phase81_registered_target_intake_gate/phase81_registered_target_intake_table.csv",
+    "manifest": "docs/results/phase81_registered_target_intake_gate/phase81_registered_target_intake_gate_manifest.json",
+    "markdown": "docs/results/phase81_registered_target_intake_gate/phase81_registered_target_intake_gate.md"
+  },
+  "phase": 81
+}
