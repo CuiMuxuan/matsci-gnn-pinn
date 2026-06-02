@@ -1,0 +1,82 @@
+{
+  "counts": {
+    "appendix_rows": 18,
+    "figure_caption_rows": 6,
+    "main_rows": 6,
+    "phase90_audit_rows": 24,
+    "route_rows": 8,
+    "stress_rows": 19
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "appendix_rows": 18,
+    "core_claims_integrated": true,
+    "figure_assets_exist": true,
+    "figure_caption_rows": 6,
+    "main_rows": 6,
+    "next_action": "enter Phase 92 internal benchmark review or provide target venue before final formatting",
+    "phase90_status": "manuscript_v1_core_claims_integrated_venue_unresolved",
+    "route_rows": 8,
+    "status": "table_figure_appendix_frozen_venue_unresolved",
+    "stress_rows": 19,
+    "submission_ready": false,
+    "table_figure_appendix_frozen": true,
+    "venue_alignment_ready": false
+  },
+  "inputs": {
+    "phase56_figure_png": "docs/results/phase56_manuscript_package/phase56_spot_size_seed_validation_figure.png",
+    "phase56_figure_svg": "docs/results/phase56_manuscript_package/phase56_spot_size_seed_validation_figure.svg",
+    "phase60_main": "docs/results/phase60_manuscript_evidence_package/phase60_main_spot_size_seed_positive_table.csv",
+    "phase60_manifest": "docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package_manifest.json",
+    "phase60_route": "docs/results/phase60_manuscript_evidence_package/phase60_route_guard_boundary_table.csv",
+    "phase60_stress": "docs/results/phase60_manuscript_evidence_package/phase60_stress_boundary_table.csv",
+    "phase61_captions": "docs/results/phase61_manuscript_draft_package/phase61_table_figure_captions.md",
+    "phase88_appendix": "docs/results/phase88_fallback_manuscript_finalization/phase88_appendix_diagnostic_table.csv",
+    "phase88_gate": "docs/results/phase88_fallback_manuscript_finalization/phase88_fallback_finalization_gate.json",
+    "phase90_audit": "docs/results/phase90_manuscript_v1_claim_integration/phase90_claim_evidence_audit.csv",
+    "phase90_gate": "docs/results/phase90_manuscript_v1_claim_integration/phase90_manuscript_v1_claim_integration_gate.json",
+    "phase90_manifest": "docs/results/phase90_manuscript_v1_claim_integration/phase90_manuscript_v1_claim_integration_manifest.json",
+    "phase90_manuscript": "docs/results/phase90_manuscript_v1_claim_integration/phase90_manuscript_v1_claim_integrated.md"
+  },
+  "objective": "table_figure_appendix_freeze",
+  "outputs": {
+    "appendix_diagnostic_freeze": "docs/results/phase91_table_figure_appendix_freeze/phase91_appendix_diagnostic_freeze.csv",
+    "gate_json": "docs/results/phase91_table_figure_appendix_freeze/phase91_table_figure_appendix_freeze_gate.json",
+    "main_table_freeze": "docs/results/phase91_table_figure_appendix_freeze/phase91_main_table_freeze.csv",
+    "manifest": "docs/results/phase91_table_figure_appendix_freeze/phase91_table_figure_appendix_freeze_manifest.json",
+    "markdown": "docs/results/phase91_table_figure_appendix_freeze/phase91_table_figure_appendix_freeze.md",
+    "route_guard_table_freeze": "docs/results/phase91_table_figure_appendix_freeze/phase91_route_guard_table_freeze.csv",
+    "stress_boundary_table_freeze": "docs/results/phase91_table_figure_appendix_freeze/phase91_stress_boundary_table_freeze.csv",
+    "table_figure_caption_manifest": "docs/results/phase91_table_figure_appendix_freeze/phase91_table_figure_caption_manifest.csv"
+  },
+  "phase": 91,
+  "phase60_claim_boundary": {
+    "excluded_claims": [
+      "density-invariant robustness",
+      "universal process-conditioning success",
+      "laser_power, scan_speed, or full-process strong-baseline wins",
+      "source-path or Green's-function broad12/broad21 success under current data registration"
+    ],
+    "main_claim": "fixed-sampling broad12/broad21 spot_size under broad_process_v1, seeds 7/1/2"
+  },
+  "phase88_gate": {
+    "experimental_claim_complete": true,
+    "status": "fallback_experimental_claim_complete"
+  },
+  "phase90_gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "audit_rows": 24,
+    "blocked_handoff_rows": 1,
+    "core_claims_integrated": true,
+    "core_literature_ready": true,
+    "experimental_claim_complete": true,
+    "integrated_handoff_rows": 3,
+    "next_action": "enter Phase 91 table/figure and appendix freeze; request target venue before final formatting",
+    "status": "manuscript_v1_core_claims_integrated_venue_unresolved",
+    "submission_blockers": 1,
+    "submission_ready": false,
+    "venue_alignment_ready": false
+  }
+}
