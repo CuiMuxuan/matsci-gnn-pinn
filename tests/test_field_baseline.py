@@ -258,3 +258,59 @@ def test_field_baseline_model_baseline_can_use_process_metadata_columns(tmp_path
     assert '"scan_speed_mm_s"' in payload
     assert '"spot_size_um"' in payload
     assert '"line_id"' in payload
+
+
+def test_field_baseline_cli_with_hist_gradient_boosting_model_baseline(tmp_path: Path):
+    if importlib.util.find_spec("sklearn") is None:
+        pytest.skip("scikit-learn is not installed in this environment")
+
+    table = tmp_path / "thermal.csv"
+    table.write_text(
+        "x,y,t,T,laser_power_W,scan_speed_mm_s,spot_size_um\n"
+        "0,0,0,0,285,960,67\n"
+        "1,0,0,1,285,960,67\n"
+        "2,0,0,2,325,960,67\n"
+        "3,0,0,3,325,960,67\n"
+        "4,0,0,4,245,800,49\n"
+        "5,0,0,5,245,800,49\n",
+        encoding="utf-8",
+    )
+    split = tmp_path / "split.json"
+    split.write_text(
+        '{"splits":{"train":[0,1,2,3],"val":[4],"test":[5]}}',
+        encoding="utf-8",
+    )
+    output = tmp_path / "baseline.json"
+
+    status = field_baseline_main(
+        [
+            "--table",
+            str(table),
+            "--target",
+            "T",
+            "--strategy",
+            "hist_gradient_boosting",
+            "--split-manifest",
+            str(split),
+            "--feature-column",
+            "x",
+            "--feature-column",
+            "t",
+            "--feature-column",
+            "laser_power_W",
+            "--feature-column",
+            "scan_speed_mm_s",
+            "--feature-column",
+            "spot_size_um",
+            "--n-estimators",
+            "5",
+            "--output",
+            str(output),
+        ]
+    )
+
+    payload = output.read_text(encoding="utf-8")
+    assert status == 0
+    assert '"baseline": "model:hist_gradient_boosting:fit=train"' in payload
+    assert '"n_estimators": 5' in payload
+    assert '"spot_size_um"' in payload

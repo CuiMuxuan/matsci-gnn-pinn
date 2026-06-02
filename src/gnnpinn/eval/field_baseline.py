@@ -15,7 +15,7 @@ from gnnpinn.eval.prediction_export import write_prediction_csv
 from gnnpinn.eval.regions import region_metric_tables
 
 
-MODEL_BASELINES = {"knn", "random_forest", "extra_trees"}
+MODEL_BASELINES = {"knn", "random_forest", "extra_trees", "hist_gradient_boosting"}
 
 
 def evaluate_table(
@@ -253,6 +253,14 @@ def _fit_predict_model_baseline(
             random_state=random_state,
             n_jobs=-1,
         )
+    elif strategy == "hist_gradient_boosting":
+        from sklearn.ensemble import HistGradientBoostingRegressor
+
+        model = HistGradientBoostingRegressor(
+            max_iter=n_estimators,
+            random_state=random_state,
+            early_stopping=False,
+        )
     else:
         raise ValueError(f"Unsupported model baseline: {strategy}")
 
@@ -274,7 +282,9 @@ def _baseline_parameters(
     return {
         "feature_columns": feature_columns,
         "n_neighbors": n_neighbors if strategy == "knn" else None,
-        "n_estimators": n_estimators if strategy in {"random_forest", "extra_trees"} else None,
+        "n_estimators": n_estimators
+        if strategy in {"random_forest", "extra_trees", "hist_gradient_boosting"}
+        else None,
         "random_state": random_state,
     }
 
@@ -343,7 +353,15 @@ def build_parser() -> argparse.ArgumentParser:
         default="mean",
         # Keep choices close to the legacy constant baselines and the first
         # stronger model baselines needed for server-stage AM-Bench runs.
-        choices=["mean", "first", "zero", "knn", "random_forest", "extra_trees"],
+        choices=[
+            "mean",
+            "first",
+            "zero",
+            "knn",
+            "random_forest",
+            "extra_trees",
+            "hist_gradient_boosting",
+        ],
         help="Baseline strategy when no prediction column is provided.",
     )
     parser.add_argument(
