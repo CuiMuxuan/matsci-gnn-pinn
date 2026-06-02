@@ -1,0 +1,84 @@
+{
+  "counts": {
+    "benchmark_input_rows": 0,
+    "figure_manifest_rows": 6,
+    "manual_queue_rows": 5,
+    "phase90_audit_rows": 24,
+    "phase91_main_rows": 6,
+    "phase91_route_rows": 8,
+    "phase91_stress_rows": 19,
+    "readiness_rows": 5,
+    "scope_rows": 5,
+    "verified_evidence_rows": 8
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "benchmark_review_ready": false,
+    "blocking_readiness_rows": 1,
+    "core_package_ready": true,
+    "manual_queue_rows": 5,
+    "minimum_required_benchmark_inputs": 3,
+    "next_action": "request target venue, author guide, or 3-10 accepted benchmark papers before Phase 93",
+    "phase89_status": "literature_core_resolved_venue_unresolved",
+    "phase90_status": "manuscript_v1_core_claims_integrated_venue_unresolved",
+    "phase91_status": "table_figure_appendix_frozen_venue_unresolved",
+    "readiness_rows": 5,
+    "review_scope_rows": 5,
+    "status": "blocked_missing_target_benchmarks",
+    "submission_ready": false,
+    "target_benchmark_inputs": 0,
+    "usable_benchmark_inputs": 0,
+    "venue_alignment_ready": false
+  },
+  "inputs": {
+    "benchmark_intake": "docs/benchmark_review/phase92_target_benchmark_intake.csv",
+    "phase89_evidence_register": "docs/results/phase89_literature_venue_gap_resolution/phase89_evidence_register.csv",
+    "phase89_gate": "docs/results/phase89_literature_venue_gap_resolution/phase89_literature_venue_gap_resolution_gate.json",
+    "phase89_manual_queue": "docs/results/phase89_literature_venue_gap_resolution/phase89_manual_verification_queue.csv",
+    "phase90_claim_audit": "docs/results/phase90_manuscript_v1_claim_integration/phase90_claim_evidence_audit.csv",
+    "phase90_gate": "docs/results/phase90_manuscript_v1_claim_integration/phase90_manuscript_v1_claim_integration_gate.json",
+    "phase90_venue_blocker_queue": "docs/results/phase90_manuscript_v1_claim_integration/phase90_venue_blocker_queue.csv",
+    "phase91_figure_manifest": "docs/results/phase91_table_figure_appendix_freeze/phase91_table_figure_caption_manifest.csv",
+    "phase91_gate": "docs/results/phase91_table_figure_appendix_freeze/phase91_table_figure_appendix_freeze_gate.json",
+    "phase91_main_table": "docs/results/phase91_table_figure_appendix_freeze/phase91_main_table_freeze.csv",
+    "phase91_manifest": "docs/results/phase91_table_figure_appendix_freeze/phase91_table_figure_appendix_freeze_manifest.json",
+    "phase91_route_table": "docs/results/phase91_table_figure_appendix_freeze/phase91_route_guard_table_freeze.csv",
+    "phase91_stress_table": "docs/results/phase91_table_figure_appendix_freeze/phase91_stress_boundary_table_freeze.csv"
+  },
+  "objective": "benchmark_review_intake_readiness",
+  "outputs": {
+    "benchmark_input_table": "docs/results/phase92_benchmark_review_intake/phase92_benchmark_input_table.csv",
+    "claim_review_scope": "docs/results/phase92_benchmark_review_intake/phase92_claim_review_scope.csv",
+    "gate_json": "docs/results/phase92_benchmark_review_intake/phase92_benchmark_review_intake_gate.json",
+    "manifest": "docs/results/phase92_benchmark_review_intake/phase92_benchmark_review_intake_manifest.json",
+    "manual_benchmark_queue": "docs/results/phase92_benchmark_review_intake/phase92_manual_benchmark_queue.csv",
+    "markdown": "docs/results/phase92_benchmark_review_intake/phase92_benchmark_review_intake.md",
+    "readiness_table": "docs/results/phase92_benchmark_review_intake/phase92_benchmark_review_readiness_table.csv"
+  },
+  "phase": 92,
+  "phase89_gate": {
+    "core_literature_ready": true,
+    "status": "literature_core_resolved_venue_unresolved",
+    "venue_alignment_ready": false
+  },
+  "phase90_gate": {
+    "core_claims_integrated": true,
+    "status": "manuscript_v1_core_claims_integrated_venue_unresolved",
+    "submission_blockers": 1
+  },
+  "phase91_claim_boundary": {
+    "excluded_claims": [
+      "density-invariant robustness",
+      "universal process-conditioning success",
+      "laser_power, scan_speed, or full-process strong-baseline wins",
+      "source-path or Green's-function broad12/broad21 success under current data registration"
+    ],
+    "main_claim": "fixed-sampling broad12/broad21 spot_size under broad_process_v1, seeds 7/1/2"
+  },
+  "phase91_gate": {
+    "figure_assets_exist": true,
+    "status": "table_figure_appendix_frozen_venue_unresolved",
+    "table_figure_appendix_frozen": true
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "benchmark_review_ready": false,
+  "blocking_readiness_rows": 1,
+  "core_package_ready": true,
+  "manual_queue_rows": 5,
+  "minimum_required_benchmark_inputs": 3,
+  "next_action": "request target venue, author guide, or 3-10 accepted benchmark papers before Phase 93",
+  "phase89_status": "literature_core_resolved_venue_unresolved",
+  "phase90_status": "manuscript_v1_core_claims_integrated_venue_unresolved",
+  "phase91_status": "table_figure_appendix_frozen_venue_unresolved",
+  "readiness_rows": 5,
+  "review_scope_rows": 5,
+  "status": "blocked_missing_target_benchmarks",
+  "submission_ready": false,
+  "target_benchmark_inputs": 0,
+  "usable_benchmark_inputs": 0,
+  "venue_alignment_ready": false
+}
