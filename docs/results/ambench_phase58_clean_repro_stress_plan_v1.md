@@ -60,9 +60,55 @@ frozen `spot_size` claim without changing the claim wording midstream.
 | Independent process panel | Build one additional process-balanced subset that is not exactly broad12 or broad21 if data coverage permits. | Treat as external robustness, not replacement evidence. |
 | Report drift | Regenerate Phase 55/56/57 package after every stress-test change. | Any claim package drift must be explained by changed inputs, not script nondeterminism. |
 
+## Stronger-Baseline Stress Result
+
+The A100 server ran the stronger-baseline stress at commit `9d177ae` after
+fixing the artifact-index parser to skip trailing blank TSV rows. The runner
+generated random forest and histogram gradient boosting baselines for broad12
+and broad21 `spot_size`, each with coordinate-only and coordinate+process
+features.
+
+Result package:
+
+```text
+docs/results/phase58_stronger_baseline_stress/
+```
+
+Stress gate:
+
+```text
+claim_survives_stronger_baselines
+```
+
+Key comparison:
+
+| Dataset | Metric | Frozen `broad_process_v1` | Best baseline after stress | Pass |
+|---|---|---:|---:|---|
+| broad12 | RMSE | 136.384782 | 151.850578 | yes |
+| broad12 | hot q90 RMSE | 162.125337 | 252.554440 | yes |
+| broad12 | gradient q90 RMSE | 165.282182 | 233.119660 | yes |
+| broad21 | RMSE | 146.002303 | 149.185412 | yes |
+| broad21 | hot q90 RMSE | 164.313888 | 251.976794 | yes |
+| broad21 | gradient q90 RMSE | 174.735839 | 231.072566 | yes |
+
+No stress baselines were missing. The strongest baseline after adding random
+forest and histogram gradient boosting remains the prior mean baseline on all
+six required dataset/metric checks.
+
+## Sampling and Panel Stress Runner
+
+`scripts/server/run_phase58_sampling_panel_stress_a100.sh` is the next Phase 58
+runner. It uses isolated profile tags (`phase58_density_profile` and
+`phase58_panel_profile`) so alternate sampling or auxiliary-panel results cannot
+overwrite the frozen Phase 55 `broad_process_profile` artifacts.
+
+The density branch reruns broad12/broad21 `spot_size` with a denser fixed sample.
+The panel branch runs an auxiliary broad15 process-balanced `spot_size` panel.
+These results are stress evidence only; they do not replace the Phase 55 frozen
+floor unless they pass the same full seed and baseline gates in a later phase.
+
 ## Current Decision
 
-Proceed to Phase 58 stress testing before implementing a new model branch. A new
-architecture may be attempted only after the stress-test result identifies a
-specific, train/validation-visible gap that is not already covered by
-`broad_process_v1`.
+Continue Phase 58 through sampling-density and auxiliary-panel stress before
+implementing a new model branch. The stronger-baseline stress supports keeping
+the current `spot_size` paper-facing floor intact.

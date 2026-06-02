@@ -120,3 +120,17 @@ def test_phase58_runner_uses_temp_python_file_instead_of_stdin():
     assert "phase58_stronger_baseline_stress_summary.json" in text
     assert '[[ -z "${dataset_label}${base_run_id}${table}${split_manifest}" ]]' in text
     assert "incomplete artifact index row" in text
+
+
+def test_phase58_sampling_panel_runner_uses_isolated_stress_profiles():
+    text = Path("scripts/server/run_phase58_sampling_panel_stress_a100.sh").read_text(encoding="utf-8")
+
+    assert "phase58_density_profile" in text
+    assert "phase58_panel_profile" in text
+    assert "phase58_sampling_density_stress_summary" in text
+    assert "phase58_process_panel_stress_summary" in text
+    assert 'PANEL_DATASET_LIMITS="${PANEL_DATASET_LIMITS:-15}"' in text
+    assert "--profile-tag \"$profile_tag\"" in text
+    assert "--seed \"$SEED\"" in text
+    assert "--require-complete" in text
+    assert "--require-pass" not in text

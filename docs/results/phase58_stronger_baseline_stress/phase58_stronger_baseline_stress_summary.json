@@ -1,0 +1,230 @@
+{
+  "datasets": [
+    {
+      "base_run_id": "ambench_multiline_process_temperature_broad12_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1",
+      "label": "broad12",
+      "metrics": {
+        "gradient_q90_rmse": {
+          "best_baseline_after_stress": {
+            "method": "mean",
+            "value": 233.11966000888705
+          },
+          "best_stress_baseline": {
+            "method": "hist_gradient_boosting_coords",
+            "path": "outputs/baselines/ambench_multiline_process_temperature_broad12_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_hist_gradient_boosting_coords_regions_q90.json",
+            "value": 304.7044239781355
+          },
+          "delta_vs_best_after_stress": -67.83747773685394,
+          "frozen_beats_best_after_stress": true,
+          "frozen_broad_process_v1": 165.2821822720331,
+          "prior_best_strong": {
+            "method": "mean",
+            "value": 233.11966000888705
+          }
+        },
+        "hot_q90_rmse": {
+          "best_baseline_after_stress": {
+            "method": "mean",
+            "value": 252.5544395876147
+          },
+          "best_stress_baseline": {
+            "method": "hist_gradient_boosting_coords",
+            "path": "outputs/baselines/ambench_multiline_process_temperature_broad12_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_hist_gradient_boosting_coords_regions_q90.json",
+            "value": 343.6577908226242
+          },
+          "delta_vs_best_after_stress": -90.42910252229737,
+          "frozen_beats_best_after_stress": true,
+          "frozen_broad_process_v1": 162.12533706531732,
+          "prior_best_strong": {
+            "method": "mean",
+            "value": 252.5544395876147
+          }
+        },
+        "rmse": {
+          "best_baseline_after_stress": {
+            "method": "mean",
+            "value": 151.85057798740885
+          },
+          "best_stress_baseline": {
+            "method": "hist_gradient_boosting_coords",
+            "path": "outputs/baselines/ambench_multiline_process_temperature_broad12_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_hist_gradient_boosting_coords_regions_q90.json",
+            "value": 199.57755943056682
+          },
+          "delta_vs_best_after_stress": -15.465796000272206,
+          "frozen_beats_best_after_stress": true,
+          "frozen_broad_process_v1": 136.38478198713665,
+          "prior_best_strong": {
+            "method": "mean",
+            "value": 151.85057798740885
+          }
+        }
+      },
+      "missing_stress_baselines": [],
+      "pass": true,
+      "stress_rows": [
+        {
+          "gradient_q90_rmse": 326.33588957706587,
+          "hot_q90_rmse": 358.4381230959935,
+          "method": "random_forest",
+          "missing": false,
+          "name": "random_forest_coords",
+          "path": "outputs/baselines/ambench_multiline_process_temperature_broad12_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_random_forest_coords_regions_q90.json",
+          "rmse": 207.91554383610372,
+          "tag": "coords"
+        },
+        {
+          "gradient_q90_rmse": 326.2716765041602,
+          "hot_q90_rmse": 358.3074356144504,
+          "method": "random_forest",
+          "missing": false,
+          "name": "random_forest_process",
+          "path": "outputs/baselines/ambench_multiline_process_temperature_broad12_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_random_forest_process_regions_q90.json",
+          "rmse": 207.89039679952657,
+          "tag": "process"
+        },
+        {
+          "gradient_q90_rmse": 304.7044239781355,
+          "hot_q90_rmse": 343.6577908226242,
+          "method": "hist_gradient_boosting",
+          "missing": false,
+          "name": "hist_gradient_boosting_coords",
+          "path": "outputs/baselines/ambench_multiline_process_temperature_broad12_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_hist_gradient_boosting_coords_regions_q90.json",
+          "rmse": 199.57755943056682,
+          "tag": "coords"
+        },
+        {
+          "gradient_q90_rmse": 304.7044239781355,
+          "hot_q90_rmse": 343.6577908226242,
+          "method": "hist_gradient_boosting",
+          "missing": false,
+          "name": "hist_gradient_boosting_process",
+          "path": "outputs/baselines/ambench_multiline_process_temperature_broad12_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_hist_gradient_boosting_process_regions_q90.json",
+          "rmse": 199.57755943056682,
+          "tag": "process"
+        }
+      ]
+    },
+    {
+      "base_run_id": "ambench_multiline_process_temperature_broad21_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1",
+      "label": "broad21",
+      "metrics": {
+        "gradient_q90_rmse": {
+          "best_baseline_after_stress": {
+            "method": "mean",
+            "value": 231.07256605617917
+          },
+          "best_stress_baseline": {
+            "method": "hist_gradient_boosting_coords",
+            "path": "outputs/baselines/ambench_multiline_process_temperature_broad21_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_hist_gradient_boosting_coords_regions_q90.json",
+            "value": 294.22868906079367
+          },
+          "delta_vs_best_after_stress": -56.33672731757633,
+          "frozen_beats_best_after_stress": true,
+          "frozen_broad_process_v1": 174.73583873860284,
+          "prior_best_strong": {
+            "method": "mean",
+            "value": 231.07256605617917
+          }
+        },
+        "hot_q90_rmse": {
+          "best_baseline_after_stress": {
+            "method": "mean",
+            "value": 251.9767944823301
+          },
+          "best_stress_baseline": {
+            "method": "hist_gradient_boosting_coords",
+            "path": "outputs/baselines/ambench_multiline_process_temperature_broad21_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_hist_gradient_boosting_coords_regions_q90.json",
+            "value": 333.7727620729939
+          },
+          "delta_vs_best_after_stress": -87.66290649198785,
+          "frozen_beats_best_after_stress": true,
+          "frozen_broad_process_v1": 164.31388799034224,
+          "prior_best_strong": {
+            "method": "mean",
+            "value": 251.9767944823301
+          }
+        },
+        "rmse": {
+          "best_baseline_after_stress": {
+            "method": "mean",
+            "value": 149.18541210581552
+          },
+          "best_stress_baseline": {
+            "method": "hist_gradient_boosting_coords",
+            "path": "outputs/baselines/ambench_multiline_process_temperature_broad21_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_hist_gradient_boosting_coords_regions_q90.json",
+            "value": 191.35403974123795
+          },
+          "delta_vs_best_after_stress": -3.1831094691341377,
+          "frozen_beats_best_after_stress": true,
+          "frozen_broad_process_v1": 146.00230263668138,
+          "prior_best_strong": {
+            "method": "mean",
+            "value": 149.18541210581552
+          }
+        }
+      },
+      "missing_stress_baselines": [],
+      "pass": true,
+      "stress_rows": [
+        {
+          "gradient_q90_rmse": 311.7191246491076,
+          "hot_q90_rmse": 351.09678249075193,
+          "method": "random_forest",
+          "missing": false,
+          "name": "random_forest_coords",
+          "path": "outputs/baselines/ambench_multiline_process_temperature_broad21_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_random_forest_coords_regions_q90.json",
+          "rmse": 200.40700495739372,
+          "tag": "coords"
+        },
+        {
+          "gradient_q90_rmse": 311.5593335178579,
+          "hot_q90_rmse": 351.13663075515757,
+          "method": "random_forest",
+          "missing": false,
+          "name": "random_forest_process",
+          "path": "outputs/baselines/ambench_multiline_process_temperature_broad21_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_random_forest_process_regions_q90.json",
+          "rmse": 200.443492028716,
+          "tag": "process"
+        },
+        {
+          "gradient_q90_rmse": 294.22868906079367,
+          "hot_q90_rmse": 333.7727620729939,
+          "method": "hist_gradient_boosting",
+          "missing": false,
+          "name": "hist_gradient_boosting_coords",
+          "path": "outputs/baselines/ambench_multiline_process_temperature_broad21_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_hist_gradient_boosting_coords_regions_q90.json",
+          "rmse": 191.35403974123795,
+          "tag": "coords"
+        },
+        {
+          "gradient_q90_rmse": 294.22868906079367,
+          "hot_q90_rmse": 333.7727620729939,
+          "method": "hist_gradient_boosting",
+          "missing": false,
+          "name": "hist_gradient_boosting_process",
+          "path": "outputs/baselines/ambench_multiline_process_temperature_broad21_process_round_robin_spot_size_broad_process_profile_smoke_a100_sxm4_40gb_v1_hist_gradient_boosting_process_regions_q90.json",
+          "rmse": 191.35403974123795,
+          "tag": "process"
+        }
+      ]
+    }
+  ],
+  "objective": "stronger_baseline_stress",
+  "phase": 58,
+  "phase55_summary": "outputs/reports/phase55_spot_size_route_seed_check_summary.json",
+  "required_metrics": [
+    "rmse",
+    "hot_q90_rmse",
+    "gradient_q90_rmse"
+  ],
+  "stress_gate": {
+    "pass": true,
+    "status": "claim_survives_stronger_baselines"
+  },
+  "stress_methods": [
+    "random_forest:coords",
+    "random_forest:process",
+    "hist_gradient_boosting:coords",
+    "hist_gradient_boosting:process"
+  ]
+}
