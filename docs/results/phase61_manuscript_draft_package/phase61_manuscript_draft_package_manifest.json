@@ -1,0 +1,52 @@
+{
+  "claim_boundary": {
+    "excluded_claims": [
+      "density-invariant robustness",
+      "universal process-conditioning success",
+      "laser_power, scan_speed, or full-process strong-baseline wins",
+      "source-path or Green's-function broad12/broad21 success under current data registration"
+    ],
+    "main_claim": "fixed-sampling broad12/broad21 spot_size under broad_process_v1, seeds 7/1/2"
+  },
+  "counts": {
+    "caption_files": 1,
+    "claim_anchor_rows": 11,
+    "literature_gap_rows": 3,
+    "result_draft_files": 2
+  },
+  "inputs": {
+    "appendix": "docs/results/phase60_manuscript_evidence_package/phase60_appendix_negative_diagnostic_table.csv",
+    "main": "docs/results/phase60_manuscript_evidence_package/phase60_main_spot_size_seed_positive_table.csv",
+    "next_gate": "docs/results/phase60_manuscript_evidence_package/phase60_next_branch_gate_table.csv",
+    "phase60_manifest": "docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package_manifest.json",
+    "phase60_markdown": "docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_package.md",
+    "route": "docs/results/phase60_manuscript_evidence_package/phase60_route_guard_boundary_table.csv",
+    "stress": "docs/results/phase60_manuscript_evidence_package/phase60_stress_boundary_table.csv"
+  },
+  "model_expansion_gate": {
+    "decision": "block_density_failure_driven_model_expansion",
+    "reason": "validation-visible correction does not beat the reference on the analysis split",
+    "selected_variant": "blend:broad_process_v1->mean:alpha=1",
+    "uses_test_for_selection": false
+  },
+  "objective": "manuscript_results_methods_caption_draft_package",
+  "outputs": {
+    "captions": "docs/results/phase61_manuscript_draft_package/phase61_table_figure_captions.md",
+    "claim_evidence_crosswalk": "docs/results/phase61_manuscript_draft_package/phase61_claim_evidence_crosswalk.csv",
+    "literature_gap_register": "docs/results/phase61_manuscript_draft_package/phase61_literature_gap_register.csv",
+    "manifest": "docs/results/phase61_manuscript_draft_package/phase61_manuscript_draft_package_manifest.json",
+    "methods_draft": "docs/results/phase61_manuscript_draft_package/phase61_methods_draft.md",
+    "package_markdown": "docs/results/phase61_manuscript_draft_package/phase61_manuscript_draft_package.md",
+    "results_draft": "docs/results/phase61_manuscript_draft_package/phase61_results_draft.md"
+  },
+  "phase": 61,
+  "writing_stage_gate": {
+    "active_gate": "draft_ready_for_internal_results_methods; needs_verification_for_literature_context",
+    "blocked_work": [
+      "final Introduction or Related Work without verified literature",
+      "target-venue style claims without target examples or author guide"
+    ],
+    "evidence_status": "phase60_tables_writing_ready",
+    "mode": "section_draft"
+  }
+}

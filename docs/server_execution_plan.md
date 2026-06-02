@@ -2,7 +2,16 @@
 
 ## 目标与当前基线
 
-本方案用于后续在远程 A100/A800 服务器上持续推进 `matsci-gnn-pinn` 项目，目标是把当前已跑通的 AM-Bench dense 热场实验推进到可写论文的 GNN-PINN 多尺度耦合实验矩阵。
+本方案用于后续在远程 A100/A800 服务器上持续推进 `matsci-gnn-pinn` 项目，目标是把 AM-Bench thermal/process 实验推进到可写论文的 route-guarded Macro PINN 结果，并在通过明确 gate 后继续尝试更多模型创新和模型架构。
+
+当前权威推进状态：
+
+- Phase 55 固定采样 broad12/broad21 `spot_size` 三 seed 结果是当前 frozen paper-facing floor。
+- Phase 58 stronger-baseline stress 和 broad15 auxiliary panel 支持该 fixed-sampling floor，但 alternate-density broad21 暴露 density-sensitive boundary。
+- Phase 59 no-test-leakage upper-bound probe 选择 `blend:broad_process_v1->mean:alpha=1`，因此 density failure 不能直接驱动新模型分支。
+- Phase 60 已生成 manuscript evidence package，并记录 `block_density_failure_driven_model_expansion`。
+- Phase 61 已生成 manuscript results/methods/caption draft package；下一步是 Phase 66 closeout/sync，然后进入 claim-audited manuscript v0 与 validation-visible signal mining。
+- 当前 A100-SXM4-40GB 仍足够处理 Phase 61/66 和下一轮信号挖掘；只有进入大规模 learned image encoder、更大多线表、多模型 ensemble 或 40GB 显存实测不足时，才向用户请求 A100-SXM4-80GB。
 
 当前已完成节点：
 
@@ -53,7 +62,7 @@ git rev-parse --short origin/main
 登录：
 
 ```bash
-ssh -i ~/.ssh/matsci_gnnpinn_a100 -p 25820 root@223.109.239.30
+ssh -i ~/.ssh/matsci_gnnpinn_a100 -p 22036 root@223.109.239.30
 ```
 
 项目目录：
@@ -1995,6 +2004,32 @@ docs/results/phase60_manuscript_evidence_package/phase60_manuscript_evidence_pac
 
 结论：Phase 60 不新增训练证据。当前 manifest 记录 main rows `6`、route rows `8`、stress/boundary rows `19`、appendix rows `14`，并给出 `block_density_failure_driven_model_expansion`。下一步优先进入 Phase 61 manuscript results/methods/caption draft package；若用户要求继续模型创新，则只能从 Phase 60 next-branch gate 中未阻塞的新验证信号进入。
 
+#### Phase 61：manuscript results/methods/caption draft package
+
+目标：把 Phase 60 evidence package 转成主文 Results、Methods、caption 草稿和 claim-to-evidence crosswalk，作为 manuscript v0 的可审计输入。该阶段不新增训练证据。
+
+生成命令：
+
+```bash
+python -X utf8 scripts/server/build_phase61_manuscript_draft_package.py
+```
+
+输出：
+
+```text
+docs/results/phase61_manuscript_draft_package/phase61_results_draft.md
+docs/results/phase61_manuscript_draft_package/phase61_methods_draft.md
+docs/results/phase61_manuscript_draft_package/phase61_table_figure_captions.md
+docs/results/phase61_manuscript_draft_package/phase61_claim_evidence_crosswalk.csv
+docs/results/phase61_manuscript_draft_package/phase61_literature_gap_register.csv
+docs/results/phase61_manuscript_draft_package/phase61_manuscript_draft_package.md
+docs/results/phase61_manuscript_draft_package/phase61_manuscript_draft_package_manifest.json
+```
+
+当前 Phase 61 manifest 记录 claim anchors `11`、literature gaps `3`、result draft files `2`、caption files `1`。Writing gate 是 `draft_ready_for_internal_results_methods; needs_verification_for_literature_context`。模型扩展 gate 继续继承 Phase 60 的 `block_density_failure_driven_model_expansion`。
+
+结论：Phase 61 是 manuscript-facing package，不是模型扩展入口。下一步 Phase 66 应先完成 local/GitHub/server 三端同步和服务器可复现检查，再进入 manuscript v0 claim audit 与 validation-visible signal mining。
+
 ## 阶段 E：方向三弱双向耦合
 
 ### E1. Weak coupling MVP
@@ -2158,7 +2193,7 @@ git push origin main
 如果服务器没有 GitHub 凭据，则从本地拉取服务器提交后推送：
 
 ```bash
-git -c core.sshCommand="ssh -i C:/Users/cjh02/.ssh/matsci_gnnpinn_a100 -p 25820 -o IdentitiesOnly=yes" \
+git -c core.sshCommand="ssh -i C:/Users/cjh02/.ssh/matsci_gnnpinn_a100 -p 22036 -o IdentitiesOnly=yes" \
   fetch ssh://root@223.109.239.30/root/matsci-gnn-pinn main:refs/remotes/server/main
 git merge --ff-only server/main
 git push origin main
@@ -2176,12 +2211,12 @@ git rev-parse --short origin/main
 
 ## 立即下一步建议
 
-Phase 60 已完成。下一步先进入 Phase 61 manuscript results/methods/caption draft package，不要从 Phase 58/59 density failure 直接启动新模型训练分支。
+Phase 61 draft package 已在本地生成并通过 targeted validation。下一步执行 Phase 66 closeout/sync，不要从 Phase 58/59 density failure 直接启动新模型训练分支。
 
 优先级：
 
-1. 用 `docs/results/phase60_manuscript_evidence_package/phase60_main_spot_size_seed_positive_table.csv` 写主文主表和结果段落。
-2. 用 `phase60_route_guard_boundary_table.csv` 写 route-guard/no-process fallback 边界，明确 `laser_power`、`scan_speed`、full `process` 不是 strong-baseline wins。
-3. 用 `phase60_stress_boundary_table.csv` 写 stronger-baseline stress、broad15 support、broad21 density boundary。
-4. 用 `phase60_appendix_negative_diagnostic_table.csv` 写 Phases 33-53 负诊断，加上 Phase 58/59 density-sensitive boundary。
-5. 若继续模型创新，先查 `phase60_next_branch_gate_table.csv`：Candidate A 处于 paused，Candidate B 被 Phase 59 density gate 阻塞，Candidate C 被 registration data 阻塞；只有出现新的 validation-visible signal 时才进入 A100 focused validation。
+1. 本地重新生成 Phase 61 package，并确认 manifest counts、claim anchors、literature gaps 和 repository-relative paths。
+2. 本地运行 Phase 60/61 targeted tests、`py_compile` 和 `git diff --check`。
+3. 提交并 push Phase 61 package、builder、tests、README 和本服务器执行方案。
+4. A100 服务器从 GitHub fast-forward 到同一 commit，运行 Phase 61 `py_compile`、pytest 和 package regeneration。
+5. 进入 manuscript v0 claim audit；若继续模型创新，先做 train/validation-visible signal mining，再决定 Candidate A/B/C 是否重新打开。
