@@ -21,7 +21,7 @@ from typing import Any
 
 LOCAL_TABLE_SNAPSHOT = "phase75_line0_1_temperature_medium_probe_snapshot.csv"
 LOCAL_SPLIT_SNAPSHOT = "phase75_line0_1_temperature_medium_probe_split_snapshot.json"
-FLOAT_DIGITS = 6
+JSON_FLOAT_DIGITS = 5
 
 GATE_FIELDS = (
     "gate_id",
@@ -49,7 +49,7 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
 
 def _stable_json_value(value: Any) -> Any:
     if isinstance(value, float):
-        return round(value, FLOAT_DIGITS)
+        return round(value, JSON_FLOAT_DIGITS)
     if isinstance(value, dict):
         return {key: _stable_json_value(item) for key, item in value.items()}
     if isinstance(value, list):

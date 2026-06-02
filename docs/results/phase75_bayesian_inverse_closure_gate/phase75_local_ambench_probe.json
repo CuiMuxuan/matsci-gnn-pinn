@@ -7,11 +7,11 @@
     "active_strategy": "validation_selected_region_policy",
     "calibration_ok": true,
     "gradient_q90_rmse_gain_vs_random": 19.4023,
-    "hot_q90_rmse_gain_vs_random": 75.802315,
+    "hot_q90_rmse_gain_vs_random": 75.80231,
     "interpretation": "Bayesian low-dimensional inverse closure is not yet region-preserving enough for AM-Bench/A100 expansion.",
     "region_preservation_ok": true,
     "require_region_preservation": true,
-    "rmse_gain_vs_random": -50.403261,
+    "rmse_gain_vs_random": -50.40326,
     "source_recovery_ok": true,
     "status": "negative"
   },
@@ -59,38 +59,38 @@
     "random": {
       "calibration_scale_mean": 1.0,
       "n_repeats": 2,
-      "test_coverage90_mean": 0.936842,
-      "test_gradient_q90_rmse_mean": 141.703851,
-      "test_hot_q90_rmse_mean": 162.638892,
-      "test_rmse_mean": 125.961761
+      "test_coverage90_mean": 0.93684,
+      "test_gradient_q90_rmse_mean": 141.70385,
+      "test_hot_q90_rmse_mean": 162.63889,
+      "test_rmse_mean": 125.96176
     },
     "region_quota_uncertainty": {
-      "calibration_scale_mean": 1.376958,
+      "calibration_scale_mean": 1.37696,
       "n_repeats": 2,
-      "test_coverage90_mean": 0.836842,
-      "test_gradient_q90_rmse_mean": 122.217451,
-      "test_hot_q90_rmse_mean": 90.253908,
-      "test_rmse_mean": 173.163278
+      "test_coverage90_mean": 0.83684,
+      "test_gradient_q90_rmse_mean": 122.21745,
+      "test_hot_q90_rmse_mean": 90.25391,
+      "test_rmse_mean": 173.16328
     },
     "uncertainty_source": {
       "calibration_scale_mean": 1.88969,
       "n_repeats": 2,
-      "test_coverage90_mean": 0.984211,
-      "test_gradient_q90_rmse_mean": 161.532024,
-      "test_hot_q90_rmse_mean": 197.026458,
+      "test_coverage90_mean": 0.98421,
+      "test_gradient_q90_rmse_mean": 161.53202,
+      "test_hot_q90_rmse_mean": 197.02646,
       "test_rmse_mean": 115.46709
     },
     "validation_selected_region_policy": {
-      "calibration_scale_mean": 1.346388,
+      "calibration_scale_mean": 1.34639,
       "n_repeats": 2,
       "selected_policy_counts": {
         "pareto_source_gradient": 1,
         "region_quota_uncertainty": 1
       },
-      "test_coverage90_mean": 0.826316,
-      "test_gradient_q90_rmse_mean": 122.301551,
-      "test_hot_q90_rmse_mean": 86.836577,
-      "test_rmse_mean": 176.365022
+      "test_coverage90_mean": 0.82632,
+      "test_gradient_q90_rmse_mean": 122.30155,
+      "test_hot_q90_rmse_mean": 86.83658,
+      "test_rmse_mean": 176.36502
     }
   }
 }

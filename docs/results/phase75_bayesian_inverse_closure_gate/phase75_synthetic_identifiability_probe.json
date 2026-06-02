@@ -6,12 +6,12 @@
   "decision": {
     "active_strategy": "validation_selected_region_policy",
     "calibration_ok": true,
-    "gradient_q90_rmse_gain_vs_random": 0.294485,
-    "hot_q90_rmse_gain_vs_random": 0.106836,
+    "gradient_q90_rmse_gain_vs_random": 0.29449,
+    "hot_q90_rmse_gain_vs_random": 0.10684,
     "interpretation": "Bayesian low-dimensional inverse closure shows enough region-preserving signal for expansion.",
     "region_preservation_ok": true,
     "require_region_preservation": true,
-    "rmse_gain_vs_random": 0.111717,
+    "rmse_gain_vs_random": 0.11172,
     "source_recovery_ok": true,
     "status": "positive"
   },
@@ -55,32 +55,32 @@
     "random": {
       "calibration_scale_mean": 1.0,
       "n_repeats": 2,
-      "source_parameter_mean_abs_error_mean": 12.236868,
+      "source_parameter_mean_abs_error_mean": 12.23687,
       "source_recovery_pass_rate": 1.0,
-      "test_coverage90_mean": 0.902778,
-      "test_gradient_q90_rmse_mean": 5.401758,
-      "test_hot_q90_rmse_mean": 5.132917,
-      "test_rmse_mean": 4.398935
+      "test_coverage90_mean": 0.90278,
+      "test_gradient_q90_rmse_mean": 5.40176,
+      "test_hot_q90_rmse_mean": 5.13292,
+      "test_rmse_mean": 4.39893
     },
     "region_quota_uncertainty": {
       "calibration_scale_mean": 1.0,
       "n_repeats": 2,
-      "source_parameter_mean_abs_error_mean": 6.191066,
+      "source_parameter_mean_abs_error_mean": 6.19107,
       "source_recovery_pass_rate": 1.0,
-      "test_coverage90_mean": 0.888889,
-      "test_gradient_q90_rmse_mean": 5.184249,
-      "test_hot_q90_rmse_mean": 5.071841,
-      "test_rmse_mean": 4.412994
+      "test_coverage90_mean": 0.88889,
+      "test_gradient_q90_rmse_mean": 5.18425,
+      "test_hot_q90_rmse_mean": 5.07184,
+      "test_rmse_mean": 4.41299
     },
     "uncertainty_source": {
       "calibration_scale_mean": 1.0,
       "n_repeats": 2,
-      "source_parameter_mean_abs_error_mean": 4.761844,
+      "source_parameter_mean_abs_error_mean": 4.76184,
       "source_recovery_pass_rate": 1.0,
-      "test_coverage90_mean": 0.895833,
-      "test_gradient_q90_rmse_mean": 5.107272,
-      "test_hot_q90_rmse_mean": 5.026081,
-      "test_rmse_mean": 4.287218
+      "test_coverage90_mean": 0.89583,
+      "test_gradient_q90_rmse_mean": 5.10727,
+      "test_hot_q90_rmse_mean": 5.02608,
+      "test_rmse_mean": 4.28722
     },
     "validation_selected_region_policy": {
       "calibration_scale_mean": 1.0,
@@ -88,12 +88,12 @@
       "selected_policy_counts": {
         "uncertainty_source": 2
       },
-      "source_parameter_mean_abs_error_mean": 4.761844,
+      "source_parameter_mean_abs_error_mean": 4.76184,
       "source_recovery_pass_rate": 1.0,
-      "test_coverage90_mean": 0.895833,
-      "test_gradient_q90_rmse_mean": 5.107272,
-      "test_hot_q90_rmse_mean": 5.026081,
-      "test_rmse_mean": 4.287218
+      "test_coverage90_mean": 0.89583,
+      "test_gradient_q90_rmse_mean": 5.10727,
+      "test_hot_q90_rmse_mean": 5.02608,
+      "test_rmse_mean": 4.28722
     }
   }
 }
