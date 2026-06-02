@@ -69,3 +69,22 @@ RUN_ID="ambench_multiline_process_temperature_broad${DATASET_LIMIT}_${DATASET_OR
   --top-n "${TOP_N:-30}" \
   --json-output "outputs/reports/phase59_broad21_density_residual_anatomy.json" \
   --markdown-output "outputs/reports/phase59_broad21_density_residual_anatomy.md"
+
+"$CONDA_BIN" run -n "$CONDA_ENV" python -X utf8 scripts/server/summarize_phase59_residual_upper_bound.py \
+  --prediction "$PREDICTION_DIR/${RUN_ID}_mean_constant_predictions.csv" \
+  --prediction "$PREDICTION_DIR/${RUN_ID}_macro_pinn_minmax_no_process_v1_predictions.csv" \
+  --prediction "$PREDICTION_DIR/${RUN_ID}_macro_pinn_minmax_${PROFILE_TAG}_v1_predictions.csv" \
+  --label mean \
+  --label no_process \
+  --label broad_process_v1 \
+  --target temperature_C \
+  --candidate broad_process_v1 \
+  --reference mean \
+  --secondary-reference no_process \
+  --fit-split train \
+  --selection-split val \
+  --analysis-split test \
+  --min-fit-n "${MIN_FIT_N:-20}" \
+  --shrinkage "${SHRINKAGE:-20}" \
+  --json-output "outputs/reports/phase59_broad21_density_residual_upper_bound.json" \
+  --markdown-output "outputs/reports/phase59_broad21_density_residual_upper_bound.md"
