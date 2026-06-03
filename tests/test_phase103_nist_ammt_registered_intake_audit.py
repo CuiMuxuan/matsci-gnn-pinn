@@ -256,7 +256,7 @@ def test_phase103_aria2c_backend_uses_parallel_resume_command(tmp_path: Path, mo
         backend="aria2c",
         url="https://example.test/In-situ%20Meas%20Data.zip",
         output=output,
-        timeout_seconds=30,
+        timeout_seconds=900,
         retries=4,
         resume=True,
     )
@@ -268,5 +268,6 @@ def test_phase103_aria2c_backend_uses_parallel_resume_command(tmp_path: Path, mo
     assert "--continue=true" in command
     assert "--max-connection-per-server=8" in command
     assert "--split=8" in command
+    assert command[command.index("--timeout") + 1] == "600"
     assert str(output.parent) in command
     assert output.name in command

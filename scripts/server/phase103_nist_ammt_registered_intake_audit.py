@@ -154,6 +154,7 @@ def _download_with_external(
     if backend == "python":
         return _download_with_python(url, output, timeout_seconds)
     if backend == "aria2c":
+        aria2_timeout = max(1, min(timeout_seconds, 600))
         command = [
             "aria2c",
             "--continue=true" if resume else "--continue=false",
@@ -167,7 +168,7 @@ def _download_with_external(
             "--max-tries",
             str(retries),
             "--timeout",
-            str(timeout_seconds),
+            str(aria2_timeout),
             "--dir",
             str(output.parent),
             "--out",
