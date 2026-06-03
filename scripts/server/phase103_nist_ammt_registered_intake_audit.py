@@ -14,6 +14,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+import sys
 import time
 import urllib.request
 import zipfile
@@ -159,6 +160,10 @@ def _download_with_external(
             "--max-connection-per-server=8",
             "--split=8",
             "--min-split-size=16M",
+            "--console-log-level=warn",
+            "--summary-interval=0",
+            "--auto-file-renaming=false",
+            "--file-allocation=none",
             "--max-tries",
             str(retries),
             "--timeout",
@@ -203,7 +208,7 @@ def _download_with_external(
     outer_attempts = max(1, retries)
     for attempt in range(1, outer_attempts + 1):
         try:
-            subprocess.run(command, check=True)
+            subprocess.run(command, check=True, stdout=sys.stderr)
             return f"downloaded_{backend}"
         except subprocess.CalledProcessError:
             if attempt >= outer_attempts:

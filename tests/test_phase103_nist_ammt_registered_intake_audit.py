@@ -213,8 +213,8 @@ def test_phase103_external_download_retries_after_transient_failure(tmp_path: Pa
     calls = []
     sleeps = []
 
-    def fake_run(command, check):
-        calls.append((command, check, output.read_bytes()))
+    def fake_run(command, check, **kwargs):
+        calls.append((command, check, kwargs, output.read_bytes()))
         if len(calls) == 1:
             raise subprocess.CalledProcessError(returncode=4, cmd=command)
         output.write_bytes(b"complete")
@@ -236,6 +236,7 @@ def test_phase103_external_download_retries_after_transient_failure(tmp_path: Pa
     assert len(calls) == 2
     assert sleeps == [5]
     assert calls[0][0][0:3] == ["wget", "-c", "--tries"]
+    assert "stdout" in calls[0][2]
     assert output.read_bytes() == b"complete"
 
 
@@ -244,8 +245,8 @@ def test_phase103_aria2c_backend_uses_parallel_resume_command(tmp_path: Path, mo
     output = tmp_path / "In-situ Meas Data.zip"
     calls = []
 
-    def fake_run(command, check):
-        calls.append((command, check))
+    def fake_run(command, check, **kwargs):
+        calls.append((command, check, kwargs))
         output.write_bytes(b"complete")
         return subprocess.CompletedProcess(command, 0)
 
@@ -263,6 +264,7 @@ def test_phase103_aria2c_backend_uses_parallel_resume_command(tmp_path: Path, mo
     assert status == "downloaded_aria2c"
     command = calls[0][0]
     assert command[0] == "aria2c"
+    assert "stdout" in calls[0][2]
     assert "--continue=true" in command
     assert "--max-connection-per-server=8" in command
     assert "--split=8" in command
