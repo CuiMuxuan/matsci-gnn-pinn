@@ -17,6 +17,9 @@ DEEP_MAX_SAMPLES_PER_GROUP="${DEEP_MAX_SAMPLES_PER_GROUP:-2}"
 DEEP_MAX_BINARY_HEADER_BYTES="${DEEP_MAX_BINARY_HEADER_BYTES:-4096}"
 DEEP_MAX_TIMING_ROWS="${DEEP_MAX_TIMING_ROWS:-32}"
 DEEP_MAX_TEXT_SCAN_BYTES="${DEEP_MAX_TEXT_SCAN_BYTES:-65536}"
+JOIN_MIN_TARGET_COVERAGE="${JOIN_MIN_TARGET_COVERAGE:-0.95}"
+JOIN_MIN_LAYER_PAIRS="${JOIN_MIN_LAYER_PAIRS:-20}"
+JOIN_MIN_MELT_POOL_PAIRS="${JOIN_MIN_MELT_POOL_PAIRS:-5}"
 INTAKE_MANIFEST="${INTAKE_MANIFEST:-logs/phase103_nist_ammt_intake_a100_manifest.json}"
 
 mkdir -p "$LOG_DIR" "$OUTPUT_DIR"
@@ -62,6 +65,14 @@ run_python scripts/server/phase103_nist_ammt_deep_registration_probe.py \
   --max-text-scan-bytes "$DEEP_MAX_TEXT_SCAN_BYTES" \
   > "$LOG_DIR/phase103_nist_ammt_deep_registration_probe_a100_manifest.json"
 
+run_python scripts/server/phase103_nist_ammt_join_probe.py \
+  --sequence-groups-csv "$OUTPUT_DIR/phase103_nist_ammt_deep_sequence_groups.csv" \
+  --output-dir "$OUTPUT_DIR" \
+  --min-target-coverage "$JOIN_MIN_TARGET_COVERAGE" \
+  --min-layer-pairs "$JOIN_MIN_LAYER_PAIRS" \
+  --min-melt-pool-pairs "$JOIN_MIN_MELT_POOL_PAIRS" \
+  > "$LOG_DIR/phase103_nist_ammt_join_probe_a100_manifest.json"
+
 run_python scripts/server/phase103_nist_ammt_tiny_table_feasibility_gate.py \
   --output-dir "$OUTPUT_DIR" \
   > "$LOG_DIR/phase103_nist_ammt_tiny_table_feasibility_a100_manifest.json"
@@ -74,6 +85,7 @@ paths = {
     "schema": Path("logs/phase103_nist_ammt_schema_scout_a100_manifest.json"),
     "sampler": Path("logs/phase103_nist_ammt_member_schema_sampler_a100_manifest.json"),
     "deep": Path("logs/phase103_nist_ammt_deep_registration_probe_a100_manifest.json"),
+    "join": Path("logs/phase103_nist_ammt_join_probe_a100_manifest.json"),
     "tiny": Path("logs/phase103_nist_ammt_tiny_table_feasibility_a100_manifest.json"),
 }
 for label, path in paths.items():

@@ -118,12 +118,21 @@ def _write_ready_gates(tmp_path: Path) -> dict[str, Path]:
             "explicit_trigger_timing_ready": True,
         },
     )
+    join_probe = _write_json(
+        tmp_path / "join_probe_gate.json",
+        {
+            "status": "source_target_layer_join_ready_timing_not_absolute",
+            "source_target_join_ready": True,
+            "explicit_absolute_timing_ready": False,
+        },
+    )
     samples = _write_samples(tmp_path / "samples.csv")
     return {
         "intake": intake,
         "scout": scout,
         "sampler": sampler,
         "deep_probe": deep_probe,
+        "join_probe": join_probe,
         "samples": samples,
     }
 
@@ -141,6 +150,7 @@ def test_tiny_table_feasibility_allows_manual_construction_but_keeps_training_lo
         scout_gate_path=paths["scout"],
         sampler_gate_path=paths["sampler"],
         deep_probe_gate_path=paths["deep_probe"],
+        join_probe_gate_path=paths["join_probe"],
         samples_csv_path=paths["samples"],
     )
 
@@ -180,6 +190,7 @@ def test_tiny_table_feasibility_blocks_when_sampler_gate_missing(tmp_path: Path)
         scout_gate_path=paths["scout"],
         sampler_gate_path=tmp_path / "missing_sampler_gate.json",
         deep_probe_gate_path=paths["deep_probe"],
+        join_probe_gate_path=paths["join_probe"],
         samples_csv_path=paths["samples"],
     )
 
@@ -202,6 +213,7 @@ def test_tiny_table_feasibility_blocks_when_required_role_lacks_text_sample(tmp_
         scout_gate_path=paths["scout"],
         sampler_gate_path=paths["sampler"],
         deep_probe_gate_path=tmp_path / "missing_deep_probe_gate.json",
+        join_probe_gate_path=tmp_path / "missing_join_probe_gate.json",
         samples_csv_path=samples,
     )
 
@@ -226,6 +238,7 @@ def test_tiny_table_feasibility_accepts_deep_binary_target_schema_but_keeps_trai
         scout_gate_path=paths["scout"],
         sampler_gate_path=paths["sampler"],
         deep_probe_gate_path=paths["deep_probe"],
+        join_probe_gate_path=paths["join_probe"],
         samples_csv_path=samples,
     )
 
@@ -234,6 +247,49 @@ def test_tiny_table_feasibility_accepts_deep_binary_target_schema_but_keeps_trai
     assert gate["role_statuses"]["target_observation"] == (
         "ready_for_manual_join_review_binary_schema"
     )
+    assert gate["tiny_registered_table_construction_allowed"] is True
+    assert gate["phase104_baseline_smoke_allowed"] is False
+    assert gate["a100_training_allowed_now"] is False
+
+
+def test_tiny_table_feasibility_accepts_layer_join_for_timing_but_not_training(
+    tmp_path: Path,
+):
+    module = _load_module()
+    paths = _write_ready_gates(tmp_path)
+    deep_without_timing = _write_json(
+        tmp_path / "deep_without_timing.json",
+        {
+            "status": "target_binary_schema_ready_trigger_timing_missing",
+            "target_observation_binary_schema_ready": True,
+            "explicit_trigger_timing_ready": False,
+        },
+    )
+    samples = _write_samples(tmp_path / "samples_missing_timing.csv", include_target=False)
+    # Keep coordinate/source rows only; target comes from deep probe and timing from join probe.
+    with samples.open(encoding="utf-8", newline="") as handle:
+        rows = [row for row in csv.DictReader(handle) if row["roles"] != "trigger_timing"]
+    with samples.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+
+    manifest = module.build_package(
+        root=Path(".").resolve(),
+        output_dir=tmp_path / "out",
+        intake_gate_path=paths["intake"],
+        scout_gate_path=paths["scout"],
+        sampler_gate_path=paths["sampler"],
+        deep_probe_gate_path=deep_without_timing,
+        join_probe_gate_path=paths["join_probe"],
+        samples_csv_path=samples,
+    )
+
+    gate = manifest["gate"]
+    assert gate["status"] == "tiny_registered_table_construction_allowed_training_locked"
+    assert gate["source_target_join_ready"] is True
+    assert gate["explicit_absolute_timing_ready"] is False
+    assert gate["role_statuses"]["trigger_timing"] == "ready_for_manual_join_review_layer_join"
     assert gate["tiny_registered_table_construction_allowed"] is True
     assert gate["phase104_baseline_smoke_allowed"] is False
     assert gate["a100_training_allowed_now"] is False

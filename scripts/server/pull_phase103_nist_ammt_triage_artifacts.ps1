@@ -47,6 +47,9 @@ $artifactFiles = @(
     "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_deep_timing_evidence.csv",
     "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_deep_registration_probe_gate.json",
     "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_deep_registration_probe_manifest.json",
+    "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_source_target_join_candidates.csv",
+    "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_join_probe_gate.json",
+    "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_join_probe_manifest.json",
     "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_tiny_table_feasibility_roles.csv",
     "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_tiny_table_feasibility_gate.json",
     "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_tiny_table_feasibility_summary.md",
@@ -58,6 +61,7 @@ $logFiles = @(
     "logs/phase103_nist_ammt_schema_scout_a100_manifest.json",
     "logs/phase103_nist_ammt_member_schema_sampler_a100_manifest.json",
     "logs/phase103_nist_ammt_deep_registration_probe_a100_manifest.json",
+    "logs/phase103_nist_ammt_join_probe_a100_manifest.json",
     "logs/phase103_nist_ammt_tiny_table_feasibility_a100_manifest.json",
     "logs/phase103_nist_ammt_triage_watch.log"
 )
@@ -77,6 +81,7 @@ $gatePaths = @(
     (Join-Path $LocalOutputDir "phase103_nist_ammt_schema_scout_gate.json"),
     (Join-Path $LocalOutputDir "phase103_nist_ammt_member_schema_sampler_gate.json"),
     (Join-Path $LocalOutputDir "phase103_nist_ammt_deep_registration_probe_gate.json"),
+    (Join-Path $LocalOutputDir "phase103_nist_ammt_join_probe_gate.json"),
     (Join-Path $LocalOutputDir "phase103_nist_ammt_tiny_table_feasibility_gate.json")
 )
 
