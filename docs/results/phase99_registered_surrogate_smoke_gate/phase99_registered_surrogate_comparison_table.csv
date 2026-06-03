@@ -1,0 +1,13 @@
+comparison_id,candidate_method,baseline_method,metric,candidate_value,baseline_value,delta_baseline_minus_candidate,pass,scope
+P99-COMP-001,fixed_green_function_features_full,low_order_interpolation_full,global_rmse,0.000171,0.130146,0.129975,true,full-grid baselines
+P99-COMP-002,fixed_green_function_features_full,low_order_interpolation_full,pde_residual_rmse,0.002728,1.065073,1.062344,true,full-grid baselines
+P99-COMP-003,fixed_green_function_features_full,low_order_interpolation_full,hot_q90_rmse,0.000085,0.174943,0.174858,true,full-grid baselines
+P99-COMP-004,fixed_green_function_features_full,low_order_interpolation_full,gradient_q90_rmse,0.000162,0.077841,0.077678,true,full-grid baselines
+P99-COMP-005,fixed_green_function_features_full,vanilla_deterministic_surrogate_full,global_rmse,0.000171,0.101878,0.101707,true,full-grid baselines
+P99-COMP-006,fixed_green_function_features_full,vanilla_deterministic_surrogate_full,pde_residual_rmse,0.002728,0.955219,0.952491,true,full-grid baselines
+P99-COMP-007,fixed_green_function_features_full,vanilla_deterministic_surrogate_full,hot_q90_rmse,0.000085,0.114738,0.114653,true,full-grid baselines
+P99-COMP-008,fixed_green_function_features_full,vanilla_deterministic_surrogate_full,gradient_q90_rmse,0.000162,0.058955,0.058792,true,full-grid baselines
+P99-COMP-009,fixed_green_function_features_full,random_collocation_same_budget,global_rmse,0.000171,0.000258,0.000088,true,same-budget boundary audit
+P99-COMP-010,fixed_green_function_features_full,random_collocation_same_budget,pde_residual_rmse,0.002728,0.004172,0.001444,true,same-budget boundary audit
+P99-COMP-011,fixed_green_function_features_full,random_collocation_same_budget,hot_q90_rmse,0.000085,0.000085,0.000000,true,same-budget boundary audit
+P99-COMP-012,fixed_green_function_features_full,random_collocation_same_budget,gradient_q90_rmse,0.000162,0.000154,-0.000008,false,same-budget boundary audit
