@@ -14,7 +14,6 @@ import hashlib
 import json
 import shutil
 import subprocess
-import time
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -418,7 +417,6 @@ def build_package(
             "member_rows": len(member_rows),
         },
         "gate": gate,
-        "created_at_unix": int(time.time()),
     }
     _write_json(manifest_path, manifest)
     return manifest

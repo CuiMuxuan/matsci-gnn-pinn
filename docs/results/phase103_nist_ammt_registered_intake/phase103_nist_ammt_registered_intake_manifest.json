@@ -3,7 +3,6 @@
     "audit_rows": 4,
     "member_rows": 0
   },
-  "created_at_unix": 1780457202,
   "data_root": "data/raw/nist_ammt/mds2_2044",
   "download": {
     "backend": "python",
