@@ -1,5 +1,5 @@
 file_id,file_name,expected_bytes,actual_bytes,size_ok,sha256,download_status,zip_status,member_count,registration_hits,timing_hits,command_hits,target_hits,status
-p102_nist_metadata_zip,Metadata.zip,2489233,2489233,true,cf788593b45675dfbf380782b9141ebafd85bf6653f8ca57f0cf69d578c60ee6,downloaded_wget,valid_zip,5,1,0,1,0,ready_for_schema_audit
-p102_nist_build_command_data_zip,Build Command Data.zip,7419446651,0,false,,not_requested,not_present,0,0,0,0,0,not_requested
-p102_nist_in_situ_meas_data_zip,In-situ Meas Data.zip,9170420366,0,false,,not_requested,not_present,0,0,0,0,0,not_requested
+p102_nist_metadata_zip,Metadata.zip,2489233,2489233,true,cf788593b45675dfbf380782b9141ebafd85bf6653f8ca57f0cf69d578c60ee6,present,valid_zip,5,1,0,1,0,ready_for_schema_audit
+p102_nist_build_command_data_zip,Build Command Data.zip,7419446651,7419446651,true,de8a05ebd27f80bd79b6545c9f8a79c0e60230290e1799d9151f14f7429594b1,downloaded_aria2c,valid_zip,295,0,0,295,0,ready_for_schema_audit
+p102_nist_in_situ_meas_data_zip,In-situ Meas Data.zip,9170420366,9170420366,true,4db83f84cce2f4a28e75830a5df496c9a04db5e5554513924434463081ab645f,downloaded_aria2c,valid_zip,2000,0,0,0,2000,ready_for_schema_audit
 p102_nist_movies_zip,Movies.zip,698954503,0,false,,not_requested,not_present,0,0,0,0,0,not_requested

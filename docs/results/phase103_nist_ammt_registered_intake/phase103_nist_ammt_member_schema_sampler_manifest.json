@@ -1,0 +1,42 @@
+{
+  "counts": {
+    "candidate_rows": 402,
+    "sample_rows": 16,
+    "selected_rows": 16
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "missing_required_roles": [
+      "trigger_timing"
+    ],
+    "next_action": "inspect additional scout candidates for missing registration roles",
+    "non_text_rows": 8,
+    "phase104_baseline_smoke_allowed": false,
+    "phase105_model_mechanism_allowed": false,
+    "sample_rows": 16,
+    "sampled_text_rows": 8,
+    "status": "member_schema_samples_incomplete"
+  },
+  "inputs": {
+    "candidate_csv": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_schema_scout_candidates.csv",
+    "data_root": "data/raw/nist_ammt/mds2_2044"
+  },
+  "limits": {
+    "max_bytes": 4096,
+    "max_per_role": 8,
+    "roles": [
+      "coordinate_transform",
+      "trigger_timing",
+      "source_command_path",
+      "target_observation"
+    ]
+  },
+  "objective": "nist_ammt_candidate_member_schema_sampling_no_extraction",
+  "outputs": {
+    "gate_json": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_member_schema_sampler_gate.json",
+    "manifest": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_member_schema_sampler_manifest.json",
+    "samples": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_member_schema_samples.csv"
+  },
+  "phase": 103
+}

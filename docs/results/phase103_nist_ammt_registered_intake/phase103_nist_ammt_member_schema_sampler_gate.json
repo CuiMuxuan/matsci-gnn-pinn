@@ -1,0 +1,14 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "missing_required_roles": [
+    "trigger_timing"
+  ],
+  "next_action": "inspect additional scout candidates for missing registration roles",
+  "non_text_rows": 8,
+  "phase104_baseline_smoke_allowed": false,
+  "phase105_model_mechanism_allowed": false,
+  "sample_rows": 16,
+  "sampled_text_rows": 8,
+  "status": "member_schema_samples_incomplete"
+}

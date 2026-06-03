@@ -1,0 +1,169 @@
+file_id,file_name,member_name,member_size,extension,roles,sample_status,bytes_read,line_count,header_line,preview_text
+p102_nist_metadata_zip,Metadata.zip,Metadata/2018_AMMTLaserScanAngles.txt,3307,.txt,coordinate_transform;source_command_path;split_key,sampled_text,3307,35,					i_laser				,"					i_laser				
+	-50	-37.5	-25	-12.5	0	12.5	25	37.5	50
+-50	-0.137954166	-0.104512988	-0.070714241	-0.036670714	-0.002499427	0.031680389	0.065749388	0.099590098	0.133089042
+-37.5	-0.13775912	-0.104218792	-0.070319941	-0.036176276	-0.001905783	0.032371344	0.066534794	0.100466259	0.134051515
+-25	-0.137432978	-0.103819251	-0.069846882	-0.035630333	-0.001288282	0.033058392	0.067288751	0.101283863	0.134928886
+-12.5	-0.136974753	-0.103313901	-0.069295207	-0.035033583	-0.000648151	0.033739802	0.068008936	0.102040012	0.135717885
+0	-0.136384516	-0.102703187	-0.06866568	-0.034387116	0.000013199	0.034413835	0.068693347	0.102732402	0.13641584
+12.5	-0.13566337	-0.101988335	-0.067959646	-0.033692392	0.000694212	0.035078841	0.069340212	0.103359193	0.137020844
+25	-0.134813373	-0.101171335	-0.067179015	-0.032951222	0.001393156	0.035733205	0.069948053	0.10391903	0.137531671
+37.5	-0.133837608	-0.100254915	-0.066326237	-0.032165763	0.002108215	0.036375421	0.070515684	0.104411062	0.137947846
+50	-0.132740031	-0.099242655	-0.065404306	-0.031338464	0.002837442	0.037004083	0.071042279	0.104835063	0.138269691
+									
+					i_laser				
+	-50	-37.5	-25	-12.5	0	12.5	25	37.5	50
+-50	-0.113467691	-0.113853049	-0.114131126	-0.114299382	-0.114356301	-0.114301318	-0.114135008	-0.11385885	-0.113475352
+-37.5	-0.085203974	-0.085494992	-0.085705056	-0.085832181	-0.085875183	-0.085833657	-0.085707994	-0.085499365	-0.08520976
+-25	-0.056733961	-0.056928561	-0.057069011	-0.057154012	-0.057182766	-0.057155005	-0.057070988	-0.056931503	-0.056737841
+-12.5	-0.02812537	-0.028222079	-0.028291878	-0.028334122	-0.028348414	-0.028334619	-0.028292867	-0.02822355	-0.028127311
+0	0.000552404	0.000554305	0.000555677	0.000556508	0.000556788	0.000556517	0.000555697	0.000554334	0.000552443
+12.5	0.0292291	0.029329602	0.029402141	0.029446046	0.0294609	0.029446568	0.029403182	0.029331151	0.029231143"
+p102_nist_metadata_zip,Metadata.zip,Metadata/201807_LayerCamera_DotGrid.bmp,2561078,.bmp,coordinate_transform;target_observation;split_key,non_text_preview_skipped,4096,0,,
+p102_nist_build_command_data_zip,Build Command Data.zip,Build Command Data/AM Gcode/1_cube_gcode/1_cube.gcode,1969053,.gcode,source_command_path;split_key,sampled_text,4096,141,N0001 G01 X-5.5000 Y-3.5000 Z0.0000 F800 L0,"N0001 G01 X-5.5000 Y-3.5000 Z0.0000 F800 L0
+N0002 G01 Y4.5000 F900 L100
+N0003 G01 X2.5000
+N0004 G01 X4.5000 Y2.5000
+N0005 G01 Y-4.5000
+N0006 G01 X3.5000 Y-5.5000
+N0007 G01 X-3.5000
+N0008 G01 X-4.7929 Y-4.7929
+N0009 G01 X-5.5000 Y-3.5000
+N0010 G01 X4.5000 Y-4.2466 F800 L0
+N0011 G01 X4.3131 Y-4.6869 L195
+N0012 G01 X4.1263 Y-4.8737 L0
+N0013 G01 X4.5000 Y-3.9933 L195
+N0014 G01 Y-3.7399 L0
+N0015 G01 X3.9394 Y-5.0606 L195
+N0016 G01 X3.7525 Y-5.2475 L0
+N0017 G01 X4.5000 Y-3.4865 L195
+N0018 G01 Y-3.2331 L0
+N0019 G01 X3.5656 Y-5.4344 L195
+N0020 G01 X3.4302 Y-5.5000 L0"
+p102_nist_build_command_data_zip,Build Command Data.zip,Build Command Data/AM Gcode/1_cube_gcode/Gcode_Generator_par.csv,2981,.csv,source_command_path;split_key,sampled_text,2981,48,"Variable,Value,Remark","Variable,Value,Remark
+% Scan setting  (will overwritte setting in build parameter),,
+theta_interlayer,67,layer by layer rotation angle in degree; replace all in BuildParameter if set
+hatch_space,0.1,hatch space in mm;replace all hatchsepace setting in BuildParameter if set
+laser_diameter,0.1,Laser diameter for dimension compensation in mm
+option_tool_compensate,0,1=compensate laser/tool radius
+free_speed,800,Free feed speed in mm/s
+option_second_perimeter,1,Scan the contour twice
+option_baselayer,0,Insert bse layers
+number_of_baselayers,5,Number of base layers
+base_layer_power,250,Laser power setting for base layer scan
+base_layer_speed_scale,1,Slow down base scan speed by setting basespeedscale < 1
+,,
+% Island setting ,,
+mode_island,0,0 = no island; 1 = slice before contour (for concentric); 2 = slice after contour. (ARC disabled in island mode)
+mode_island_distribution,1,1=sequential; 2=chess board; 3 = random
+island_rectangle_sideA,8,Island cell side a dimension in mm; put large number for strip
+island_rectangle_sideB,8,Island cell side b dimension in mm
+theta_island_cell,45,hatch angle rotation of adjacent cell
+theta_island_rotation_interlayer,67,layer by layer rotation angle in degree for island slicing. "
+p102_nist_build_command_data_zip,Build Command Data.zip,Build Command Data/AM Gcode/1_cube_gcode/Gcode_interpreter_par.csv,3533,.csv,source_command_path;split_key,sampled_text,3533,56,"Variable,Value,Remark","Variable,Value,Remark
+%  Interpreter modes,,
+mode_laser_power,1,Laser power mode 1)constant 2)constant density 3)thermal adjusted
+mode_laser_path,2,Laser path mode; 1) ExactStop 2)constant build speed 3)continuous
+mode_motion_control,1,1)Sin Jerk - constant Acc  2)Step Acc  3) Step velocity - max_acc = 10^8 4)Sine Jerk - constant Jerk 5) Sine Jerk - capped Acc  
+laser_density,0.00125,default value; L_adjusted =  L (0.6+0.4*laser_density*v); will be overwritten if auto option is set.  
+option_laser_density_auto,0,auto will set laser density  to 1/max(build_speed) 
+,,
+% Continuous mode setting,,
+CM_speed_ratio,0.5,ratio for speed reduction for connecting arc in continuous mode; default 0.5
+CM_turn_radius,0.05,radius of the turn in mm for continuous mode; default 0.05
+CM_small_arc_acc_scale,10,Short arc continuous mode acceleration scale up factor
+CM_short_line_acc_scale,1,Short line continuous mode acceleration scale up factor
+small_arc_radius,1,define smallarc radus where CM_smallArcAccScale will apply
+short_line_length,0.49,define short line length where CM_shortlineAccScale will apply
+CM_tolerance,0.05,Tolerance (error cause by replacing corner with arc) in mm
+,,
+%thermadjusted mode setting,,
+mode_thermal_adjusted,3,1) residual heat; 2) conductivity
+proximity_evaluation_radius,0.3, proximity evaluation radius. "
+p102_nist_build_command_data_zip,Build Command Data.zip,Build Command Data/AM Gcode/10_cube_Island_Concentric_Interleaved_altIslandLayer_altConcentricLayer/10_cube_Island_Concentric_Interleaved_altIslandLayer_altConcentricLayer.gcode,4260896,.gcode,source_command_path;split_key,sampled_text,4096,171,N0001 G01 X-0.5000 Y-0.5000 Z0.0000 F800 L0,"N0001 G01 X-0.5000 Y-0.5000 Z0.0000 F800 L0
+N0002 G01 Y-5.5000 F900 L100
+N0003 G01 X-3.5000
+N0004 G01 X-4.7930 Y-4.7930
+N0005 G01 X-5.5000 Y-3.5000
+N0006 G01 Y-0.5000
+N0007 G01 X-0.5000
+N0008 G01 L0
+N0009 G01 L100
+N0010 G01 X4.5000
+N0011 G01 Y-4.5000
+N0012 G01 X3.5000 Y-5.5000
+N0013 G01 X-0.5000
+N0014 G01 Y-0.5000
+N0015 G01 L0
+N0016 G01 L100
+N0017 G01 X-5.5000
+N0018 G01 Y4.5000
+N0019 G01 X-0.5000
+N0020 G01 Y-0.5000"
+p102_nist_build_command_data_zip,Build Command Data.zip,Build Command Data/AM Gcode/10_cube_Island_Concentric_Interleaved_altIslandLayer_altConcentricLayer/Gcode_Generator_par.csv,3311,.csv,source_command_path;split_key,sampled_text,3311,52,"Variable,Value,Remark","Variable,Value,Remark
+% Scan setting  (will overwritte setting in build parameter),,
+theta_interlayer,67,layer by layer rotation angle in degree; replace all in BuildParameter if set
+hatch_space,1,hatch space in mm;replace all hatchsepace setting in BuildParameter if set
+laser_diameter,0.1,Laser diameter for dimension compensation in mm
+option_tool_compensate,0,1=compensate laser/tool radius
+free_speed,800,Free feed speed in mm/s
+option_second_perimeter,1,Scan the contour twice
+option_baselayer,0,Insert bse layers
+number_of_baselayers,5,Number of base layers
+base_layer_power,250,Laser power setting for base layer scan
+base_layer_speed_scale,1,Slow down base scan speed by setting basespeedscale < 1
+,,
+% Island setting ,,
+mode_island,1,0 = no island; 1 = slice before contour (for concentric); 2 = slice after contour. (ARC disabled in island mode)
+mode_island_distribution,1,1=sequential; 2=chess board; 3 = random
+island_rectangle_sideA,8,Island cell side a dimension in mm; put large number for strip
+island_rectangle_sideB,8,Island cell side b dimension in mm
+theta_island_cell,45,hatch angle rotation of adjacent cell
+theta_island_rotation_interlayer,67,layer by layer rotation angle in degree for island slicing. "
+p102_nist_build_command_data_zip,Build Command Data.zip,Build Command Data/AM Gcode/10_cube_Island_Concentric_Interleaved_altIslandLayer_altConcentricLayer/Gcode_interpreter_par.csv,3533,.csv,source_command_path;split_key,sampled_text,3533,56,"Variable,Value,Remark","Variable,Value,Remark
+%  Interpreter modes,,
+mode_laser_power,2,Laser power mode 1)constant 2)constant density 3)thermal adjusted
+mode_laser_path,3,Laser path mode; 1) ExactStop 2)constant build speed 3)continuous
+mode_motion_control,1,1)Sin Jerk - constant Acc  2)Step Acc  3) Step velocity - max_acc = 10^8 4)Sine Jerk - constant Jerk 5) Sine Jerk - capped Acc  
+laser_density,0.00125,default value; L_adjusted =  L (0.6+0.4*laser_density*v); will be overwritten if auto option is set.  
+option_laser_density_auto,0,auto will set laser density  to 1/max(build_speed) 
+,,
+% Continuous mode setting,,
+CM_speed_ratio,0.5,ratio for speed reduction for connecting arc in continuous mode; default 0.5
+CM_turn_radius,0.05,radius of the turn in mm for continuous mode; default 0.05
+CM_small_arc_acc_scale,10,Short arc continuous mode acceleration scale up factor
+CM_short_line_acc_scale,1,Short line continuous mode acceleration scale up factor
+small_arc_radius,1,define smallarc radus where CM_smallArcAccScale will apply
+short_line_length,0.49,define short line length where CM_shortlineAccScale will apply
+CM_tolerance,0.05,Tolerance (error cause by replacing corner with arc) in mm
+,,
+%thermadjusted mode setting,,
+mode_thermal_adjusted,3,1) residual heat; 2) conductivity
+proximity_evaluation_radius,0.3, proximity evaluation radius. "
+p102_nist_build_command_data_zip,Build Command Data.zip,Build Command Data/AM Gcode/11_cube_Island_Interleaved/11_cube_Island_Interleaved.gcode,4623407,.gcode,source_command_path;split_key,sampled_text,4096,138,N0001 G01 X-0.5000 Y-0.5000 Z0.0000 F800 L0,"N0001 G01 X-0.5000 Y-0.5000 Z0.0000 F800 L0
+N0002 G01 Y-5.5000 F900 L100
+N0003 G01 X-3.5000
+N0004 G01 X-4.7930 Y-4.7930
+N0005 G01 X-5.5000 Y-3.5000
+N0006 G01 Y-0.5000
+N0007 G01 X-0.5000
+N0008 G01 L0
+N0009 G01 L100
+N0010 G01 X4.5000
+N0011 G01 Y-4.5000
+N0012 G01 X3.5000 Y-5.5000
+N0013 G01 X-0.5000
+N0014 G01 Y-0.5000
+N0015 G01 L0
+N0016 G01 L100
+N0017 G01 X-5.5000
+N0018 G01 Y4.5000
+N0019 G01 X-0.5000
+N0020 G01 Y-0.5000"
+p102_nist_in_situ_meas_data_zip,In-situ Meas Data.zip,In-situ Meas Data/Layer Camera/A0002.bmp,4001078,.bmp,target_observation;split_key,non_text_preview_skipped,4096,0,,
+p102_nist_in_situ_meas_data_zip,In-situ Meas Data.zip,In-situ Meas Data/Layer Camera/A0003.bmp,4001078,.bmp,target_observation;split_key,non_text_preview_skipped,4096,0,,
+p102_nist_in_situ_meas_data_zip,In-situ Meas Data.zip,In-situ Meas Data/Layer Camera/A0004.bmp,4001078,.bmp,target_observation;split_key,non_text_preview_skipped,4096,0,,
+p102_nist_in_situ_meas_data_zip,In-situ Meas Data.zip,In-situ Meas Data/Layer Camera/A0005.bmp,4001078,.bmp,target_observation;split_key,non_text_preview_skipped,4096,0,,
+p102_nist_in_situ_meas_data_zip,In-situ Meas Data.zip,In-situ Meas Data/Layer Camera/A0006.bmp,4001078,.bmp,target_observation;split_key,non_text_preview_skipped,4096,0,,
+p102_nist_in_situ_meas_data_zip,In-situ Meas Data.zip,In-situ Meas Data/Layer Camera/A0007.bmp,4001078,.bmp,target_observation;split_key,non_text_preview_skipped,4096,0,,
+p102_nist_in_situ_meas_data_zip,In-situ Meas Data.zip,In-situ Meas Data/Layer Camera/A0008.bmp,4001078,.bmp,target_observation;split_key,non_text_preview_skipped,4096,0,,

@@ -1,0 +1,4 @@
+file_id,file_name,expected_bytes,actual_bytes,size_ok,zip_status,member_count_scanned,candidate_rows,coordinate_transform_hits,trigger_timing_hits,source_command_path_hits,target_observation_hits,split_key_hits,status
+p102_nist_metadata_zip,Metadata.zip,2489233,2489233,true,valid_zip,5,2,2,0,1,1,2,ready_for_schema_scout
+p102_nist_build_command_data_zip,Build Command Data.zip,7419446651,7419446651,true,valid_zip,281,200,0,0,281,0,281,ready_for_schema_scout
+p102_nist_in_situ_meas_data_zip,In-situ Meas Data.zip,9170420366,9170420366,true,valid_zip,99973,200,0,0,0,99973,99973,ready_for_schema_scout

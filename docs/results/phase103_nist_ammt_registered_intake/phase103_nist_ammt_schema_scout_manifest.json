@@ -1,0 +1,51 @@
+{
+  "counts": {
+    "candidate_rows": 402,
+    "summary_rows": 3
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "candidate_rows": 402,
+    "missing_or_invalid_required_rows": 0,
+    "missing_required_roles": [
+      "trigger_timing"
+    ],
+    "next_action": "manually inspect package directories and metadata for missing registration roles",
+    "phase104_baseline_smoke_allowed": false,
+    "phase105_model_mechanism_allowed": false,
+    "ready_file_rows": 3,
+    "required_before_baseline_smoke": [
+      "extract explicit coordinate transforms",
+      "extract explicit trigger/timing join",
+      "sample source command/path schema",
+      "sample target observation schema",
+      "generate tiny registered sample table",
+      "generate leakage-safe split manifest"
+    ],
+    "role_hits": {
+      "coordinate_transform": 2,
+      "source_command_path": 201,
+      "split_key": 402,
+      "target_observation": 201,
+      "trigger_timing": 0
+    },
+    "status": "schema_candidates_incomplete"
+  },
+  "inputs": {
+    "data_card": "docs/results/phase102_registered_source_manifest_gate/phase102_nist_ammt_data_card.json",
+    "data_root": "data/raw/nist_ammt/mds2_2044"
+  },
+  "limits": {
+    "max_candidates_per_role": 200,
+    "max_members": 100000
+  },
+  "objective": "nist_ammt_schema_scout_no_extraction",
+  "outputs": {
+    "candidates": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_schema_scout_candidates.csv",
+    "gate_json": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_schema_scout_gate.json",
+    "manifest": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_schema_scout_manifest.json",
+    "summary": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_schema_scout_summary.csv"
+  },
+  "phase": 103
+}
