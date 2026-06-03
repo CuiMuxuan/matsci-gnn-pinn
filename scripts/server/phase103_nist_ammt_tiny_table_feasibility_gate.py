@@ -107,6 +107,7 @@ def _unique_join(values: list[str], limit: int = 5) -> str:
 def _role_evidence_rows(
     *,
     scout_gate: dict[str, Any] | None,
+    deep_probe_gate: dict[str, Any] | None,
     sample_rows: list[dict[str, str]],
 ) -> list[dict[str, Any]]:
     role_hits = scout_gate.get("role_hits", {}) if scout_gate else {}
@@ -118,12 +119,30 @@ def _role_evidence_rows(
             row for row in matching if row.get("sample_status") == "non_text_preview_skipped"
         ]
         scout_hits = int(role_hits.get(role) or 0)
-        if scout_hits == 0:
+        deep_target_ready = (
+            role == "target_observation"
+            and deep_probe_gate is not None
+            and bool(deep_probe_gate.get("target_observation_binary_schema_ready"))
+        )
+        deep_timing_ready = (
+            role == "trigger_timing"
+            and deep_probe_gate is not None
+            and bool(deep_probe_gate.get("explicit_trigger_timing_ready"))
+        )
+        if scout_hits == 0 and not (deep_target_ready or deep_timing_ready):
             status = "missing_scout_candidate"
         elif not matching:
-            status = "missing_member_sample"
+            if deep_target_ready:
+                status = "ready_for_manual_join_review_binary_schema"
+            elif deep_timing_ready:
+                status = "ready_for_manual_join_review_deep_timing"
+            else:
+                status = "missing_member_sample"
         elif not text_rows:
-            status = "missing_text_schema_sample"
+            if deep_target_ready:
+                status = "ready_for_manual_join_review_binary_schema"
+            else:
+                status = "missing_text_schema_sample"
         else:
             status = "ready_for_manual_join_review"
         rows.append(
@@ -147,10 +166,13 @@ def build_gate(
     intake_gate: dict[str, Any] | None,
     scout_gate: dict[str, Any] | None,
     sampler_gate: dict[str, Any] | None,
+    deep_probe_gate: dict[str, Any] | None,
     role_rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
     required_not_ready = [
-        row for row in role_rows if row["required"] and row["status"] != "ready_for_manual_join_review"
+        row
+        for row in role_rows
+        if row["required"] and not str(row["status"]).startswith("ready_for_manual_join_review")
     ]
     if intake_gate is None:
         status = "intake_audit_gate_required"
@@ -161,18 +183,19 @@ def build_gate(
     elif scout_gate is None:
         status = "schema_scout_gate_required"
         next_action = "run Phase 103 schema scout after large ZIP downloads complete"
-    elif scout_gate.get("status") != "schema_candidates_ready_manual_sampling_required":
-        status = "schema_scout_not_ready"
-        next_action = "finish large intake and schema scout before tiny-table feasibility review"
     elif sampler_gate is None:
         status = "member_schema_sampler_gate_required"
         next_action = "run Phase 103 member schema sampler on scout candidates"
-    elif sampler_gate.get("status") != "member_schema_samples_ready_manual_registration_required":
-        status = "member_schema_sampler_not_ready"
-        next_action = "sample enough candidate members to cover required registration roles"
     elif required_not_ready:
-        status = "tiny_registered_table_feasibility_blocked"
-        next_action = "inspect additional candidates or add a targeted schema sampler for blocked roles"
+        if scout_gate.get("status") != "schema_candidates_ready_manual_sampling_required":
+            status = "schema_scout_not_ready"
+            next_action = "finish schema/deep registration review before tiny-table feasibility review"
+        elif sampler_gate.get("status") != "member_schema_samples_ready_manual_registration_required":
+            status = "member_schema_sampler_not_ready"
+            next_action = "sample enough candidate members or use deep probe evidence for blocked roles"
+        else:
+            status = "tiny_registered_table_feasibility_blocked"
+            next_action = "inspect additional candidates or add a targeted schema sampler for blocked roles"
     else:
         status = "tiny_registered_table_construction_allowed_training_locked"
         next_action = "manually construct a tiny registered source/path-to-target sample table and split manifest"
@@ -181,6 +204,7 @@ def build_gate(
         "intake_status": intake_gate.get("status") if intake_gate else "missing",
         "schema_scout_status": scout_gate.get("status") if scout_gate else "missing",
         "member_schema_sampler_status": sampler_gate.get("status") if sampler_gate else "missing",
+        "deep_registration_probe_status": deep_probe_gate.get("status") if deep_probe_gate else "missing",
         "required_roles": list(REQUIRED_ROLES),
         "optional_roles": list(OPTIONAL_ROLES),
         "required_roles_ready": len(required_not_ready) == 0,
@@ -242,17 +266,24 @@ def build_package(
     intake_gate_path: Path,
     scout_gate_path: Path,
     sampler_gate_path: Path,
+    deep_probe_gate_path: Path,
     samples_csv_path: Path,
 ) -> dict[str, Any]:
     intake_gate = _read_json_if_exists(intake_gate_path)
     scout_gate = _read_json_if_exists(scout_gate_path)
     sampler_gate = _read_json_if_exists(sampler_gate_path)
+    deep_probe_gate = _read_json_if_exists(deep_probe_gate_path)
     sample_rows = _read_csv_if_exists(samples_csv_path)
-    role_rows = _role_evidence_rows(scout_gate=scout_gate, sample_rows=sample_rows)
+    role_rows = _role_evidence_rows(
+        scout_gate=scout_gate,
+        deep_probe_gate=deep_probe_gate,
+        sample_rows=sample_rows,
+    )
     gate = build_gate(
         intake_gate=intake_gate,
         scout_gate=scout_gate,
         sampler_gate=sampler_gate,
+        deep_probe_gate=deep_probe_gate,
         role_rows=role_rows,
     )
 
@@ -271,6 +302,7 @@ def build_package(
             "intake_gate": _display_path(intake_gate_path, root),
             "schema_scout_gate": _display_path(scout_gate_path, root),
             "member_schema_sampler_gate": _display_path(sampler_gate_path, root),
+            "deep_registration_probe_gate": _display_path(deep_probe_gate_path, root),
             "member_schema_samples": _display_path(samples_csv_path, root),
         },
         "outputs": {
@@ -322,6 +354,14 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--deep-registration-probe-gate",
+        type=Path,
+        default=Path(
+            "docs/results/phase103_nist_ammt_registered_intake/"
+            "phase103_nist_ammt_deep_registration_probe_gate.json"
+        ),
+    )
+    parser.add_argument(
         "--member-schema-samples",
         type=Path,
         default=Path(
@@ -339,6 +379,7 @@ def main() -> None:
     intake_gate = args.intake_gate
     scout_gate = args.schema_scout_gate
     sampler_gate = args.member_schema_sampler_gate
+    deep_probe_gate = args.deep_registration_probe_gate
     samples_csv = args.member_schema_samples
     if not output_dir.is_absolute():
         output_dir = root / output_dir
@@ -348,6 +389,8 @@ def main() -> None:
         scout_gate = root / scout_gate
     if not sampler_gate.is_absolute():
         sampler_gate = root / sampler_gate
+    if not deep_probe_gate.is_absolute():
+        deep_probe_gate = root / deep_probe_gate
     if not samples_csv.is_absolute():
         samples_csv = root / samples_csv
     manifest = build_package(
@@ -356,6 +399,7 @@ def main() -> None:
         intake_gate_path=intake_gate,
         scout_gate_path=scout_gate,
         sampler_gate_path=sampler_gate,
+        deep_probe_gate_path=deep_probe_gate,
         samples_csv_path=samples_csv,
     )
     print(json.dumps(manifest, indent=2, sort_keys=True))

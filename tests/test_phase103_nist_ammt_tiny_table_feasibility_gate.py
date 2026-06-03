@@ -110,8 +110,22 @@ def _write_ready_gates(tmp_path: Path) -> dict[str, Path]:
         tmp_path / "sampler_gate.json",
         {"status": "member_schema_samples_ready_manual_registration_required"},
     )
+    deep_probe = _write_json(
+        tmp_path / "deep_probe_gate.json",
+        {
+            "status": "deep_probe_ready_manual_registration_required",
+            "target_observation_binary_schema_ready": True,
+            "explicit_trigger_timing_ready": True,
+        },
+    )
     samples = _write_samples(tmp_path / "samples.csv")
-    return {"intake": intake, "scout": scout, "sampler": sampler, "samples": samples}
+    return {
+        "intake": intake,
+        "scout": scout,
+        "sampler": sampler,
+        "deep_probe": deep_probe,
+        "samples": samples,
+    }
 
 
 def test_tiny_table_feasibility_allows_manual_construction_but_keeps_training_locked(
@@ -126,6 +140,7 @@ def test_tiny_table_feasibility_allows_manual_construction_but_keeps_training_lo
         intake_gate_path=paths["intake"],
         scout_gate_path=paths["scout"],
         sampler_gate_path=paths["sampler"],
+        deep_probe_gate_path=paths["deep_probe"],
         samples_csv_path=paths["samples"],
     )
 
@@ -164,6 +179,7 @@ def test_tiny_table_feasibility_blocks_when_sampler_gate_missing(tmp_path: Path)
         intake_gate_path=paths["intake"],
         scout_gate_path=paths["scout"],
         sampler_gate_path=tmp_path / "missing_sampler_gate.json",
+        deep_probe_gate_path=paths["deep_probe"],
         samples_csv_path=paths["samples"],
     )
 
@@ -185,11 +201,39 @@ def test_tiny_table_feasibility_blocks_when_required_role_lacks_text_sample(tmp_
         intake_gate_path=paths["intake"],
         scout_gate_path=paths["scout"],
         sampler_gate_path=paths["sampler"],
+        deep_probe_gate_path=tmp_path / "missing_deep_probe_gate.json",
         samples_csv_path=samples,
     )
 
     gate = manifest["gate"]
     assert gate["status"] == "tiny_registered_table_feasibility_blocked"
     assert gate["missing_or_blocked_required_roles"] == ["target_observation"]
+    assert gate["phase104_baseline_smoke_allowed"] is False
+    assert gate["a100_training_allowed_now"] is False
+
+
+def test_tiny_table_feasibility_accepts_deep_binary_target_schema_but_keeps_training_locked(
+    tmp_path: Path,
+):
+    module = _load_module()
+    paths = _write_ready_gates(tmp_path)
+    samples = _write_samples(tmp_path / "samples_missing_target.csv", include_target=False)
+
+    manifest = module.build_package(
+        root=Path(".").resolve(),
+        output_dir=tmp_path / "out",
+        intake_gate_path=paths["intake"],
+        scout_gate_path=paths["scout"],
+        sampler_gate_path=paths["sampler"],
+        deep_probe_gate_path=paths["deep_probe"],
+        samples_csv_path=samples,
+    )
+
+    gate = manifest["gate"]
+    assert gate["status"] == "tiny_registered_table_construction_allowed_training_locked"
+    assert gate["role_statuses"]["target_observation"] == (
+        "ready_for_manual_join_review_binary_schema"
+    )
+    assert gate["tiny_registered_table_construction_allowed"] is True
     assert gate["phase104_baseline_smoke_allowed"] is False
     assert gate["a100_training_allowed_now"] is False
