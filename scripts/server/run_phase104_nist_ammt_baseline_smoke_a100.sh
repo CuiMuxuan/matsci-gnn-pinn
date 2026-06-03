@@ -21,6 +21,7 @@ run_python() {
 
 run_python scripts/server/phase103_nist_ammt_tiny_registered_table_builder.py \
   --output-dir "$OUTPUT_DIR" \
+  --join-candidates-csv "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_source_target_join_candidates.csv" \
   --rows-per-target-type "$REGISTERED_ROWS_PER_TARGET_TYPE" \
   > "$LOG_DIR/phase104_nist_ammt_expanded_registered_table_a100_manifest.json"
 

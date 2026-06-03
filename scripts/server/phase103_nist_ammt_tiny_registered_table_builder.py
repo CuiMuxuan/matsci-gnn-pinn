@@ -285,6 +285,7 @@ def build_package(
     root: Path,
     sequence_groups_csv: Path,
     join_probe_gate_path: Path,
+    join_candidates_csv: Path,
     target_binary_samples_csv: Path,
     output_dir: Path,
     rows_per_target_type: int = 12,
@@ -292,9 +293,7 @@ def build_package(
     sequence_groups = _read_csv(sequence_groups_csv)
     join_gate = _read_json(join_probe_gate_path)
     target_samples = _read_csv(target_binary_samples_csv)
-    join_rows = _read_csv(
-        output_dir / "phase103_nist_ammt_source_target_join_candidates.csv"
-    )
+    join_rows = _read_csv(join_candidates_csv)
     rows, split_manifest = _build_rows(
         sequence_groups=sequence_groups,
         join_rows=join_rows,
@@ -319,6 +318,7 @@ def build_package(
         "inputs": {
             "sequence_groups": _display_path(sequence_groups_csv, root),
             "join_probe_gate": _display_path(join_probe_gate_path, root),
+            "join_candidates": _display_path(join_candidates_csv, root),
             "target_binary_samples": _display_path(target_binary_samples_csv, root),
         },
         "outputs": {
@@ -366,6 +366,14 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--join-candidates-csv",
+        type=Path,
+        default=Path(
+            "docs/results/phase103_nist_ammt_registered_intake/"
+            "phase103_nist_ammt_source_target_join_candidates.csv"
+        ),
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("docs/results/phase103_nist_ammt_registered_intake"),
@@ -379,12 +387,15 @@ def main() -> None:
     root = args.root.resolve()
     sequence_groups_csv = args.sequence_groups_csv
     join_probe_gate = args.join_probe_gate
+    join_candidates_csv = args.join_candidates_csv
     target_binary_samples = args.target_binary_samples
     output_dir = args.output_dir
     if not sequence_groups_csv.is_absolute():
         sequence_groups_csv = root / sequence_groups_csv
     if not join_probe_gate.is_absolute():
         join_probe_gate = root / join_probe_gate
+    if not join_candidates_csv.is_absolute():
+        join_candidates_csv = root / join_candidates_csv
     if not target_binary_samples.is_absolute():
         target_binary_samples = root / target_binary_samples
     if not output_dir.is_absolute():
@@ -393,6 +404,7 @@ def main() -> None:
         root=root,
         sequence_groups_csv=sequence_groups_csv,
         join_probe_gate_path=join_probe_gate,
+        join_candidates_csv=join_candidates_csv,
         target_binary_samples_csv=target_binary_samples,
         output_dir=output_dir,
         rows_per_target_type=args.rows_per_target_type,
