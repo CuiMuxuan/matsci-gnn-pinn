@@ -13,9 +13,9 @@
   "phase105_model_mechanism_allowed": true,
   "sample_size_sufficient_for_phase105": true,
   "selected_target": "target_intensity_std",
-  "selected_test_rmse": 1.2921697569115889,
-  "selected_validation_method": "knn",
-  "selected_validation_rmse": 1.0119702725595097,
+  "selected_test_rmse": 0.7130653969884204,
+  "selected_validation_method": "hist_gradient_boosting",
+  "selected_validation_rmse": 0.5594973535400991,
   "status": "phase104_target_hardness_review_ready_phase105_design",
   "target_columns": [
     "target_intensity_mean",

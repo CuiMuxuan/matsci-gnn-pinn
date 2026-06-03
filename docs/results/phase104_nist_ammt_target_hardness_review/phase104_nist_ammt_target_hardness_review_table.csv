@@ -1,6 +1,6 @@
 target,target_min,target_max,target_range,selected_validation_method,selected_validation_rmse,selected_test_rmse,mean_validation_rmse,mean_test_rmse,validation_relative_improvement_over_mean,selected_test_improves_mean,zero_variance_target,physical_priority,status,phase105_candidate
 target_intensity_mean,82.587801,111.195316,28.607515,mean,0.723440,0.711468,0.723440,0.711468,0.000000,false,false,3,blocked_mean_baseline_best,false
-target_intensity_std,25.095077,34.406437,9.311360,knn,1.011970,1.292170,2.104431,2.215968,0.519124,true,false,0,candidate_target_ready_for_phase105_design,true
-target_intensity_min,10.000000,23.000000,13.000000,extra_trees,3.410944,3.549128,7.606510,7.530013,0.551576,true,false,2,candidate_target_ready_for_phase105_design,true
+target_intensity_std,25.095077,34.406437,9.311360,hist_gradient_boosting,0.559497,0.713065,2.104431,2.215968,0.734134,true,false,0,candidate_target_ready_for_phase105_design,true
+target_intensity_min,10.000000,23.000000,13.000000,hist_gradient_boosting,3.410444,3.383101,7.606510,7.530013,0.551641,true,false,2,candidate_target_ready_for_phase105_design,true
 target_intensity_max,255.000000,255.000000,0.000000,extra_trees,0.000000,0.000000,0.000000,0.000000,0.000000,false,true,4,blocked_zero_variance_target,false
 target_intensity_q90,114.000000,142.000000,28.000000,mean,1.302775,1.253277,1.302775,1.253277,0.000000,false,false,1,blocked_mean_baseline_best,false

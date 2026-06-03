@@ -9,8 +9,8 @@
 | Target | Status | Selected method | Val RMSE | Test RMSE | Mean val RMSE | Mean test RMSE | Val improvement vs mean |
 |---|---|---|---:|---:|---:|---:|---:|
 | target_intensity_mean | blocked_mean_baseline_best | mean | 0.723440 | 0.711468 | 0.723440 | 0.711468 | 0.000000 |
-| target_intensity_std | candidate_target_ready_for_phase105_design | knn | 1.011970 | 1.292170 | 2.104431 | 2.215968 | 0.519124 |
-| target_intensity_min | candidate_target_ready_for_phase105_design | extra_trees | 3.410944 | 3.549128 | 7.606510 | 7.530013 | 0.551576 |
+| target_intensity_std | candidate_target_ready_for_phase105_design | hist_gradient_boosting | 0.559497 | 0.713065 | 2.104431 | 2.215968 | 0.734134 |
+| target_intensity_min | candidate_target_ready_for_phase105_design | hist_gradient_boosting | 3.410444 | 3.383101 | 7.606510 | 7.530013 | 0.551641 |
 | target_intensity_max | blocked_zero_variance_target | extra_trees | 0.000000 | 0.000000 | 0.000000 | 0.000000 | 0.000000 |
 | target_intensity_q90 | blocked_mean_baseline_best | mean | 1.302775 | 1.253277 | 1.302775 | 1.253277 | 0.000000 |
 
