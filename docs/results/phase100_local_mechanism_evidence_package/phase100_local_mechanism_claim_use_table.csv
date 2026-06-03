@@ -1,0 +1,5 @@
+claim_id,claim_text,claim_location,supporting_evidence,allowed_now,status
+P100-CLAIM-001,Fixed Green's-function / heat-kernel features are effective on a registered analytic heat-source surrogate.,appendix or method ablation,P100-EVID-001;P100-EVID-002;P100-EVID-004;P100-EVID-005,true,allowed_local_mechanism_claim
+P100-CLAIM-002,The fixed-kernel mechanism transfers to AM-Bench broad12/broad21 thermal/process prediction.,main paper,P100-BND-001;P100-BND-002,false,blocked_no_registered_transfer_target
+P100-CLAIM-003,The fixed-kernel mechanism is superior under all same-budget focused-region comparisons.,main paper or appendix,P100-EVID-006;P100-BND-003,false,blocked_same_budget_gradient_boundary
+P100-CLAIM-004,New A100 broad validation or A100-SXM4-80GB training is justified now.,execution plan,P100-BND-004,false,blocked_training_lock

@@ -1,0 +1,62 @@
+{
+  "counts": {
+    "allowed_claim_rows": 1,
+    "blocked_claim_rows": 3,
+    "boundary_rows": 4,
+    "claim_rows": 4,
+    "evidence_rows": 6
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "allowed_claim_rows": 1,
+    "am_bench_transfer_unlocked": false,
+    "appendix_local_mechanism_ready": true,
+    "blocked_claim_rows": 3,
+    "boundary_rows": 4,
+    "claim_rows": 4,
+    "evidence_rows": 6,
+    "main_paper_transfer_claim_ready": false,
+    "next_action": "enter Phase 101 registered target acquisition gate before any A100 training",
+    "phase101_registered_target_acquisition_allowed": true,
+    "required_before_a100_training": [
+      "public registered AM-Bench/external target",
+      "baseline-first local smoke on that registered target",
+      "non-worse global/hot/gradient metrics",
+      "server validation from a pushed commit"
+    ],
+    "same_budget_boundary_disclosed": true,
+    "source_phase96_status": "local_smoke_positive_transfer_design_only",
+    "source_phase98_status": "registered_surrogate_unlocked_no_a100",
+    "source_phase99_status": "local_surrogate_positive_with_focused_baseline_boundary",
+    "status": "local_mechanism_package_ready_transfer_locked",
+    "submission_ready": false
+  },
+  "inputs": {
+    "phase96_gate": "docs/results/phase96_pfhub_local_smoke_gate/phase96_pfhub_local_smoke_gate.json",
+    "phase96_mechanism_table": "docs/results/phase96_pfhub_local_smoke_gate/phase96_mechanism_decision_table.csv",
+    "phase96_metric_table": "docs/results/phase96_pfhub_local_smoke_gate/phase96_local_smoke_metric_table.csv",
+    "phase96_target_manifest": "docs/results/phase96_pfhub_local_smoke_gate/phase96_pfhub_style_target_manifest.json",
+    "phase98_gate": "docs/results/phase98_registered_target_unlock_gate/phase98_registered_target_unlock_gate.json",
+    "phase98_surrogate_card": "docs/results/phase98_registered_target_unlock_gate/phase98_registered_surrogate_data_card.json",
+    "phase98_unlock_table": "docs/results/phase98_registered_target_unlock_gate/phase98_unlock_candidate_table.csv",
+    "phase99_comparison_table": "docs/results/phase99_registered_surrogate_smoke_gate/phase99_registered_surrogate_comparison_table.csv",
+    "phase99_gate": "docs/results/phase99_registered_surrogate_smoke_gate/phase99_registered_surrogate_smoke_gate.json",
+    "phase99_metric_table": "docs/results/phase99_registered_surrogate_smoke_gate/phase99_registered_surrogate_metric_table.csv"
+  },
+  "objective": "local_mechanism_evidence_packaging",
+  "outputs": {
+    "boundary_table": "docs/results/phase100_local_mechanism_evidence_package/phase100_local_mechanism_boundary_table.csv",
+    "claim_use_table": "docs/results/phase100_local_mechanism_evidence_package/phase100_local_mechanism_claim_use_table.csv",
+    "evidence_table": "docs/results/phase100_local_mechanism_evidence_package/phase100_local_mechanism_evidence_table.csv",
+    "gate_json": "docs/results/phase100_local_mechanism_evidence_package/phase100_local_mechanism_evidence_package.json",
+    "manifest": "docs/results/phase100_local_mechanism_evidence_package/phase100_local_mechanism_evidence_package_manifest.json",
+    "markdown": "docs/results/phase100_local_mechanism_evidence_package/phase100_local_mechanism_evidence_package.md"
+  },
+  "phase": 100,
+  "source_gates": {
+    "phase96_status": "local_smoke_positive_transfer_design_only",
+    "phase98_status": "registered_surrogate_unlocked_no_a100",
+    "phase99_status": "local_surrogate_positive_with_focused_baseline_boundary"
+  }
+}

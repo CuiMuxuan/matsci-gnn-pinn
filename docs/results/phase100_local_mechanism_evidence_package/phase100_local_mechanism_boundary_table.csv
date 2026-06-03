@@ -1,0 +1,5 @@
+boundary_id,source_phase,boundary_type,evidence,blocked_claim,required_before_unlock,status
+P100-BND-001,97,transfer_registration_blocker,Phase 97/98 AM-Bench and external rows lack paper-facing registration or data cards.,AM-Bench transfer for fixed heat-kernel / Green's-function features,public registered AM-Bench or external target with source manifest and split plan,active
+P100-BND-002,98,registered_target_lock,am_bench_transfer_unlocked=false; blocked_registered_rows=5,real-data registered-source transfer,camera-to-galvo registration or external registered target data card,active
+P100-BND-003,99,same_budget_focused_boundary,same_budget_boundary_failures=1; fixed full-grid gradient q90 is worse than random same-budget collocation,budget-matched focused-region superiority,new local gate where same-budget global/hot/gradient comparisons all pass,active
+P100-BND-004,100,a100_training_lock,a100_training_allowed_now=false; a100_80gb_request_now=false,A100 broad validation or A100-SXM4-80GB request,"registered target, baseline-first smoke, non-worse metrics, pushed-commit server validation",active
