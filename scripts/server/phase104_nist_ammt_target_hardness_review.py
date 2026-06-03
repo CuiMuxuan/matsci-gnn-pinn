@@ -19,7 +19,7 @@ from typing import Any
 from gnnpinn.eval.field_baseline import evaluate_table
 
 
-METHODS = ("mean", "knn", "extra_trees")
+METHODS = ("mean", "knn", "extra_trees", "hist_gradient_boosting")
 DEFAULT_TARGET_COLUMNS = (
     "target_intensity_mean",
     "target_intensity_std",

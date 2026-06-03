@@ -95,6 +95,9 @@ def test_target_hardness_review_selects_validation_positive_target_and_keeps_a10
     gate = manifest["gate"]
     assert gate["status"] == "phase104_target_hardness_review_ready_phase105_design"
     assert gate["selected_target"] == "target_intensity_std"
+    assert "hist_gradient_boosting" in module.METHODS
+    assert gate["selected_validation_method"] in module.METHODS
+    assert gate["selected_validation_method"] != "mean"
     assert gate["phase105_model_mechanism_allowed"] is True
     assert gate["phase105_low_capacity_design_only"] is True
     assert gate["a100_training_allowed_now"] is False
