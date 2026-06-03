@@ -5,7 +5,8 @@ param(
     [string]$IdentityFile = "$env:USERPROFILE\.ssh\matsci_gnnpinn_a100",
     [string]$RemoteRepo = "/root/matsci-gnn-pinn",
     [string]$LocalOutputDir = "docs/results/phase103_nist_ammt_registered_intake",
-    [string]$LocalLogDir = "logs"
+    [string]$LocalLogDir = "logs",
+    [int64]$MaxArtifactBytes = 52428800
 )
 
 $ErrorActionPreference = "Stop"
@@ -20,6 +21,12 @@ function Invoke-ScpPull {
         New-Item -ItemType Directory -Force -Path $localParent | Out-Null
     }
     $remoteSpec = "${User}@${HostName}:$RemoteRepo/$RemotePath"
+    $remoteFile = "$RemoteRepo/$RemotePath"
+    $sizeText = ssh -i $IdentityFile -p $Port -o IdentitiesOnly=yes "${User}@${HostName}" "stat -c %s '$remoteFile'"
+    $remoteBytes = [int64]($sizeText | Select-Object -First 1)
+    if ($remoteBytes -gt $MaxArtifactBytes) {
+        throw "Refusing to pull oversized Phase 103 artifact ($remoteBytes bytes > $MaxArtifactBytes): $remotePath"
+    }
     scp -i $IdentityFile -P $Port -o IdentitiesOnly=yes $remoteSpec $LocalPath
 }
 
