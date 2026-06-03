@@ -1,0 +1,27 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "baseline_gate_status": "phase104_baseline_smoke_complete_mechanisms_review_required",
+  "baseline_smoke_completed": true,
+  "candidate_targets": [
+    "target_intensity_std",
+    "target_intensity_min"
+  ],
+  "min_validation_relative_improvement": 0.05,
+  "next_action": "enter Phase 105 low-capacity mechanism design on target_intensity_std without opening A100 training",
+  "phase105_low_capacity_design_only": true,
+  "phase105_model_mechanism_allowed": true,
+  "sample_size_sufficient_for_phase105": true,
+  "selected_target": "target_intensity_std",
+  "selected_test_rmse": 1.2921697569115889,
+  "selected_validation_method": "knn",
+  "selected_validation_rmse": 1.0119702725595097,
+  "status": "phase104_target_hardness_review_ready_phase105_design",
+  "target_columns": [
+    "target_intensity_mean",
+    "target_intensity_std",
+    "target_intensity_min",
+    "target_intensity_max",
+    "target_intensity_q90"
+  ]
+}
