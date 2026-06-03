@@ -1,0 +1,57 @@
+{
+  "counts": {
+    "manual_queue_rows": 6,
+    "phase98_unlock_rows_read": 7,
+    "protocol_rows": 4,
+    "ready_real_registered_target_rows": 0,
+    "target_rows": 7
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "am_bench_transfer_unlocked": false,
+    "analytic_surrogate_closed_for_transfer": true,
+    "manual_queue_rows": 6,
+    "next_action": "provide pad registration evidence or an external registered-target data card",
+    "open_registered_target_count_phase81": 0,
+    "phase102_baseline_smoke_allowed": false,
+    "preferred_next_route_phase81": "ambench_mds2_2716_pad_thermography_xypt",
+    "ready_real_registered_target_rows": 0,
+    "required_before_a100_training": [
+      "Phase 102 baseline-first smoke on a real registered target",
+      "non-worse global/hot/gradient metrics",
+      "strong baseline comparison",
+      "validation-only selection",
+      "server validation from a pushed commit"
+    ],
+    "source_phase100_status": "local_mechanism_package_ready_transfer_locked",
+    "source_phase81_status": "blocked_no_registered_target",
+    "status": "blocked_no_real_registered_target",
+    "submission_ready": false,
+    "target_rows": 7
+  },
+  "inputs": {
+    "phase100_boundary_table": "docs/results/phase100_local_mechanism_evidence_package/phase100_local_mechanism_boundary_table.csv",
+    "phase100_gate": "docs/results/phase100_local_mechanism_evidence_package/phase100_local_mechanism_evidence_package.json",
+    "phase81_gate": "docs/results/phase81_registered_target_intake_gate/phase81_registered_target_gate.json",
+    "phase81_intake_table": "docs/results/phase81_registered_target_intake_gate/phase81_registered_target_intake_table.csv",
+    "phase94_candidate_table": "docs/results/phase94_external_registered_target_candidate_gate/phase94_external_candidate_triage.csv",
+    "phase94_gate": "docs/results/phase94_external_registered_target_candidate_gate/phase94_external_registered_target_candidate_gate.json",
+    "phase98_unlock_table": "docs/results/phase98_registered_target_unlock_gate/phase98_unlock_candidate_table.csv"
+  },
+  "objective": "registered_target_acquisition_gate",
+  "outputs": {
+    "gate_json": "docs/results/phase101_registered_target_acquisition_gate/phase101_registered_target_acquisition_gate.json",
+    "manifest": "docs/results/phase101_registered_target_acquisition_gate/phase101_registered_target_acquisition_gate_manifest.json",
+    "manual_queue": "docs/results/phase101_registered_target_acquisition_gate/phase101_registered_target_manual_queue.csv",
+    "markdown": "docs/results/phase101_registered_target_acquisition_gate/phase101_registered_target_acquisition_gate.md",
+    "protocol": "docs/results/phase101_registered_target_acquisition_gate/phase101_registered_target_protocol.csv",
+    "target_table": "docs/results/phase101_registered_target_acquisition_gate/phase101_registered_target_acquisition_table.csv"
+  },
+  "phase": 101,
+  "source_gates": {
+    "phase100_status": "local_mechanism_package_ready_transfer_locked",
+    "phase81_status": "blocked_no_registered_target",
+    "phase94_status": "opened_local_design_gate_no_a100"
+  }
+}
