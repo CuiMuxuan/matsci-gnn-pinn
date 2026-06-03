@@ -2,8 +2,8 @@
 
 - Status: `phase104_numeric_field_table_ready_baseline_pending`
 - Numeric field table ready: `True`
-- Row count: `24`
-- Split counts: `train=14, val=4, test=6`
+- Row count: `128`
+- Split counts: `train=76, val=26, test=26`
 - Leakage-safe split manifest ready: `True`
 - Phase 105 model mechanisms allowed: `false`
 - A100 training allowed now: `false`

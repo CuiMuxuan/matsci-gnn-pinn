@@ -7,11 +7,11 @@
   "next_action": "run mean/kNN/ExtraTrees baseline smoke on the numeric tiny field table",
   "numeric_field_table_ready": true,
   "phase105_model_mechanism_allowed": false,
-  "row_count": 24,
+  "row_count": 128,
   "split_counts": {
-    "test": 6,
-    "train": 14,
-    "val": 4
+    "test": 26,
+    "train": 76,
+    "val": 26
   },
   "status": "phase104_numeric_field_table_ready_baseline_pending",
   "target": "target_intensity_mean"
