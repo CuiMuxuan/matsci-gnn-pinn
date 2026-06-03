@@ -1,0 +1,19 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "baseline_smoke_completed": true,
+  "best_test_rmse": 2.0560795838669463,
+  "best_validation_rmse": 2.5636179057570785,
+  "methods": [
+    "extra_trees",
+    "knn",
+    "mean"
+  ],
+  "min_rows_for_mechanism": 100,
+  "next_action": "expand the registered numeric table before Phase 105 mechanism testing",
+  "phase105_model_mechanism_allowed": false,
+  "row_count": 24,
+  "sample_size_sufficient_for_phase105": false,
+  "status": "phase104_baseline_smoke_boundary_tiny_sample_mechanisms_locked",
+  "target": "target_intensity_mean"
+}

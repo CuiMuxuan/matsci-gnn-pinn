@@ -1,0 +1,10 @@
+method,baseline,split,n_points,rmse,mae,relative_l2,normalized_rmse,hot_q90_rmse,gradient_q90_rmse
+mean,constant:mean:fit=train,test,6,3.460781,3.284258,0.032512,1.121905,1.426275,3.460781
+mean,constant:mean:fit=train,train,14,1.213729,0.859220,0.011061,0.239325,1.304880,1.213729
+mean,constant:mean:fit=train,val,4,3.390400,3.363133,0.031876,3.214058,2.973377,3.390400
+knn,model:knn:fit=train,test,6,2.713934,2.652253,0.025496,0.879794,1.904951,2.713934
+knn,model:knn:fit=train,train,14,0.869788,0.626795,0.007926,0.171506,0.976733,0.869788
+knn,model:knn:fit=train,val,4,2.764919,2.673288,0.025995,2.621109,3.318393,2.764919
+extra_trees,model:extra_trees:fit=train,test,6,2.056080,1.921334,0.019315,0.666533,1.801907,2.056080
+extra_trees,model:extra_trees:fit=train,train,14,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000
+extra_trees,model:extra_trees:fit=train,val,4,2.563618,2.391979,0.024102,2.430278,3.065739,2.563618

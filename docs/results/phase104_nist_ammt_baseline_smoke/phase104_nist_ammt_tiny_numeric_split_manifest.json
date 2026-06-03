@@ -1,0 +1,43 @@
+{
+  "group_count": 12,
+  "leakage_group": "source_layer_index",
+  "leakage_safe": true,
+  "row_count": 24,
+  "split_counts": {
+    "test": 6,
+    "train": 14,
+    "val": 4
+  },
+  "splits": {
+    "test": [
+      9,
+      10,
+      11,
+      21,
+      22,
+      23
+    ],
+    "train": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+    ],
+    "val": [
+      7,
+      8,
+      19,
+      20
+    ]
+  }
+}
