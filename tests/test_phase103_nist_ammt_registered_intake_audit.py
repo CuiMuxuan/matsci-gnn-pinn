@@ -237,3 +237,34 @@ def test_phase103_external_download_retries_after_transient_failure(tmp_path: Pa
     assert sleeps == [5]
     assert calls[0][0][0:3] == ["wget", "-c", "--tries"]
     assert output.read_bytes() == b"complete"
+
+
+def test_phase103_aria2c_backend_uses_parallel_resume_command(tmp_path: Path, monkeypatch):
+    module = _load_module()
+    output = tmp_path / "In-situ Meas Data.zip"
+    calls = []
+
+    def fake_run(command, check):
+        calls.append((command, check))
+        output.write_bytes(b"complete")
+        return subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+
+    status = module._download_with_external(
+        backend="aria2c",
+        url="https://example.test/In-situ%20Meas%20Data.zip",
+        output=output,
+        timeout_seconds=30,
+        retries=4,
+        resume=True,
+    )
+
+    assert status == "downloaded_aria2c"
+    command = calls[0][0]
+    assert command[0] == "aria2c"
+    assert "--continue=true" in command
+    assert "--max-connection-per-server=8" in command
+    assert "--split=8" in command
+    assert str(output.parent) in command
+    assert output.name in command

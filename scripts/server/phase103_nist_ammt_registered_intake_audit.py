@@ -152,7 +152,24 @@ def _download_with_external(
     output.parent.mkdir(parents=True, exist_ok=True)
     if backend == "python":
         return _download_with_python(url, output, timeout_seconds)
-    if backend == "curl":
+    if backend == "aria2c":
+        command = [
+            "aria2c",
+            "--continue=true" if resume else "--continue=false",
+            "--max-connection-per-server=8",
+            "--split=8",
+            "--min-split-size=16M",
+            "--max-tries",
+            str(retries),
+            "--timeout",
+            str(timeout_seconds),
+            "--dir",
+            str(output.parent),
+            "--out",
+            output.name,
+            url,
+        ]
+    elif backend == "curl":
         command = [
             "curl",
             "-L",
@@ -454,7 +471,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--download", action="store_true")
     parser.add_argument("--large-downloads", action="store_true")
-    parser.add_argument("--download-backend", choices=("python", "curl", "wget"), default="python")
+    parser.add_argument(
+        "--download-backend",
+        choices=("python", "curl", "wget", "aria2c"),
+        default="python",
+    )
     parser.add_argument("--retries", type=int, default=3)
     parser.add_argument("--timeout-seconds", type=int, default=300)
     parser.add_argument("--no-resume", action="store_true")
