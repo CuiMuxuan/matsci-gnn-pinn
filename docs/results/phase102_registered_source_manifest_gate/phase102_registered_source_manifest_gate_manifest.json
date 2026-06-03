@@ -1,0 +1,68 @@
+{
+  "counts": {
+    "file_rows": 4,
+    "phase101_manual_queue_rows_read": 6,
+    "phase103_queue_rows": 3,
+    "protocol_rows": 4,
+    "registration_rows": 5,
+    "source_rows": 3
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "critical_registration_checks_pending": 2,
+    "next_action": "enter Phase 103 minimal registered data intake/audit on the NIST AMMT metadata package",
+    "phase103_intake_allowed": true,
+    "phase103_large_server_download_allowed": true,
+    "phase103_queue_rows": 3,
+    "phase104_baseline_smoke_allowed": false,
+    "phase105_model_mechanism_allowed": false,
+    "preferred_candidate": "P102-CAND-NIST-AMMT-3D-SCAN",
+    "registration_rows": 5,
+    "required_before_a100_training": [
+      "Phase 103 intake/audit pass",
+      "Phase 104 baseline-first smoke pass",
+      "Phase 105 low-capacity mechanism pass",
+      "server validation from a pushed commit"
+    ],
+    "required_before_baseline_smoke": [
+      "download and inspect Metadata.zip",
+      "verify explicit coordinate transforms and trigger timing",
+      "construct a tiny registered source/path-to-target sample table",
+      "fix train/validation/test split keys before model selection",
+      "write baseline plan against mean, kNN, ExtraTrees, and no-process Macro PINN"
+    ],
+    "source_phase101_status": "blocked_no_real_registered_target",
+    "source_rows": 3,
+    "status": "source_manifest_ready_phase103_intake_allowed",
+    "submission_ready": false
+  },
+  "inputs": {
+    "phase101_gate": "docs/results/phase101_registered_target_acquisition_gate/phase101_registered_target_acquisition_gate.json",
+    "phase101_manual_queue": "docs/results/phase101_registered_target_acquisition_gate/phase101_registered_target_manual_queue.csv",
+    "phase101_target_table": "docs/results/phase101_registered_target_acquisition_gate/phase101_registered_target_acquisition_table.csv"
+  },
+  "objective": "registered_source_manifest_data_card_gate",
+  "outputs": {
+    "gate_json": "docs/results/phase102_registered_source_manifest_gate/phase102_registered_source_manifest_gate.json",
+    "manifest": "docs/results/phase102_registered_source_manifest_gate/phase102_registered_source_manifest_gate_manifest.json",
+    "markdown": "docs/results/phase102_registered_source_manifest_gate/phase102_registered_source_manifest_gate.md",
+    "nist_ammt_data_card": "docs/results/phase102_registered_source_manifest_gate/phase102_nist_ammt_data_card.json",
+    "nist_ammt_file_manifest": "docs/results/phase102_registered_source_manifest_gate/phase102_nist_ammt_file_manifest.csv",
+    "phase103_intake_queue": "docs/results/phase102_registered_source_manifest_gate/phase102_phase103_intake_queue.csv",
+    "protocol": "docs/results/phase102_registered_source_manifest_gate/phase102_protocol.csv",
+    "registration_evidence_table": "docs/results/phase102_registered_source_manifest_gate/phase102_registration_evidence_table.csv",
+    "source_candidate_table": "docs/results/phase102_registered_source_manifest_gate/phase102_registered_source_candidate_table.csv"
+  },
+  "phase": 102,
+  "server_download_policy": {
+    "first_file": "Metadata.zip",
+    "known_total_gib": 16.10378804896027,
+    "large_server_download_allowed": true,
+    "local_large_download_allowed": false
+  },
+  "source_gates": {
+    "phase101_phase102_baseline_smoke_allowed": false,
+    "phase101_status": "blocked_no_real_registered_target"
+  }
+}

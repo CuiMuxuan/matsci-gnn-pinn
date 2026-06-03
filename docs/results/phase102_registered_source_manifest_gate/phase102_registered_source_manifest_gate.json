@@ -1,0 +1,30 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "critical_registration_checks_pending": 2,
+  "next_action": "enter Phase 103 minimal registered data intake/audit on the NIST AMMT metadata package",
+  "phase103_intake_allowed": true,
+  "phase103_large_server_download_allowed": true,
+  "phase103_queue_rows": 3,
+  "phase104_baseline_smoke_allowed": false,
+  "phase105_model_mechanism_allowed": false,
+  "preferred_candidate": "P102-CAND-NIST-AMMT-3D-SCAN",
+  "registration_rows": 5,
+  "required_before_a100_training": [
+    "Phase 103 intake/audit pass",
+    "Phase 104 baseline-first smoke pass",
+    "Phase 105 low-capacity mechanism pass",
+    "server validation from a pushed commit"
+  ],
+  "required_before_baseline_smoke": [
+    "download and inspect Metadata.zip",
+    "verify explicit coordinate transforms and trigger timing",
+    "construct a tiny registered source/path-to-target sample table",
+    "fix train/validation/test split keys before model selection",
+    "write baseline plan against mean, kNN, ExtraTrees, and no-process Macro PINN"
+  ],
+  "source_phase101_status": "blocked_no_real_registered_target",
+  "source_rows": 3,
+  "status": "source_manifest_ready_phase103_intake_allowed",
+  "submission_ready": false
+}

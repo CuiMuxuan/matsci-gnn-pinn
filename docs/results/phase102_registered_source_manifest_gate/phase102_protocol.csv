@@ -1,0 +1,5 @@
+protocol_id,component,requirement,current_status,pass_condition,stop_condition
+P102-PROT-001,no_training,Phase 102 may only create source-manifest/data-card artifacts.,enforced,phase104_baseline_smoke_allowed and a100_training_allowed remain false,"any model training, baseline smoke, or A100 training is started in Phase 102"
+P102-PROT-002,public_provenance,Candidate must have public DOI/PDR/article provenance.,satisfied_for_nist_ammt,"DOI, landing page, file index, and article record are listed in the data card",private or non-reproducible source
+P102-PROT-003,registration_evidence,"Source/path, target observations, transforms, and timing must be auditable before baseline smoke.",manifested_pending_phase103_metadata_audit,Phase 103 finds explicit transform and timing files,registration depends on independent rescaling or target-label fitting
+P102-PROT-004,large_downloads,Large downloads are allowed only as Phase 103 server intake with resumable manifests.,allowed_by_user_for_server,"server download manifests record URL, size, checksum/content length, and extraction state",large files are downloaded locally or without audit manifests
