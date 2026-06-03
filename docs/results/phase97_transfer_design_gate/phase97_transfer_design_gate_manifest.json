@@ -1,0 +1,68 @@
+{
+  "counts": {
+    "blocked_rows": 4,
+    "phase98_candidate_rows": 0,
+    "protocol_rows": 4,
+    "transfer_rows": 6
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "blocked_rows": 4,
+    "next_action": "resolve pad registration or add an external registered data card before Phase 98",
+    "phase98_candidate_rows": 0,
+    "phase98_local_smoke_allowed": false,
+    "positive_mechanisms": [
+      "fixed_green_function_features"
+    ],
+    "preferred_phase98_route": "none",
+    "required_before_a100_training": [
+      "Phase 98 local baseline-first smoke",
+      "strong baseline deltas",
+      "non-worse global/hot/gradient metrics",
+      "fixed train/validation/test split and registration mapping",
+      "server validation from a pushed commit"
+    ],
+    "source_phase81_status": "blocked_no_registered_target",
+    "source_phase96_status": "local_smoke_positive_transfer_design_only",
+    "status": "blocked_no_registered_transfer_target",
+    "submission_ready": false,
+    "synthetic_only_rows": 1,
+    "transfer_rows": 6
+  },
+  "inputs": {
+    "phase81_data_card": "docs/results/phase81_registered_target_intake_gate/phase81_registered_target_data_card.json",
+    "phase81_gate": "docs/results/phase81_registered_target_intake_gate/phase81_registered_target_gate.json",
+    "phase81_intake_table": "docs/results/phase81_registered_target_intake_gate/phase81_registered_target_intake_table.csv",
+    "phase92_gate": "docs/results/phase92_benchmark_review_intake/phase92_benchmark_review_intake_gate.json",
+    "phase96_gate": "docs/results/phase96_pfhub_local_smoke_gate/phase96_pfhub_local_smoke_gate.json",
+    "phase96_mechanism_table": "docs/results/phase96_pfhub_local_smoke_gate/phase96_mechanism_decision_table.csv"
+  },
+  "objective": "ambench_external_transfer_design_gate",
+  "outputs": {
+    "gate_json": "docs/results/phase97_transfer_design_gate/phase97_transfer_design_gate.json",
+    "manifest": "docs/results/phase97_transfer_design_gate/phase97_transfer_design_gate_manifest.json",
+    "markdown": "docs/results/phase97_transfer_design_gate/phase97_transfer_design_gate.md",
+    "transfer_design_protocol": "docs/results/phase97_transfer_design_gate/phase97_transfer_design_protocol.csv",
+    "transfer_route_table": "docs/results/phase97_transfer_design_gate/phase97_transfer_route_table.csv"
+  },
+  "phase": 97,
+  "phase81_data_card_status": "blocked_no_registered_target",
+  "phase81_gate": {
+    "open_registered_target_count": 0,
+    "preferred_next_route": "ambench_mds2_2716_pad_thermography_xypt",
+    "status": "blocked_no_registered_target"
+  },
+  "phase92_gate": {
+    "benchmark_review_ready": false,
+    "status": "blocked_missing_target_benchmarks",
+    "submission_ready": false
+  },
+  "phase96_gate": {
+    "phase97_transfer_design_allowed": true,
+    "positive_mechanisms": [
+      "fixed_green_function_features"
+    ],
+    "status": "local_smoke_positive_transfer_design_only"
+  }
+}

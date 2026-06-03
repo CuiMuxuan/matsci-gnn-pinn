@@ -1,0 +1,5 @@
+protocol_id,component,requirement,status,pass_condition,stop_condition
+P97-PROT-001,physical_mapping,Every fixed-kernel transfer route must define what the Green's-function/source coordinates mean in the target data.,defined,"source, target, and coordinate systems are compatible without independent test-time rescaling",feature can only be interpreted as a synthetic basis with no target-data registration
+P97-PROT-002,baseline_contract,"A later smoke gate must compare against mean/kNN/ExtraTrees or stronger sklearn, no-process Macro PINN, and the relevant route guard.",defined,all baseline artifacts or commands are available before Phase 98,candidate cannot be compared to the frozen floor or strongest baseline
+P97-PROT-003,leakage_control,Route choice and feature mapping must be decided without test-set labels.,defined,train/validation-only selection and fixed split manifest,feature alignment or route selection depends on test performance
+P97-PROT-004,compute_governance,"Phase 97 may allow only local Phase 98 smoke, never A100 training.",defined,A100 flags remain false,any route tries to skip Phase 98 local baseline-first smoke
