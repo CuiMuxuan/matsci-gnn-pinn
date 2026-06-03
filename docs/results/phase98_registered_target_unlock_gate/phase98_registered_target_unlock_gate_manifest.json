@@ -1,0 +1,57 @@
+{
+  "counts": {
+    "ambench_phase99_candidate_rows": 0,
+    "blocked_rows": 4,
+    "phase99_candidate_rows": 1,
+    "protocol_rows": 4,
+    "unlock_rows": 7
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "am_bench_transfer_unlocked": false,
+    "ambench_phase99_candidate_rows": 0,
+    "blocked_rows": 4,
+    "next_action": "enter Phase 99 local baseline-first smoke on the generated registered surrogate",
+    "phase99_candidate_rows": 1,
+    "phase99_local_smoke_allowed": true,
+    "preferred_phase99_candidate": "phase98_generated_pfhub_registered_surrogate_v1",
+    "required_before_a100_training": [
+      "Phase 99 local baseline-first smoke",
+      "non-worse global/hot/gradient metrics",
+      "strong baseline comparison",
+      "fixed split and no-test-leakage selection",
+      "server validation from a pushed commit"
+    ],
+    "source_phase97_status": "blocked_no_registered_transfer_target",
+    "status": "registered_surrogate_unlocked_no_a100",
+    "submission_ready": false,
+    "unlock_rows": 7
+  },
+  "inputs": {
+    "phase96_target_manifest": "docs/results/phase96_pfhub_local_smoke_gate/phase96_pfhub_style_target_manifest.json",
+    "phase97_gate": "docs/results/phase97_transfer_design_gate/phase97_transfer_design_gate.json",
+    "phase97_transfer_routes": "docs/results/phase97_transfer_design_gate/phase97_transfer_route_table.csv"
+  },
+  "objective": "registered_transfer_target_unlock_gate",
+  "outputs": {
+    "gate_json": "docs/results/phase98_registered_target_unlock_gate/phase98_registered_target_unlock_gate.json",
+    "manifest": "docs/results/phase98_registered_target_unlock_gate/phase98_registered_target_unlock_gate_manifest.json",
+    "markdown": "docs/results/phase98_registered_target_unlock_gate/phase98_registered_target_unlock_gate.md",
+    "registered_surrogate_data_card": "docs/results/phase98_registered_target_unlock_gate/phase98_registered_surrogate_data_card.json",
+    "unlock_candidate_table": "docs/results/phase98_registered_target_unlock_gate/phase98_unlock_candidate_table.csv",
+    "unlock_protocol": "docs/results/phase98_registered_target_unlock_gate/phase98_unlock_protocol.csv"
+  },
+  "phase": 98,
+  "phase97_gate": {
+    "phase98_local_smoke_allowed": false,
+    "positive_mechanisms": [
+      "fixed_green_function_features"
+    ],
+    "status": "blocked_no_registered_transfer_target"
+  },
+  "source_target": {
+    "target_id": "phase96_pfhub_style_heat_source_v1",
+    "target_type": "manufactured_heat_diffusion_with_moving_source"
+  }
+}
