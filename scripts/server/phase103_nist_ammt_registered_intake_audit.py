@@ -14,6 +14,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+import time
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -182,8 +183,22 @@ def _download_with_external(
             command.insert(1, "-c")
     else:
         raise ValueError(f"Unsupported download backend: {backend}")
-    subprocess.run(command, check=True)
-    return f"downloaded_{backend}"
+    outer_attempts = max(1, retries)
+    for attempt in range(1, outer_attempts + 1):
+        try:
+            subprocess.run(command, check=True)
+            return f"downloaded_{backend}"
+        except subprocess.CalledProcessError:
+            if attempt >= outer_attempts:
+                raise
+            delay_seconds = min(60, 5 * attempt)
+            print(
+                f"{backend} download attempt {attempt}/{outer_attempts} failed for {output}; "
+                f"retrying in {delay_seconds}s",
+                flush=True,
+            )
+            time.sleep(delay_seconds)
+    raise RuntimeError(f"unreachable download retry state for {output}")
 
 
 def _inspect_zip_members(path: Path, max_members: int) -> tuple[str, list[dict[str, Any]]]:

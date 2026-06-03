@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import importlib.util
+import subprocess
 import zipfile
 from pathlib import Path
 
@@ -203,3 +204,36 @@ def test_phase103_existing_partial_large_file_is_resumed(tmp_path: Path, monkeyp
     assert build_row["size_ok"] == "true"
     assert build_row["status"] == "ready_for_schema_audit"
     assert manifest["gate"]["phase104_baseline_smoke_allowed"] is False
+
+
+def test_phase103_external_download_retries_after_transient_failure(tmp_path: Path, monkeypatch):
+    module = _load_module()
+    output = tmp_path / "Build Command Data.zip"
+    output.write_bytes(b"partial")
+    calls = []
+    sleeps = []
+
+    def fake_run(command, check):
+        calls.append((command, check, output.read_bytes()))
+        if len(calls) == 1:
+            raise subprocess.CalledProcessError(returncode=4, cmd=command)
+        output.write_bytes(b"complete")
+        return subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    monkeypatch.setattr(module.time, "sleep", lambda seconds: sleeps.append(seconds))
+
+    status = module._download_with_external(
+        backend="wget",
+        url="https://example.test/Build%20Command%20Data.zip",
+        output=output,
+        timeout_seconds=10,
+        retries=2,
+        resume=True,
+    )
+
+    assert status == "downloaded_wget"
+    assert len(calls) == 2
+    assert sleeps == [5]
+    assert calls[0][0][0:3] == ["wget", "-c", "--tries"]
+    assert output.read_bytes() == b"complete"
