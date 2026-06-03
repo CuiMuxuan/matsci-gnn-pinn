@@ -1,1 +1,6 @@
 file_id,member_name,member_size,registration_keyword,timing_keyword,command_keyword,target_keyword
+p102_nist_metadata_zip,Metadata/20170619_In625_HPAlloys_0.25x1x4.pdf,174156,false,false,false,false
+p102_nist_metadata_zip,Metadata/2018_AMMTLaserScanAngles.txt,3307,true,false,true,false
+p102_nist_metadata_zip,Metadata/201807_LayerCamera_DotGrid.bmp,2561078,false,false,false,false
+p102_nist_metadata_zip,Metadata/20180708_PowderComposition&PSD.txt,535,false,false,false,false
+p102_nist_metadata_zip,Metadata/AMB2018-01_625_MaterialCertificate.pdf,499576,false,false,false,false

@@ -1,29 +1,29 @@
 {
   "counts": {
     "audit_rows": 4,
-    "member_rows": 0
+    "member_rows": 5
   },
   "data_root": "data/raw/nist_ammt/mds2_2044",
   "download": {
-    "backend": "python",
+    "backend": "wget",
     "large_downloads": false,
-    "requested": false,
+    "requested": true,
     "resume": true,
-    "retries": 3,
-    "timeout_seconds": 300
+    "retries": 5,
+    "timeout_seconds": 900
   },
   "gate": {
     "a100_80gb_request_now": false,
     "a100_training_allowed_now": false,
     "audit_rows": 4,
-    "command_keyword_hits": 0,
+    "command_keyword_hits": 1,
     "large_downloads_requested": false,
-    "member_rows": 0,
-    "metadata_ready": false,
-    "next_action": "download Metadata.zip and rerun Phase 103 audit",
+    "member_rows": 5,
+    "metadata_ready": true,
+    "next_action": "inspect metadata manually for transform/timing records before opening baseline smoke",
     "phase104_baseline_smoke_allowed": false,
     "phase105_model_mechanism_allowed": false,
-    "registration_keyword_hits": 0,
+    "registration_keyword_hits": 1,
     "required_before_baseline_smoke": [
       "explicit coordinate transform files identified",
       "explicit trigger/timing join identified",
@@ -31,10 +31,10 @@
       "target observation schema sampled",
       "tiny registered sample table and split manifest generated"
     ],
-    "required_missing_rows": 1,
+    "required_missing_rows": 0,
     "size_mismatch_rows": 0,
     "source_phase102_status": "source_manifest_ready_phase103_intake_allowed",
-    "status": "metadata_intake_incomplete",
+    "status": "metadata_ready_registration_evidence_pending",
     "target_keyword_hits": 0,
     "timing_keyword_hits": 0
   },
