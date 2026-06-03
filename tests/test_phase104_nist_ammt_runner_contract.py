@@ -14,3 +14,15 @@ def test_phase104_runner_rebuilds_expanded_registered_table_before_baselines():
     assert "phase104_nist_ammt_expanded_registered_table_a100_manifest.json" in script
     assert '--tiny-table "$OUTPUT_DIR/phase103_nist_ammt_tiny_registered_source_target_table.csv"' in script
     assert "phase104_nist_ammt_baseline_smoke.py" in script
+
+
+def test_phase104_target_hardness_runner_is_review_only_and_logs_gate():
+    script = Path("scripts/server/run_phase104_nist_ammt_target_hardness_review_a100.sh").read_text(
+        encoding="utf-8"
+    )
+
+    assert "phase104_nist_ammt_target_hardness_review.py" in script
+    assert "phase104_nist_ammt_target_hardness_review_a100_manifest.json" in script
+    assert "selected_target" in script
+    assert "phase105_model_mechanism_allowed" in script
+    assert "a100_training_allowed_now" in script
