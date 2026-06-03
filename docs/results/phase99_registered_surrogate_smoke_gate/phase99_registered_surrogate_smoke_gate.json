@@ -16,7 +16,7 @@
   "same_budget_boundary_failures": 1,
   "source_candidate": "phase98_generated_pfhub_registered_surrogate_v1",
   "source_phase98_status": "registered_surrogate_unlocked_no_a100",
-  "source_quota_hot_gain_vs_random": 3.048150357656997e-05,
+  "source_quota_hot_gain_vs_random": 3e-05,
   "status": "local_surrogate_positive_with_focused_baseline_boundary",
   "submission_ready": false
 }

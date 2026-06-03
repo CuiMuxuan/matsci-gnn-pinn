@@ -99,6 +99,12 @@ def _csv_value(value: Any) -> str:
     return str(value)
 
 
+def _stable_metric(value: float | None) -> float | None:
+    if value is None:
+        return None
+    return round(float(value), 6)
+
+
 def _display_path(path: Path, root: Path | None = None) -> str:
     if root is not None:
         try:
@@ -362,7 +368,9 @@ def build_gate(
     boundary_failures = [row for row in boundary_comparisons if not row["pass"]]
     source_quota = next(row for row in metric_rows if row["method_id"] == "source_quota_green_same_budget")
     random_budget = next(row for row in metric_rows if row["method_id"] == "random_collocation_same_budget")
-    source_quota_hot_gain = random_budget["test_hot_q90_rmse"] - source_quota["test_hot_q90_rmse"]
+    source_quota_hot_gain = _stable_metric(
+        random_budget["test_hot_q90_rmse"] - source_quota["test_hot_q90_rmse"]
+    )
 
     if full_grid_pass and boundary_failures:
         status = "local_surrogate_positive_with_focused_baseline_boundary"
