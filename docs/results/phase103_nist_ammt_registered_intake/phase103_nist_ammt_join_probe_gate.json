@@ -1,0 +1,21 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "explicit_absolute_timing_ready": false,
+  "join_candidate_rows": 3,
+  "layer_camera_join_ready": true,
+  "melt_pool_layer_join_ready": true,
+  "next_action": "construct a tiny layer-index registered table candidate; keep baseline/training locked",
+  "phase104_baseline_smoke_allowed": false,
+  "phase105_model_mechanism_allowed": false,
+  "ready_join_rows": 3,
+  "required_before_baseline_smoke": [
+    "tiny registered source/path-to-target sample table generated",
+    "coordinate transform values applied to sample rows",
+    "source-target join applied to sample rows",
+    "leakage-safe split manifest generated",
+    "baseline smoke plan validated without test-label route selection"
+  ],
+  "source_target_join_ready": true,
+  "status": "source_target_layer_join_ready_timing_not_absolute"
+}

@@ -1,0 +1,40 @@
+{
+  "counts": {
+    "row_count": 24,
+    "split_groups": 12
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "explicit_absolute_timing_ready": false,
+    "leakage_safe_split_manifest_ready": true,
+    "next_action": "validate the tiny layer-member table and split manifest before any separate Phase 104 baseline-smoke decision",
+    "phase104_baseline_smoke_allowed": false,
+    "phase105_model_mechanism_allowed": false,
+    "row_count": 24,
+    "source_target_join_ready": true,
+    "split_counts": {
+      "test": 6,
+      "train": 14,
+      "val": 4
+    },
+    "split_group_count": 12,
+    "status": "tiny_registered_table_ready_manual_baseline_pending",
+    "table_scope": "layer_member_source_target_join",
+    "tiny_registered_table_ready": true
+  },
+  "inputs": {
+    "join_probe_gate": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_join_probe_gate.json",
+    "sequence_groups": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_deep_sequence_groups.csv",
+    "target_binary_samples": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_deep_target_binary_samples.csv"
+  },
+  "objective": "nist_ammt_tiny_registered_source_target_table_build_no_training",
+  "outputs": {
+    "gate_json": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_tiny_registered_table_gate.json",
+    "manifest": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_tiny_registered_table_manifest.json",
+    "markdown_summary": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_tiny_registered_table_summary.md",
+    "split_manifest": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_tiny_registered_split_manifest.json",
+    "tiny_table": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_tiny_registered_source_target_table.csv"
+  },
+  "phase": 103
+}
