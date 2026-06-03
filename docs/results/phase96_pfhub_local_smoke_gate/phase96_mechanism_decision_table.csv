@@ -1,3 +1,3 @@
 mechanism_id,mechanism,comparator,selected_by_validation,validation_gate_pass,test_audit_pass,transfer_design_signal,next_action,reason
-P96-MECH-001,fixed_green_function_features,vanilla_deterministic_surrogate,true,true,true,true,open Phase 97 transfer design gate,validation RMSE 0.000184038 vs 0.107311; test hot/gradient deltas 0.114653/0.0587924
-P96-MECH-002,bayesian_adaptive_collocation,random_collocation_same_budget,false,false,false,false,keep as diagnostic until global/coverage guards pass,validation RMSE 0.000715552 vs random 0.000275759; coverage 0.948859
+P96-MECH-001,fixed_green_function_features,vanilla_deterministic_surrogate,true,true,true,true,open Phase 97 transfer design gate,validation RMSE 0.000184 vs 0.107311; test hot/gradient deltas 0.114653/0.058792
+P96-MECH-002,bayesian_adaptive_collocation,random_collocation_same_budget,false,false,false,false,keep as diagnostic until global/coverage guards pass,validation RMSE 0.000716 vs random 0.000276; coverage 0.948859

@@ -107,7 +107,9 @@ def _csv_value(value: Any) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, float):
-        return f"{value:.9f}"
+        # Keep generated CSV/Markdown stable across local Windows and server
+        # Linux BLAS/libm differences; gate thresholds are far wider than 1e-6.
+        return f"{value:.6f}"
     if isinstance(value, (dict, list)):
         return json.dumps(value, sort_keys=True)
     return str(value)
@@ -581,10 +583,10 @@ def build_mechanism_rows(metric_rows: list[dict[str, Any]]) -> list[dict[str, An
                 else "close as synthetic diagnostic"
             ),
             "reason": (
-                f"validation RMSE {fixed['validation_rmse']:.6g} vs "
-                f"{vanilla['validation_rmse']:.6g}; test hot/gradient deltas "
-                f"{fixed['hot_delta_vs_vanilla']:.6g}/"
-                f"{fixed['gradient_delta_vs_vanilla']:.6g}"
+                f"validation RMSE {_csv_value(fixed['validation_rmse'])} vs "
+                f"{_csv_value(vanilla['validation_rmse'])}; test hot/gradient deltas "
+                f"{_csv_value(fixed['hot_delta_vs_vanilla'])}/"
+                f"{_csv_value(fixed['gradient_delta_vs_vanilla'])}"
             ),
         },
         {
@@ -601,9 +603,9 @@ def build_mechanism_rows(metric_rows: list[dict[str, Any]]) -> list[dict[str, An
                 else "keep as diagnostic until global/coverage guards pass"
             ),
             "reason": (
-                f"validation RMSE {adaptive['validation_rmse']:.6g} vs random "
-                f"{random_row['validation_rmse']:.6g}; coverage "
-                f"{adaptive['coverage_95']:.6g}"
+                f"validation RMSE {_csv_value(adaptive['validation_rmse'])} vs random "
+                f"{_csv_value(random_row['validation_rmse'])}; coverage "
+                f"{_csv_value(adaptive['coverage_95'])}"
             ),
         },
     ]
