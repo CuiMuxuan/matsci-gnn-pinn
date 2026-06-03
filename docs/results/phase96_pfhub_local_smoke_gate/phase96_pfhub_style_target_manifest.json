@@ -1,0 +1,31 @@
+{
+  "adaptive_budget": 72,
+  "alpha": 0.04,
+  "ensemble_size": 9,
+  "not_a_claim": [
+    "not AM-Bench evidence",
+    "not proof of registered-source transfer",
+    "not permission for A100 training"
+  ],
+  "selection_policy": "validation-only mechanism selection; test metrics are audit fields",
+  "source_beta": 3.5,
+  "source_sigma2": 0.018,
+  "source_velocity": 0.42,
+  "source_x0": 0.28,
+  "splits": {
+    "test_grid": {
+      "nt": 31,
+      "nx": 41
+    },
+    "train_grid": {
+      "nt": 15,
+      "nx": 19
+    },
+    "validation_grid": {
+      "nt": 17,
+      "nx": 23
+    }
+  },
+  "target_id": "phase96_pfhub_style_heat_source_v1",
+  "target_type": "manufactured_heat_diffusion_with_moving_source"
+}
