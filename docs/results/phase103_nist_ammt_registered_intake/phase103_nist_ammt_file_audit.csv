@@ -1,0 +1,5 @@
+file_id,file_name,expected_bytes,actual_bytes,size_ok,sha256,download_status,zip_status,member_count,registration_hits,timing_hits,command_hits,target_hits,status
+p102_nist_metadata_zip,Metadata.zip,2489233,0,false,,missing_required,not_present,0,0,0,0,0,missing_required
+p102_nist_build_command_data_zip,Build Command Data.zip,7419446651,0,false,,not_requested,not_present,0,0,0,0,0,not_requested
+p102_nist_in_situ_meas_data_zip,In-situ Meas Data.zip,9170420366,0,false,,not_requested,not_present,0,0,0,0,0,not_requested
+p102_nist_movies_zip,Movies.zip,698954503,0,false,,not_requested,not_present,0,0,0,0,0,not_requested

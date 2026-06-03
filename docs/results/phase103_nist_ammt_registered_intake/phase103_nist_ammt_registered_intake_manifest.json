@@ -1,0 +1,54 @@
+{
+  "counts": {
+    "audit_rows": 4,
+    "member_rows": 0
+  },
+  "created_at_unix": 1780457202,
+  "data_root": "data/raw/nist_ammt/mds2_2044",
+  "download": {
+    "backend": "python",
+    "large_downloads": false,
+    "requested": false,
+    "resume": true,
+    "retries": 3,
+    "timeout_seconds": 300
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "audit_rows": 4,
+    "command_keyword_hits": 0,
+    "large_downloads_requested": false,
+    "member_rows": 0,
+    "metadata_ready": false,
+    "next_action": "download Metadata.zip and rerun Phase 103 audit",
+    "phase104_baseline_smoke_allowed": false,
+    "phase105_model_mechanism_allowed": false,
+    "registration_keyword_hits": 0,
+    "required_before_baseline_smoke": [
+      "explicit coordinate transform files identified",
+      "explicit trigger/timing join identified",
+      "source command/path schema sampled",
+      "target observation schema sampled",
+      "tiny registered sample table and split manifest generated"
+    ],
+    "required_missing_rows": 1,
+    "size_mismatch_rows": 0,
+    "source_phase102_status": "source_manifest_ready_phase103_intake_allowed",
+    "status": "metadata_intake_incomplete",
+    "target_keyword_hits": 0,
+    "timing_keyword_hits": 0
+  },
+  "inputs": {
+    "phase102_data_card": "docs/results/phase102_registered_source_manifest_gate/phase102_nist_ammt_data_card.json",
+    "phase102_gate": "docs/results/phase102_registered_source_manifest_gate/phase102_registered_source_manifest_gate.json"
+  },
+  "objective": "nist_ammt_registered_data_intake_audit",
+  "outputs": {
+    "file_audit": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_file_audit.csv",
+    "gate_json": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_registered_intake_gate.json",
+    "manifest": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_registered_intake_manifest.json",
+    "zip_member_keywords": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_zip_member_keywords.csv"
+  },
+  "phase": 103
+}
