@@ -235,8 +235,10 @@ def audit_files(
         path = data_root / file_name
         expected_bytes = int(row["expected_bytes"])
         should_download = download and _file_required(row, large_downloads)
+        actual_bytes_before = path.stat().st_size if path.exists() else 0
+        needs_resume = path.exists() and actual_bytes_before != expected_bytes
         download_status = "not_requested"
-        if should_download and not path.exists():
+        if should_download and (not path.exists() or needs_resume):
             download_status = _download_with_external(
                 backend=backend,
                 url=str(row["url"]),

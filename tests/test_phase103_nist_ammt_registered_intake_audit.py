@@ -131,3 +131,75 @@ def test_phase103_size_mismatch_is_not_ready(tmp_path: Path):
     assert gate["status"] == "metadata_intake_incomplete"
     assert gate["metadata_ready"] is False
     assert gate["size_mismatch_rows"] == 1
+
+
+def test_phase103_existing_partial_large_file_is_resumed(tmp_path: Path, monkeypatch):
+    module = _load_module()
+    data_root = tmp_path / "data"
+    metadata = data_root / "Metadata.zip"
+    _write_zip(
+        metadata,
+        {
+            "calibration/pixel_to_AMMT_coordinate_transform.csv": "x,y",
+            "timing/trigger_timestamp_table.csv": "t,frame",
+        },
+    )
+    full_build = tmp_path / "full_build.zip"
+    _write_zip(full_build, {"commands/XYPT_scan_path_commands.csv": "x,y,p,t"})
+    partial_build = data_root / "Build Command Data.zip"
+    partial_build.write_bytes(b"partial")
+
+    gate = tmp_path / "phase102_gate.json"
+    card = tmp_path / "phase102_card.json"
+    gate.write_text(
+        '{"status":"source_manifest_ready_phase103_intake_allowed","phase103_intake_allowed":true}\n',
+        encoding="utf-8",
+    )
+    card.write_text(
+        (
+            '{"files":['
+            '{"file_id":"p102_nist_metadata_zip","file_name":"Metadata.zip",'
+            f'"expected_bytes":{metadata.stat().st_size},'
+            '"url":"file:///unused/Metadata.zip",'
+            '"required_for_phase103":true,'
+            '"download_scope":"minimal_registration_metadata_intake"},'
+            '{"file_id":"p102_nist_build_command_data_zip","file_name":"Build Command Data.zip",'
+            f'"expected_bytes":{full_build.stat().st_size},'
+            '"url":"file:///unused/Build%20Command%20Data.zip",'
+            '"required_for_phase103":false,'
+            '"download_scope":"long_running_server_download_after_metadata_pass"}]}'
+        ),
+        encoding="utf-8",
+    )
+
+    calls = []
+
+    def fake_download(**kwargs):
+        calls.append(kwargs)
+        assert kwargs["output"] == partial_build
+        assert kwargs["resume"] is True
+        partial_build.write_bytes(full_build.read_bytes())
+        return "downloaded_wget"
+
+    monkeypatch.setattr(module, "_download_with_external", fake_download)
+
+    manifest = module.build_package(
+        root=Path(".").resolve(),
+        output_dir=tmp_path / "out",
+        data_root=data_root,
+        paths={"phase102_gate": gate, "phase102_data_card": card},
+        download=True,
+        large_downloads=True,
+        backend="wget",
+    )
+
+    assert len(calls) == 1
+    with (tmp_path / "out/phase103_nist_ammt_file_audit.csv").open(
+        encoding="utf-8", newline=""
+    ) as handle:
+        rows = list(csv.DictReader(handle))
+    build_row = next(row for row in rows if row["file_name"] == "Build Command Data.zip")
+    assert build_row["download_status"] == "downloaded_wget"
+    assert build_row["size_ok"] == "true"
+    assert build_row["status"] == "ready_for_schema_audit"
+    assert manifest["gate"]["phase104_baseline_smoke_allowed"] is False
