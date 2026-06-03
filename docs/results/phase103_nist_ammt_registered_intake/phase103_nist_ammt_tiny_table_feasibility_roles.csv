@@ -1,0 +1,6 @@
+role,required,scout_hits,sample_rows,sampled_text_rows,non_text_rows,member_names,header_lines,status
+coordinate_transform,true,0,0,0,0,,,missing_scout_candidate
+trigger_timing,true,0,0,0,0,,,missing_scout_candidate
+source_command_path,true,0,0,0,0,,,missing_scout_candidate
+target_observation,true,0,0,0,0,,,missing_scout_candidate
+split_key,false,0,0,0,0,,,missing_scout_candidate

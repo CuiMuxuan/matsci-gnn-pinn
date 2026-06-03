@@ -1,0 +1,45 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "intake_status": "metadata_ready_registration_evidence_pending",
+  "leakage_safe_split_manifest_ready": false,
+  "member_schema_sampler_status": "missing",
+  "missing_or_blocked_required_roles": [
+    "coordinate_transform",
+    "trigger_timing",
+    "source_command_path",
+    "target_observation"
+  ],
+  "next_action": "run Phase 103 schema scout after large ZIP downloads complete",
+  "optional_roles": [
+    "split_key"
+  ],
+  "phase104_baseline_smoke_allowed": false,
+  "phase105_model_mechanism_allowed": false,
+  "required_before_baseline_smoke": [
+    "tiny registered sample table generated",
+    "coordinate transform values applied to sample rows",
+    "trigger/timing join applied to sample rows",
+    "source command/path rows joined to target observations",
+    "leakage-safe split manifest generated",
+    "CPU baseline smoke plan validated without test-label route selection"
+  ],
+  "required_roles": [
+    "coordinate_transform",
+    "trigger_timing",
+    "source_command_path",
+    "target_observation"
+  ],
+  "required_roles_ready": false,
+  "role_statuses": {
+    "coordinate_transform": "missing_scout_candidate",
+    "source_command_path": "missing_scout_candidate",
+    "split_key": "missing_scout_candidate",
+    "target_observation": "missing_scout_candidate",
+    "trigger_timing": "missing_scout_candidate"
+  },
+  "schema_scout_status": "missing",
+  "status": "schema_scout_gate_required",
+  "tiny_registered_table_construction_allowed": false,
+  "tiny_registered_table_ready": false
+}
