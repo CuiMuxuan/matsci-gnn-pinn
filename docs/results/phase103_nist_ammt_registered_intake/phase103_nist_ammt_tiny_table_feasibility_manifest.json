@@ -6,14 +6,14 @@
   "gate": {
     "a100_80gb_request_now": false,
     "a100_training_allowed_now": false,
+    "deep_registration_probe_status": "target_binary_schema_ready_trigger_timing_missing",
     "intake_status": "metadata_ready_registration_evidence_pending",
     "leakage_safe_split_manifest_ready": false,
     "member_schema_sampler_status": "member_schema_samples_incomplete",
     "missing_or_blocked_required_roles": [
-      "trigger_timing",
-      "target_observation"
+      "trigger_timing"
     ],
-    "next_action": "finish large intake and schema scout before tiny-table feasibility review",
+    "next_action": "finish schema/deep registration review before tiny-table feasibility review",
     "optional_roles": [
       "split_key"
     ],
@@ -38,7 +38,7 @@
       "coordinate_transform": "ready_for_manual_join_review",
       "source_command_path": "ready_for_manual_join_review",
       "split_key": "ready_for_manual_join_review",
-      "target_observation": "missing_text_schema_sample",
+      "target_observation": "ready_for_manual_join_review_binary_schema",
       "trigger_timing": "missing_scout_candidate"
     },
     "schema_scout_status": "schema_candidates_incomplete",
@@ -47,6 +47,7 @@
     "tiny_registered_table_ready": false
   },
   "inputs": {
+    "deep_registration_probe_gate": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_deep_registration_probe_gate.json",
     "intake_gate": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_registered_intake_gate.json",
     "member_schema_sampler_gate": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_member_schema_sampler_gate.json",
     "member_schema_samples": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_member_schema_samples.csv",

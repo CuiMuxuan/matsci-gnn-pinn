@@ -1,0 +1,17 @@
+file_name,member_name,member_size,extension,format,width,height,bits_per_pixel,channels,header_status,target_observation_binary_schema_ready
+In-situ Meas Data.zip,In-situ Meas Data/Layer Camera/A0002.bmp,4001078,.bmp,bmp,2000,2000,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Layer Camera/A0247.bmp,4001078,.bmp,bmp,2000,2000,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Layer Camera/B0001.bmp,4001078,.bmp,bmp,2000,2000,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Layer Camera/B0246.bmp,4001078,.bmp,bmp,2000,2000,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Melt Pool Camera/MIA_L0001/frame00001.bmp,16438,.bmp,bmp,120,128,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Melt Pool Camera/MIA_L0001/frame02661.bmp,16438,.bmp,bmp,120,128,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Melt Pool Camera/MIA_L0002/frame00001.bmp,16438,.bmp,bmp,120,128,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Melt Pool Camera/MIA_L0002/frame02927.bmp,16438,.bmp,bmp,120,128,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Melt Pool Camera/MIA_L0003/frame00001.bmp,16438,.bmp,bmp,120,128,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Melt Pool Camera/MIA_L0003/frame06884.bmp,16438,.bmp,bmp,120,128,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Melt Pool Camera/MIA_L0004/frame00001.bmp,16438,.bmp,bmp,120,128,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Melt Pool Camera/MIA_L0004/frame02928.bmp,16438,.bmp,bmp,120,128,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Melt Pool Camera/MIA_L0006/frame00001.bmp,16438,.bmp,bmp,120,128,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Melt Pool Camera/MIA_L0006/frame04624.bmp,16438,.bmp,bmp,120,128,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Melt Pool Camera/MIA_L0007/frame00001.bmp,16438,.bmp,bmp,120,128,8,1,parsed_binary_header,true
+In-situ Meas Data.zip,In-situ Meas Data/Melt Pool Camera/MIA_L0007/frame03884.bmp,16438,.bmp,bmp,120,128,8,1,parsed_binary_header,true

@@ -1,0 +1,52 @@
+{
+  "counts": {
+    "sequence_group_rows": 28,
+    "target_binary_sample_rows": 16,
+    "timing_evidence_rows": 0,
+    "zip_member_rows": 100259
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "explicit_trigger_timing_ready": false,
+    "implicit_sequence_index_ready": true,
+    "missing_or_blocked_required_roles": [
+      "trigger_timing"
+    ],
+    "next_action": "find explicit trigger/timing join before constructing a tiny registered table",
+    "phase104_baseline_smoke_allowed": false,
+    "phase105_model_mechanism_allowed": false,
+    "required_before_baseline_smoke": [
+      "explicit trigger/timing join identified",
+      "target observation schema linked to source/path rows",
+      "tiny registered source/path-to-target sample table generated",
+      "leakage-safe split manifest generated",
+      "baseline smoke plan validated without test-label route selection"
+    ],
+    "sequence_group_rows": 28,
+    "status": "target_binary_schema_ready_trigger_timing_missing",
+    "target_binary_sample_rows": 16,
+    "target_observation_binary_schema_ready": true,
+    "timing_evidence_rows": 0
+  },
+  "inputs": {
+    "data_root": "data/raw/nist_ammt/mds2_2044"
+  },
+  "limits": {
+    "max_binary_header_bytes": 4096,
+    "max_members": 100000,
+    "max_samples_per_group": 2,
+    "max_target_groups": 8,
+    "max_text_scan_bytes": 65536,
+    "max_timing_rows": 32
+  },
+  "objective": "nist_ammt_deep_registration_probe_no_training",
+  "outputs": {
+    "gate_json": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_deep_registration_probe_gate.json",
+    "manifest": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_deep_registration_probe_manifest.json",
+    "sequence_groups": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_deep_sequence_groups.csv",
+    "target_binary_samples": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_deep_target_binary_samples.csv",
+    "timing_evidence": "docs/results/phase103_nist_ammt_registered_intake/phase103_nist_ammt_deep_timing_evidence.csv"
+  },
+  "phase": 103
+}
