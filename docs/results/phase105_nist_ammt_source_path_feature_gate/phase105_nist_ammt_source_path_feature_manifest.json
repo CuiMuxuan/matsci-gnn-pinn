@@ -1,0 +1,43 @@
+{
+  "counts": {
+    "candidate_feature_profiles": 0,
+    "feature_profiles": 6,
+    "metric_rows": 54,
+    "rows": 128
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "candidate_feature_profiles": [],
+    "min_validation_improvement": 0.005,
+    "next_action": "close deterministic source/path proxy features as diagnostic or refine registered targets",
+    "phase104_selected_target": "target_intensity_std",
+    "phase104_selected_test_rmse": 0.7130653969884204,
+    "phase104_selected_validation_method": "hist_gradient_boosting",
+    "phase104_selected_validation_rmse": 0.5594973535400991,
+    "phase105_cpu_smoke_allowed": false,
+    "phase105_model_training_allowed": false,
+    "selected_feature_profile": null,
+    "selected_test_rmse": null,
+    "selected_validation_method": null,
+    "selected_validation_rmse": null,
+    "status": "phase105_source_path_feature_gate_blocked_no_hgb_gain",
+    "target": "target_intensity_std"
+  },
+  "inputs": {
+    "field_table": "docs/results/phase104_nist_ammt_baseline_smoke/phase104_nist_ammt_tiny_numeric_field_table.csv",
+    "split_manifest": "docs/results/phase104_nist_ammt_baseline_smoke/phase104_nist_ammt_tiny_numeric_split_manifest.json",
+    "target_hardness_gate": "docs/results/phase104_nist_ammt_target_hardness_review/phase104_nist_ammt_target_hardness_review_gate.json"
+  },
+  "objective": "nist_ammt_source_path_heat_kernel_proxy_feature_gate_no_training",
+  "outputs": {
+    "augmented_field_table": "docs/results/phase105_nist_ammt_source_path_feature_gate/phase105_nist_ammt_source_path_augmented_field_table.csv",
+    "gate_json": "docs/results/phase105_nist_ammt_source_path_feature_gate/phase105_nist_ammt_source_path_feature_gate.json",
+    "manifest": "docs/results/phase105_nist_ammt_source_path_feature_gate/phase105_nist_ammt_source_path_feature_manifest.json",
+    "markdown_summary": "docs/results/phase105_nist_ammt_source_path_feature_gate/phase105_nist_ammt_source_path_feature_summary.md",
+    "metric_table": "docs/results/phase105_nist_ammt_source_path_feature_gate/phase105_nist_ammt_source_path_metric_table.csv",
+    "payloads": "docs/results/phase105_nist_ammt_source_path_feature_gate/phase105_nist_ammt_source_path_feature_payloads.json",
+    "review_table": "docs/results/phase105_nist_ammt_source_path_feature_gate/phase105_nist_ammt_source_path_feature_review_table.csv"
+  },
+  "phase": 105
+}

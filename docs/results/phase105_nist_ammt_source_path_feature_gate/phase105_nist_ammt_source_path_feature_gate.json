@@ -1,0 +1,19 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "candidate_feature_profiles": [],
+  "min_validation_improvement": 0.005,
+  "next_action": "close deterministic source/path proxy features as diagnostic or refine registered targets",
+  "phase104_selected_target": "target_intensity_std",
+  "phase104_selected_test_rmse": 0.7130653969884204,
+  "phase104_selected_validation_method": "hist_gradient_boosting",
+  "phase104_selected_validation_rmse": 0.5594973535400991,
+  "phase105_cpu_smoke_allowed": false,
+  "phase105_model_training_allowed": false,
+  "selected_feature_profile": null,
+  "selected_test_rmse": null,
+  "selected_validation_method": null,
+  "selected_validation_rmse": null,
+  "status": "phase105_source_path_feature_gate_blocked_no_hgb_gain",
+  "target": "target_intensity_std"
+}

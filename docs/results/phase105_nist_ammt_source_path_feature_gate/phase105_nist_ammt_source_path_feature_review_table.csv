@@ -1,0 +1,7 @@
+feature_profile,selected_validation_method,selected_validation_rmse,selected_test_rmse,selected_validation_hot_q90_rmse,selected_test_hot_q90_rmse,selected_validation_gradient_q90_rmse,selected_test_gradient_q90_rmse,guard_validation_rmse,guard_test_rmse,validation_improvement_over_guard,test_improvement_over_guard,validation_improves_guard,test_improves_guard,status,phase105_candidate
+base_guard_replay,hist_gradient_boosting,0.559497,0.713065,0.384056,0.580366,0.559497,0.713065,0.559497,0.713065,0.000000,0.000000,false,true,guard_replay_reference,false
+base_energy,hist_gradient_boosting,0.559497,0.713065,0.384056,0.580366,0.559497,0.713065,0.559497,0.713065,0.000000,0.000000,false,true,blocked_no_validation_gain_over_hgb_guard,false
+base_density,hist_gradient_boosting,0.559497,0.713065,0.384056,0.580366,0.559497,0.713065,0.559497,0.713065,0.000000,0.000000,false,true,blocked_no_validation_gain_over_hgb_guard,false
+base_green,hist_gradient_boosting,0.559497,0.713065,0.384056,0.580366,0.559497,0.713065,0.559497,0.713065,0.000000,0.000000,false,true,blocked_no_validation_gain_over_hgb_guard,false
+base_all_physics,hist_gradient_boosting,0.561350,0.712704,0.384169,0.581599,0.561350,0.712704,0.559497,0.713065,-0.001853,0.000361,false,true,blocked_no_validation_gain_over_hgb_guard,false
+physics_only,hist_gradient_boosting,0.584469,0.740072,0.429523,0.576398,0.584469,0.740072,0.559497,0.713065,-0.024971,-0.027007,false,false,blocked_no_validation_gain_over_hgb_guard,false
