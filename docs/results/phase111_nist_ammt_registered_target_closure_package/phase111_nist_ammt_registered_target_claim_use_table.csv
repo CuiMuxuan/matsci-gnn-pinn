@@ -1,0 +1,5 @@
+claim_id,phase,claim_text,claim_use,primary_metric,evidence_status
+nist_ammt_registered_target_intake_reproducible,103-106,NIST AMMT registered source/target intake and spatial target summaries are reproducible as no-training artifacts.,appendix_methods_or_data_diagnostic,artifact completeness and baseline tables,allowed_appendix_only
+spatial_target_gap_diagnostic,106,"Registered Layer Camera spatial summaries expose a baseline-visible target, but this does not open model training.",appendix_future_work_diagnostic,target_center_periphery_contrast HGB validation RMSE 1.174314,diagnostic_only
+sequence_target_branch_negative,108-110,Sequence/camera-pair target candidates collapse under focused shortcut review.,appendix_negative_result,Phase 109/110 shortcut gates,closed_negative
+main_paper_floor_remains_phase55_60_74,55/60/74,Main manuscript floor remains broad_process_v1 fixed-sampling spot_size three-seed evidence.,main_text_floor,existing Phase 55/60/74 route-guarded metrics,unchanged_positive_floor

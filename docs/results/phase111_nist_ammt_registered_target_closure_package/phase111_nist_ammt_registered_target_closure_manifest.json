@@ -1,0 +1,49 @@
+{
+  "counts": {
+    "a100_80gb_allowed_boundary_rows": 0,
+    "boundary_rows": 5,
+    "claim_rows": 4,
+    "evidence_rows": 5,
+    "training_allowed_boundary_rows": 0
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "appendix_diagnostic_package_ready": true,
+    "main_paper_floor": "Phase 55/60/74 broad_process_v1 fixed-sampling spot_size",
+    "main_paper_new_nist_ammt_claim_ready": false,
+    "next_action": "return to manuscript/appendix packaging or open a new registered target/data source; do not train on Phase 106-110 targets",
+    "nist_ammt_sequence_branch_closed": true,
+    "phase106_status": "phase106_spatial_target_gap_ready_focused_no_training_validation",
+    "phase107_status": "phase107_source_region_feature_gate_blocked_no_phase106_gain",
+    "phase108_status": "phase108_sequence_target_gap_ready_focused_review",
+    "phase109_status": "phase109_sequence_target_focused_review_closed_camera_shortcut",
+    "phase110_status": "phase110_layer_mean_target_review_closed_layer_time_shortcut",
+    "phase111_model_training_allowed": false,
+    "status": "phase111_registered_target_closure_package_ready_sequence_branch_closed"
+  },
+  "inputs": {
+    "phase106": "docs/results/phase106_nist_ammt_spatial_target_representation_gate/phase106_nist_ammt_spatial_target_gate.json",
+    "phase107": "docs/results/phase107_nist_ammt_source_region_feature_gate/phase107_nist_ammt_source_region_feature_gate.json",
+    "phase108": "docs/results/phase108_nist_ammt_sequence_target_gate/phase108_nist_ammt_sequence_target_gate.json",
+    "phase109": "docs/results/phase109_nist_ammt_sequence_target_focused_review_gate/phase109_nist_ammt_sequence_target_focused_review_gate.json",
+    "phase110": "docs/results/phase110_nist_ammt_layer_mean_target_review_gate/phase110_nist_ammt_layer_mean_target_review_gate.json"
+  },
+  "objective": "nist_ammt_registered_target_closure_package_no_training",
+  "outputs": {
+    "boundary_table": "docs/results/phase111_nist_ammt_registered_target_closure_package/phase111_nist_ammt_registered_target_boundary_table.csv",
+    "claim_use_table": "docs/results/phase111_nist_ammt_registered_target_closure_package/phase111_nist_ammt_registered_target_claim_use_table.csv",
+    "evidence_table": "docs/results/phase111_nist_ammt_registered_target_closure_package/phase111_nist_ammt_registered_target_evidence_table.csv",
+    "gate_json": "docs/results/phase111_nist_ammt_registered_target_closure_package/phase111_nist_ammt_registered_target_closure_gate.json",
+    "manifest": "docs/results/phase111_nist_ammt_registered_target_closure_package/phase111_nist_ammt_registered_target_closure_manifest.json",
+    "markdown_package": "docs/results/phase111_nist_ammt_registered_target_closure_package/phase111_nist_ammt_registered_target_closure_package.md"
+  },
+  "phase": 111,
+  "source_gates": {
+    "phase106": "phase106_spatial_target_gap_ready_focused_no_training_validation",
+    "phase107": "phase107_source_region_feature_gate_blocked_no_phase106_gain",
+    "phase108": "phase108_sequence_target_gap_ready_focused_review",
+    "phase109": "phase109_sequence_target_focused_review_closed_camera_shortcut",
+    "phase110": "phase110_layer_mean_target_review_closed_layer_time_shortcut"
+  }
+}

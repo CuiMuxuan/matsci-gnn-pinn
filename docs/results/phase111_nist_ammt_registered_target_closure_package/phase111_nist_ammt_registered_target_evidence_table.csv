@@ -1,0 +1,6 @@
+phase,status,target_or_profile,validation_metric,test_metric,interpretation
+106,phase106_spatial_target_gap_ready_focused_no_training_validation,target_center_periphery_contrast,1.174314,1.382751,spatial target gap found; opens review only
+107,phase107_source_region_feature_gate_blocked_no_phase106_gain,,,,source-region features did not clear Phase 106 guard
+108,phase108_sequence_target_gap_ready_focused_review,target_cp_camera_pair_delta,1.809450,1.809990,sequence target candidate required focused review
+109,phase109_sequence_target_focused_review_closed_camera_shortcut,target_cp_camera_pair_delta,1.809450,1.809990,selected sequence target closed as camera/layer-time shortcut
+110,phase110_layer_mean_target_review_closed_layer_time_shortcut,target_cp_layer_mean,0.940098,1.060691,alternate layer-mean target closed as layer/time shortcut

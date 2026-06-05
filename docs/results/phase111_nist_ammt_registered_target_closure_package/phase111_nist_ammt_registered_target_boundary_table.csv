@@ -1,0 +1,6 @@
+boundary_id,phase,blocked_item,reason,training_allowed,a100_80gb_request_allowed
+no_training_on_phase106_spatial_gap_alone,106,A100 model training on target_center_periphery_contrast,spatial target gap required mechanism review and Phase 107 source-region gate failed,false,false
+no_training_on_source_region_features,107,sampled source-region feature model branch,close sampled source-region path features as diagnostic; do not train,false,false
+no_training_on_camera_pair_delta,109,target_cp_camera_pair_delta,camera/layer-time shortcut matched full validation result,false,false
+no_training_on_layer_mean_sequence_target,110,target_cp_layer_mean,layer_time_only and layer_time_camera beat full validation; source-only had no independent gain,false,false
+nist_ammt_sequence_branch_closed,108-110,NIST AMMT sequence target branch,selected and alternate sequence targets collapsed under shortcut review,false,false
