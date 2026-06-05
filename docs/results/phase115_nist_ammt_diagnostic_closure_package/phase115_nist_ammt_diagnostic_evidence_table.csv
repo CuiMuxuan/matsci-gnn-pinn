@@ -1,0 +1,5 @@
+phase,branch,gate_status,row_count,selected_item,validation_metric,test_metric,closure_reason,claim_use
+111,registered_layer_camera_sequence,phase111_registered_target_closure_package_ready_sequence_branch_closed,,Phase 106-110 closure package,,,sequence branch already closed as diagnostic,appendix_diagnostic_package
+112,melt_pool_camera_target,phase112_melt_pool_target_gap_ready_focused_review,63,target_mp_temporal_mean_range,1.666605,2.822707,opened focused review only; training stayed locked,diagnostic_intermediate
+113,melt_pool_camera_target,phase113_melt_pool_focused_review_closed_validation_test_reversal,,target_mp_temporal_mean_range,1.666605,2.822707,all Phase 112 candidates reversed versus mean guard on test,appendix_negative_result
+114,gcode_strategy_source,phase114_gcode_strategy_source_gate_closed_no_guarded_baseline_gap,128,,,,no guarded baseline gap beyond XYPT guard and shortcut checks,appendix_negative_result

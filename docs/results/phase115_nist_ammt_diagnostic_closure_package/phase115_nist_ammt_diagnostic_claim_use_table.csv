@@ -1,0 +1,5 @@
+claim_id,branch,claim_text,claim_use,evidence_status
+nist_ammt_registered_intake_diagnostic_package,nist_ammt_all_closed_branches,"NIST AMMT registered Layer Camera, Melt Pool Camera, and G-code strategy probes are reproducible diagnostics.",appendix_methods_and_negative_results,allowed_appendix_only
+melt_pool_target_branch_closed,melt_pool_camera_target,Melt Pool Camera target summaries did not survive focused validation/test review.,appendix_negative_result,closed_negative
+gcode_strategy_source_branch_closed,gcode_strategy_source,G-code strategy features did not create a guarded modeling gap beyond the XYPT source guard.,appendix_negative_result,closed_negative
+main_paper_floor_unchanged,broad_process_v1_spot_size,The current paper-facing model floor remains Phase 55/60/74 broad_process_v1 fixed-sampling spot_size.,main_text_floor,unchanged_positive_floor

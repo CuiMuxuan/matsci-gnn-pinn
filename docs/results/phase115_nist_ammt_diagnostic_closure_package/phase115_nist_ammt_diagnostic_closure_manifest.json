@@ -1,0 +1,50 @@
+{
+  "counts": {
+    "a100_80gb_allowed_boundary_rows": 0,
+    "boundary_rows": 4,
+    "claim_rows": 4,
+    "evidence_rows": 4,
+    "phase113_review_rows": 8,
+    "phase114_review_rows": 4,
+    "training_allowed_boundary_rows": 0
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "all_training_locks_verified": true,
+    "main_paper_floor": "Phase 55/60/74 broad_process_v1 fixed-sampling spot_size",
+    "main_paper_new_nist_ammt_claim_ready": false,
+    "next_action": "do not train on Phase 112-114 NIST AMMT branches; return to manuscript consolidation or a fresh baseline-first data-source intake",
+    "phase111_registered_target_branch_closed": true,
+    "phase112_status": "phase112_melt_pool_target_gap_ready_focused_review",
+    "phase113_melt_pool_branch_closed": true,
+    "phase114_gcode_strategy_branch_closed": true,
+    "phase115_model_mechanism_allowed": false,
+    "phase115_model_training_allowed": false,
+    "status": "phase115_nist_ammt_diagnostic_closure_package_ready_all_new_branches_closed"
+  },
+  "inputs": {
+    "phase111_gate": "docs/results/phase111_nist_ammt_registered_target_closure_package/phase111_nist_ammt_registered_target_closure_gate.json",
+    "phase112_gate": "docs/results/phase112_nist_ammt_melt_pool_target_gate/phase112_nist_ammt_melt_pool_target_gate.json",
+    "phase113_gate": "docs/results/phase113_nist_ammt_melt_pool_focused_review/phase113_nist_ammt_melt_pool_focused_review_gate.json",
+    "phase113_review_table": "docs/results/phase113_nist_ammt_melt_pool_focused_review/phase113_nist_ammt_melt_pool_focused_review_table.csv",
+    "phase114_gate": "docs/results/phase114_nist_ammt_gcode_strategy_source_gate/phase114_nist_ammt_gcode_strategy_source_gate.json",
+    "phase114_review_table": "docs/results/phase114_nist_ammt_gcode_strategy_source_gate/phase114_nist_ammt_gcode_strategy_target_review_table.csv"
+  },
+  "objective": "nist_ammt_diagnostic_closure_package_no_training",
+  "outputs": {
+    "boundary_table": "docs/results/phase115_nist_ammt_diagnostic_closure_package/phase115_nist_ammt_diagnostic_boundary_table.csv",
+    "claim_use_table": "docs/results/phase115_nist_ammt_diagnostic_closure_package/phase115_nist_ammt_diagnostic_claim_use_table.csv",
+    "evidence_table": "docs/results/phase115_nist_ammt_diagnostic_closure_package/phase115_nist_ammt_diagnostic_evidence_table.csv",
+    "gate_json": "docs/results/phase115_nist_ammt_diagnostic_closure_package/phase115_nist_ammt_diagnostic_closure_gate.json",
+    "manifest": "docs/results/phase115_nist_ammt_diagnostic_closure_package/phase115_nist_ammt_diagnostic_closure_manifest.json",
+    "markdown_package": "docs/results/phase115_nist_ammt_diagnostic_closure_package/phase115_nist_ammt_diagnostic_closure_package.md"
+  },
+  "phase": 115,
+  "source_statuses": {
+    "phase111": "phase111_registered_target_closure_package_ready_sequence_branch_closed",
+    "phase112": "phase112_melt_pool_target_gap_ready_focused_review",
+    "phase113": "phase113_melt_pool_focused_review_closed_validation_test_reversal",
+    "phase114": "phase114_gcode_strategy_source_gate_closed_no_guarded_baseline_gap"
+  }
+}
