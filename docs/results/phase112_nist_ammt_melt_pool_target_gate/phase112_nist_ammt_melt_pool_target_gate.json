@@ -1,0 +1,50 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "candidate_targets": [
+    "target_mp_temporal_mean_range",
+    "target_mp_q90_mean",
+    "target_mp_max_range",
+    "target_mp_max_mean",
+    "target_mp_mean_mean"
+  ],
+  "empty_split_detected": false,
+  "layer_time_shortcut_target_count": 2,
+  "leakage_safe": true,
+  "melt_pool_layer_join_ready": true,
+  "melt_pool_row_build": {
+    "discover_from_zip": true,
+    "matched_row_count": 63,
+    "melt_pool_group_count": 249,
+    "source_minus_target_offset": 1,
+    "status": "melt_pool_rows_built"
+  },
+  "next_action": "review target_mp_temporal_mean_range and its source profile before any model training",
+  "phase103_join_status": "source_target_layer_join_ready_timing_not_absolute",
+  "phase112_focused_review_allowed": true,
+  "phase112_model_training_allowed": false,
+  "row_count": 63,
+  "selected_feature_profile": "source_geometry",
+  "selected_target": "target_mp_temporal_mean_range",
+  "selected_test_normalized_rmse": 0.3311776399201142,
+  "selected_test_rmse": 2.8227071700279938,
+  "selected_validation_method": "knn",
+  "selected_validation_normalized_rmse": 0.2430574731703384,
+  "selected_validation_rmse": 1.6666052321034104,
+  "split_counts": {
+    "test": 12,
+    "train": 39,
+    "val": 12
+  },
+  "status": "phase112_melt_pool_target_gap_ready_focused_review",
+  "target_columns": [
+    "target_mp_mean_mean",
+    "target_mp_mean_std",
+    "target_mp_q90_mean",
+    "target_mp_max_mean",
+    "target_mp_max_range",
+    "target_mp_temporal_mean_range",
+    "target_mp_early_late_mean_delta",
+    "target_mp_peak_frame_position"
+  ]
+}
