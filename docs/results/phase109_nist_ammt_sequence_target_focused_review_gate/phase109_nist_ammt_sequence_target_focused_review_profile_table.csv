@@ -1,0 +1,8 @@
+profile,feature_columns,selected_validation_method,selected_validation_rmse,selected_validation_normalized_rmse,selected_test_rmse,selected_test_normalized_rmse,validation_relative_gain_over_mean,test_relative_gain_over_mean,validation_delta_vs_full,test_delta_vs_full,shortcut_like,status
+mean_guard,,mean,1.940769,0.298729,1.846333,0.353727,0.000000,0.000000,0.131319,0.036343,false,reference_mean_guard
+full_phase108,"[""x"", ""y"", ""t"", ""source_p_mean"", ""source_p_nonzero_fraction"", ""source_x_range"", ""source_y_range"", ""target_camera_code""]",hist_gradient_boosting,1.809450,0.278516,1.809990,0.346764,0.067663,0.019684,0.000000,0.000000,false,reference_full_phase108_profile
+no_camera,"[""x"", ""y"", ""t"", ""source_p_mean"", ""source_p_nonzero_fraction"", ""source_x_range"", ""source_y_range""]",extra_trees,1.940769,0.298729,1.846333,0.353727,0.000000,0.000000,0.131319,0.036343,false,no_validation_gain_over_mean_guard
+camera_only,"[""target_camera_code""]",extra_trees,1.808794,0.278415,1.809849,0.346737,0.068001,0.019761,-0.000656,-0.000141,false,profile_has_independent_validation_signal
+source_only,"[""source_p_mean"", ""source_p_nonzero_fraction"", ""source_x_range"", ""source_y_range""]",extra_trees,1.940769,0.298729,1.846333,0.353727,0.000000,0.000000,0.131319,0.036343,false,no_validation_gain_over_mean_guard
+layer_time_camera,"[""t"", ""target_camera_code""]",hist_gradient_boosting,1.809450,0.278516,1.809990,0.346764,0.067663,0.019684,0.000000,0.000000,true,shortcut_matches_full_validation
+layer_time_only,"[""t""]",extra_trees,1.940769,0.298729,1.846333,0.353727,0.000000,0.000000,0.131319,0.036343,false,no_validation_gain_over_mean_guard

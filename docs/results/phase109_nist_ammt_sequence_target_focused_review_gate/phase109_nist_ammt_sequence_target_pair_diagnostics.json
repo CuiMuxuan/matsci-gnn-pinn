@@ -1,0 +1,17 @@
+{
+  "abs_delta_equals_layer_range_pair_count": 64,
+  "all_abs_delta_equals_layer_range": true,
+  "all_two_camera_pairs_antisymmetric": true,
+  "antisymmetric_pair_count": 64,
+  "camera_positive_fraction": {
+    "0": 0.609375,
+    "1": 0.390625
+  },
+  "camera_target_mean": {
+    "0": 0.49215924999999994,
+    "1": -0.49215924999999994
+  },
+  "layer_count": 64,
+  "row_count": 128,
+  "two_camera_layer_count": 64
+}
