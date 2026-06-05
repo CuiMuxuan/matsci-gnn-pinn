@@ -1,0 +1,13 @@
+{
+  "byte_size": 175052,
+  "dataset_name": "NLR/NREL Battery Failure Databank Revision 2",
+  "gate_status": "phase117_battery_failure_databank_gap_ready_focused_review",
+  "local_raw_path": "/root/matsci-gnn-pinn/data/raw/external/battery_failure_databank/battery-failure-databank-revision2-feb24.xlsx",
+  "public_reproducibility": "public_spreadsheet_download",
+  "registration_story": "single-row abuse-test metadata and outcome targets",
+  "selection_rule": "validation-only target/profile selection against mean and strong tabular baselines",
+  "sha256": "18a6b0ed0bbc881295ef9c832e4dd1937b653702ec6481834e3c6ee50c86a7c4",
+  "source_url": "https://www.nlr.gov/media/docs/libraries/tsdc/battery-failure-databank-revision2-feb24.xlsx?sfvrsn=7b7f89_1",
+  "target_family": "battery thermal-abuse energy and ejecta outcomes",
+  "training_policy": "no neural model training in Phase 117"
+}

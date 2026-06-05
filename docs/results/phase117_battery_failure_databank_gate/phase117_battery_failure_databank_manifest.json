@@ -1,0 +1,61 @@
+{
+  "counts": {
+    "candidate_targets": 5,
+    "field_rows": 365,
+    "metric_rows": 234,
+    "review_rows": 6,
+    "schema_rows": 43,
+    "source_rows": 365
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "candidate_targets": [
+      "Corrected-Total-Energy-Yield-kJ",
+      "Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ",
+      "Baseline-Total-Energy-Yield-kJ",
+      "Energy-Percent-Positive-Ejecta-%",
+      "Post-Test-Mass-Unrecovered-g"
+    ],
+    "group_count": 30,
+    "leakage_safe_group_split": true,
+    "next_action": "enter focused leakage/target review before any model mechanism",
+    "phase117_focused_review_allowed": true,
+    "phase117_model_mechanism_allowed": false,
+    "phase117_model_training_allowed": false,
+    "reviewed_targets": 6,
+    "row_count": 365,
+    "selected_method": "hist_gradient_boosting",
+    "selected_profile": "cell_trigger_safe",
+    "selected_target": "Post-Test-Mass-Unrecovered-g",
+    "selected_test_rmse": 2.5104060659928593,
+    "selected_validation_rmse": 4.3394071438560164,
+    "source_byte_size": 175052,
+    "source_name": "NLR/NREL Battery Failure Databank Revision 2",
+    "source_sha256": "18a6b0ed0bbc881295ef9c832e4dd1937b653702ec6481834e3c6ee50c86a7c4",
+    "source_url": "https://www.nlr.gov/media/docs/libraries/tsdc/battery-failure-databank-revision2-feb24.xlsx?sfvrsn=7b7f89_1",
+    "split_counts": {
+      "test": 54,
+      "train": 227,
+      "val": 84
+    },
+    "status": "phase117_battery_failure_databank_gap_ready_focused_review"
+  },
+  "inputs": {
+    "raw_xlsx": "data/raw/external/battery_failure_databank/battery-failure-databank-revision2-feb24.xlsx",
+    "source_url": "https://www.nlr.gov/media/docs/libraries/tsdc/battery-failure-databank-revision2-feb24.xlsx?sfvrsn=7b7f89_1"
+  },
+  "objective": "battery_failure_databank_external_baseline_first_gate",
+  "outputs": {
+    "data_card": "docs/results/phase117_battery_failure_databank_gate/phase117_battery_failure_databank_data_card.json",
+    "field_table": "docs/results/phase117_battery_failure_databank_gate/phase117_battery_failure_databank_field_table.csv",
+    "gate_json": "docs/results/phase117_battery_failure_databank_gate/phase117_battery_failure_databank_gate.json",
+    "manifest": "docs/results/phase117_battery_failure_databank_gate/phase117_battery_failure_databank_manifest.json",
+    "markdown": "docs/results/phase117_battery_failure_databank_gate/phase117_battery_failure_databank.md",
+    "metric_table": "docs/results/phase117_battery_failure_databank_gate/phase117_battery_failure_databank_metric_table.csv",
+    "schema_table": "docs/results/phase117_battery_failure_databank_gate/phase117_battery_failure_databank_schema_table.csv",
+    "split_manifest": "docs/results/phase117_battery_failure_databank_gate/phase117_battery_failure_databank_split_manifest.json",
+    "target_review_table": "docs/results/phase117_battery_failure_databank_gate/phase117_battery_failure_databank_target_review_table.csv"
+  },
+  "phase": 117
+}
