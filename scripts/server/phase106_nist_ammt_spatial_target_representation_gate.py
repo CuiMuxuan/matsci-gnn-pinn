@@ -419,24 +419,31 @@ def build_spatial_rows(
     max_pixels_per_target: int,
 ) -> list[dict[str, Any]]:
     cache: dict[tuple[str, str], dict[str, Any]] = {}
+    archives: dict[str, zipfile.ZipFile] = {}
     rows: list[dict[str, Any]] = []
-    for row in numeric_rows:
-        target_file = row.get("target_file_name") or "In-situ Meas Data.zip"
-        target_member = row["target_member_name"]
-        target_key = (target_file, target_member)
-        if target_key not in cache:
-            with zipfile.ZipFile(_zip_path(data_root, target_file)) as archive:
+    try:
+        for row in numeric_rows:
+            target_file = row.get("target_file_name") or "In-situ Meas Data.zip"
+            target_member = row["target_member_name"]
+            target_key = (target_file, target_member)
+            if target_key not in cache:
+                if target_file not in archives:
+                    archives[target_file] = zipfile.ZipFile(_zip_path(data_root, target_file))
+                archive = archives[target_file]
                 cache[target_key] = spatial_stats_from_bmp(
                     archive.read(target_member),
                     grid_size=grid_size,
                     max_pixels=max_pixels_per_target,
                 )
-        rows.append(
-            {
-                **row,
-                **cache[target_key],
-            }
-        )
+            rows.append(
+                {
+                    **row,
+                    **cache[target_key],
+                }
+            )
+    finally:
+        for archive in archives.values():
+            archive.close()
     _camera_pair_deltas(rows)
     return rows
 
