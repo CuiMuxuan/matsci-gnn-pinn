@@ -1,0 +1,7 @@
+feature_profile,selected_validation_method,selected_validation_rmse,selected_test_rmse,selected_validation_normalized_rmse,selected_test_normalized_rmse,guard_validation_rmse,guard_test_rmse,validation_improvement_over_guard,test_improvement_over_guard,validation_improves_guard,test_improves_guard,status,phase107_candidate
+phase106_guard_replay,hist_gradient_boosting,1.174314,1.382751,0.255740,0.246208,1.174314,1.382751,0.000000,0.000000,false,true,phase106_guard_replay_reference,false
+source_center_periphery,hist_gradient_boosting,1.174314,1.382751,0.255740,0.246208,1.174314,1.382751,0.000000,0.000000,false,true,blocked_no_validation_gain_over_phase106_guard,false
+source_grid_region,hist_gradient_boosting,1.015222,1.537635,0.221094,0.273786,1.174314,1.382751,0.159092,-0.154884,true,false,blocked_test_reversal_against_phase106_guard,false
+source_moment_drift,hist_gradient_boosting,1.186112,1.741800,0.258310,0.310139,1.174314,1.382751,-0.011798,-0.359049,false,false,blocked_no_validation_gain_over_phase106_guard,false
+source_region_all,hist_gradient_boosting,1.187121,1.704267,0.258529,0.303456,1.174314,1.382751,-0.012806,-0.321517,false,false,blocked_no_validation_gain_over_phase106_guard,false
+source_region_only,hist_gradient_boosting,1.227306,1.796377,0.267281,0.319857,1.174314,1.382751,-0.052992,-0.413626,false,false,blocked_no_validation_gain_over_phase106_guard,false
