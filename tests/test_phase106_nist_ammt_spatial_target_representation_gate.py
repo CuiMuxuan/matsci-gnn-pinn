@@ -187,6 +187,7 @@ def test_spatial_target_gate_writes_table_and_keeps_training_locked(tmp_path: Pa
         phase105_gate_path=_write_phase105_gate(tmp_path / "phase105_gate.json", closed=True),
         output_dir=tmp_path / "out",
         grid_size=2,
+        max_pixels_per_target=64,
         target_columns=(
             "target_center_periphery_contrast",
             "target_grid_mean_range",
@@ -238,6 +239,7 @@ def test_spatial_target_gate_blocks_when_phase105_not_closed(tmp_path: Path):
         phase105_gate_path=_write_phase105_gate(tmp_path / "phase105_gate.json", closed=False),
         output_dir=tmp_path / "out",
         grid_size=2,
+        max_pixels_per_target=64,
         target_columns=("target_grid_mean_range",),
         target_priority=("target_grid_mean_range",),
         min_validation_relative_improvement=0.0,

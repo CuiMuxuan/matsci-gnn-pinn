@@ -171,7 +171,7 @@ def _zip_path(data_root: Path, file_name: str) -> Path:
     return data_root / file_name
 
 
-def _bmp_pixels(payload: bytes) -> dict[str, Any]:
+def _bmp_pixels(payload: bytes, *, max_pixels: int) -> dict[str, Any]:
     if payload[:2] != b"BM":
         raise ValueError("Expected BMP target member")
     pixel_offset = struct.unpack_from("<I", payload, 10)[0]
@@ -182,16 +182,24 @@ def _bmp_pixels(payload: bytes) -> dict[str, Any]:
         raise ValueError(f"Only 8-bit BMP targets are supported, got {bits_per_pixel}")
     height = abs(height_raw)
     row_stride = ((width * bits_per_pixel + 31) // 32) * 4
+    stride = 1
+    if max_pixels > 0 and width * height > max_pixels:
+        stride = int(math.ceil(math.sqrt((width * height) / max_pixels)))
     pixels: list[list[int]] = []
     for row_index in range(height):
+        if row_index % stride != 0:
+            continue
         start = pixel_offset + row_index * row_stride
-        row = list(payload[start : start + width])
-        if len(row) != width:
+        raw_row = payload[start : start + width]
+        if len(raw_row) != width:
             raise ValueError("BMP row shorter than expected")
-        pixels.append(row)
+        pixels.append(list(raw_row[::stride]))
     return {
         "width": width,
         "height": height,
+        "sample_stride": stride,
+        "sampled_width": len(pixels[0]) if pixels else 0,
+        "sampled_height": len(pixels),
         "bits_per_pixel": bits_per_pixel,
         "pixels": pixels,
     }
@@ -257,12 +265,17 @@ def _gradient_values(pixels: list[list[int]]) -> list[float]:
     return values
 
 
-def _local_variances(pixels: list[list[int]], window_radius: int) -> list[float]:
+def _local_variances(
+    pixels: list[list[int]], window_radius: int, *, max_centers: int = 4096
+) -> list[float]:
     height = len(pixels)
     width = len(pixels[0]) if pixels else 0
+    center_stride = 1
+    if max_centers > 0 and width * height > max_centers:
+        center_stride = int(math.ceil(math.sqrt((width * height) / max_centers)))
     values: list[float] = []
-    for row in range(height):
-        for col in range(width):
+    for row in range(0, height, center_stride):
+        for col in range(0, width, center_stride):
             local = _window_values(
                 pixels,
                 row - window_radius,
@@ -274,11 +287,15 @@ def _local_variances(pixels: list[list[int]], window_radius: int) -> list[float]
     return values
 
 
-def spatial_stats_from_bmp(payload: bytes, *, grid_size: int = 4) -> dict[str, Any]:
-    parsed = _bmp_pixels(payload)
+def spatial_stats_from_bmp(
+    payload: bytes, *, grid_size: int = 4, max_pixels: int = 32768
+) -> dict[str, Any]:
+    parsed = _bmp_pixels(payload, max_pixels=max_pixels)
     pixels: list[list[int]] = parsed["pixels"]
     width = int(parsed["width"])
     height = int(parsed["height"])
+    sampled_width = int(parsed["sampled_width"])
+    sampled_height = int(parsed["sampled_height"])
     all_values = [float(value) for row in pixels for value in row]
     if not all_values:
         raise ValueError("BMP target has no pixels")
@@ -346,7 +363,10 @@ def spatial_stats_from_bmp(payload: bytes, *, grid_size: int = 4) -> dict[str, A
         "target_gradient_q90": _quantile(gradients, 0.9),
         "target_width": width,
         "target_height": height,
-        "target_pixel_count": len(all_values),
+        "target_sample_stride": int(parsed["sample_stride"]),
+        "target_sampled_width": sampled_width,
+        "target_sampled_height": sampled_height,
+        "target_sampled_pixel_count": len(all_values),
         "target_intensity_q90_recomputed": q90,
     }
 
@@ -396,6 +416,7 @@ def build_spatial_rows(
     numeric_rows: list[dict[str, str]],
     data_root: Path,
     grid_size: int,
+    max_pixels_per_target: int,
 ) -> list[dict[str, Any]]:
     cache: dict[tuple[str, str], dict[str, Any]] = {}
     rows: list[dict[str, Any]] = []
@@ -406,7 +427,9 @@ def build_spatial_rows(
         if target_key not in cache:
             with zipfile.ZipFile(_zip_path(data_root, target_file)) as archive:
                 cache[target_key] = spatial_stats_from_bmp(
-                    archive.read(target_member), grid_size=grid_size
+                    archive.read(target_member),
+                    grid_size=grid_size,
+                    max_pixels=max_pixels_per_target,
                 )
         rows.append(
             {
@@ -648,6 +671,7 @@ def build_package(
     phase105_gate_path: Path,
     output_dir: Path,
     grid_size: int,
+    max_pixels_per_target: int,
     target_columns: tuple[str, ...],
     target_priority: tuple[str, ...],
     min_validation_relative_improvement: float,
@@ -661,6 +685,7 @@ def build_package(
         numeric_rows=_read_csv(numeric_field_table),
         data_root=data_root,
         grid_size=grid_size,
+        max_pixels_per_target=max_pixels_per_target,
     )
     target_ranges = _target_ranges(spatial_rows, target_columns)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -743,6 +768,7 @@ def build_package(
         },
         "limits": {
             "grid_size": grid_size,
+            "max_pixels_per_target": max_pixels_per_target,
             "min_validation_relative_improvement": min_validation_relative_improvement,
             "min_unsolved_validation_normalized_rmse": min_unsolved_validation_normalized_rmse,
         },
@@ -804,6 +830,7 @@ def parse_args() -> argparse.Namespace:
         default=Path("docs/results/phase106_nist_ammt_spatial_target_representation_gate"),
     )
     parser.add_argument("--grid-size", type=int, default=4)
+    parser.add_argument("--max-pixels-per-target", type=int, default=65536)
     parser.add_argument("--target-columns", default=",".join(SPATIAL_TARGET_COLUMNS))
     parser.add_argument("--target-priority", default=",".join(TARGET_PRIORITY))
     parser.add_argument("--min-validation-relative-improvement", type=float, default=0.05)
@@ -837,6 +864,7 @@ def main() -> None:
         phase105_gate_path=phase105_gate,
         output_dir=output_dir,
         grid_size=args.grid_size,
+        max_pixels_per_target=args.max_pixels_per_target,
         target_columns=_split_csv_arg(args.target_columns),
         target_priority=_split_csv_arg(args.target_priority),
         min_validation_relative_improvement=args.min_validation_relative_improvement,
