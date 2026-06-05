@@ -1,0 +1,11 @@
+audit,status,severity,value,threshold,reason
+phase126_gate_status,pass,info,phase126_matbench_phonons_peak_ready_focused_review,phase126_matbench_phonons_peak_ready_focused_review,focused review requires a Phase 126 focused-review gate
+original_split_admissible_gain,pass,info,0.407323970,0.050000000,Phase 126 selected phonon target must preserve validation and test gain
+original_split_shortcut_dominance,block,blocking,dominant_element_shortcut,negative val RMSE > admissible * 1.02,"composition, chemistry-family, or dominant-element shortcuts must not dominate"
+original_split_nearest_neighbor_dominance,pass,info,371.868163979,nearest val RMSE > admissible * 1.02,nearest-neighbor composition/lattice identity control must not dominate
+original_split_target_distribution_balance,pass,info,0.479840714,0.750000000,registered split target mean/median/q90 shift must not dominate the interpretation
+original_split_near_duplicate_fraction,pass,info,0.000000000,0.600000000,registered split must not contain too many near-duplicate composition/lattice rows relative to train
+split_sensitivity_pass_rate,pass,info,1.000000000,0.750000000,"phonon target gain must survive deterministic chemistry, dominant-element, and lattice split perturbations"
+shortcut_dominant_split_count,block,blocking,1,0,"no viable split may be dominated by composition, chemistry-family, or dominant-element shortcuts"
+nearest_neighbor_dominant_split_count,pass,info,0,0,no viable split may be dominated by nearest-neighbor composition/lattice identity control
+target_distribution_imbalanced_split_count,block,blocking,5,0,"no viable split may have severe train/validation/test phonon target mean, median, or q90 imbalance"
