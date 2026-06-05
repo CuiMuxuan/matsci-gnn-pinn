@@ -1,0 +1,30 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "blocking_audit_rows": 2,
+  "blocking_audits": [
+    "original_split_negative_control_dominance",
+    "target_family_dependency"
+  ],
+  "dependency_risk_rows": 3,
+  "negative_control_dominant_splits": 3,
+  "next_action": "close the Phase 117 selected target as diagnostic; do not train",
+  "original_best_admissible_method": "hist_gradient_boosting",
+  "original_best_admissible_profile": "cell_trigger_safe",
+  "original_best_admissible_test_rmse": 2.472577417201163,
+  "original_best_admissible_val_rmse": 4.284535504950571,
+  "original_best_negative_method": "hist_gradient_boosting",
+  "original_best_negative_profile": "target_family_plus_shortcuts",
+  "passed_split_reviews": 8,
+  "phase117_selected_method": "hist_gradient_boosting",
+  "phase117_selected_profile": "cell_trigger_safe",
+  "phase117_status": "phase117_battery_failure_databank_gap_ready_focused_review",
+  "phase118_low_capacity_mechanism_design_allowed": false,
+  "phase118_model_mechanism_allowed": false,
+  "phase118_model_training_allowed": false,
+  "row_count": 365,
+  "selected_target": "Post-Test-Mass-Unrecovered-g",
+  "split_pass_rate": 0.8,
+  "status": "phase118_battery_failure_focused_review_closed_leakage_or_split_sensitivity",
+  "viable_split_reviews": 10
+}

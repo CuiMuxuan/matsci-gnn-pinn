@@ -1,0 +1,9 @@
+audit,status,severity,value,threshold,reason
+phase117_gate_status,pass,info,phase117_battery_failure_databank_gap_ready_focused_review,phase117_battery_failure_databank_gap_ready_focused_review,focused review requires a Phase 117 focused-review gate
+selected_target_post_test_family,risk,high,Post-Test-Mass-Unrecovered-g,not a post-test field,post-test targets require leakage and scaling review before mechanism design
+original_split_admissible_gain,pass,info,0.396664045,0.050000000,selected target must preserve admissible validation and test gain
+original_split_negative_control_dominance,block,blocking,target_family_plus_shortcuts,negative val RMSE > admissible * 1.02,target-family or shortcut negative controls must not dominate the selected safe profile
+split_sensitivity_pass_rate,pass,info,0.800000000,0.800000000,admissible validation/test gain must survive deterministic group split perturbations
+target_family_dependency,block,blocking,0.726987972,0.700000000,selected target must not be tightly coupled to other derived target-family columns
+pretest_mass_scaling_dependency,risk,medium,0.718488185,0.700000000,mass-derived targets can be dominated by pre-test cell inventory scaling
+cell_mass_only_scaling_control,pass,info,5.809880513,mass-only val RMSE > admissible * 1.02,mass-only scaling should not explain nearly all selected-target signal
