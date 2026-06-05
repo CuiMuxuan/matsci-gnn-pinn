@@ -1,0 +1,23 @@
+{
+  "byte_size": 4166214,
+  "dataset": "matbench_log_gvrh",
+  "input": "pymatgen Structure JSON",
+  "phase129_no_training": true,
+  "raw_path": "data/raw/external/matbench_log_gvrh/matbench_log_gvrh.json.gz",
+  "raw_row_count": 10987,
+  "row_count": 10985,
+  "sha256": "098af941f4c663270f1fe21abf20ffad6fb85ecbfcba5786ceac03983ac29da7",
+  "skipped_row_count": 2,
+  "skipped_row_examples": [
+    {
+      "reason": "Structure has no parseable species occupancy",
+      "row_index": 2073
+    },
+    {
+      "reason": "Structure has no parseable species occupancy",
+      "row_index": 3080
+    }
+  ],
+  "source_url": "https://ml.materialsproject.org/projects/matbench_log_gvrh.json.gz",
+  "target": "log10_g_vrh"
+}
