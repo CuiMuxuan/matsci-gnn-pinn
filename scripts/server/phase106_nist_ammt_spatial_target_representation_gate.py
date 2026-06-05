@@ -292,10 +292,10 @@ def spatial_stats_from_bmp(
 ) -> dict[str, Any]:
     parsed = _bmp_pixels(payload, max_pixels=max_pixels)
     pixels: list[list[int]] = parsed["pixels"]
-    width = int(parsed["width"])
-    height = int(parsed["height"])
-    sampled_width = int(parsed["sampled_width"])
-    sampled_height = int(parsed["sampled_height"])
+    original_width = int(parsed["width"])
+    original_height = int(parsed["height"])
+    width = int(parsed["sampled_width"])
+    height = int(parsed["sampled_height"])
     all_values = [float(value) for row in pixels for value in row]
     if not all_values:
         raise ValueError("BMP target has no pixels")
@@ -361,11 +361,11 @@ def spatial_stats_from_bmp(
         "target_local_variance_mean": _mean(local_variances),
         "target_gradient_mean": _mean(gradients),
         "target_gradient_q90": _quantile(gradients, 0.9),
-        "target_width": width,
-        "target_height": height,
+        "target_width": original_width,
+        "target_height": original_height,
         "target_sample_stride": int(parsed["sample_stride"]),
-        "target_sampled_width": sampled_width,
-        "target_sampled_height": sampled_height,
+        "target_sampled_width": width,
+        "target_sampled_height": height,
         "target_sampled_pixel_count": len(all_values),
         "target_intensity_q90_recomputed": q90,
     }

@@ -223,6 +223,22 @@ def test_spatial_target_gate_writes_table_and_keeps_training_locked(tmp_path: Pa
     assert len(metric_rows) == 3 * len(module.METHODS) * 3
 
 
+def test_spatial_stats_downsampling_uses_sampled_dimensions():
+    module = _load_module()
+    stats = module.spatial_stats_from_bmp(
+        _bmp(6, 6, list(range(36))),
+        grid_size=2,
+        max_pixels=4,
+    )
+
+    assert stats["target_width"] == 6
+    assert stats["target_height"] == 6
+    assert stats["target_sample_stride"] > 1
+    assert stats["target_sampled_width"] < stats["target_width"]
+    assert stats["target_sampled_height"] < stats["target_height"]
+    assert "target_center_periphery_contrast" in stats
+
+
 def test_spatial_target_gate_blocks_when_phase105_not_closed(tmp_path: Path):
     if importlib.util.find_spec("sklearn") is None:
         pytest.skip("scikit-learn is not installed in this environment")
