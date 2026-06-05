@@ -39,3 +39,8 @@ venv/
 3.10
 logs/
 
+# Local sync and experiment scratch artifacts
+*.bundle
+*.server-before-*
+phase*_w*_summary.json
+
