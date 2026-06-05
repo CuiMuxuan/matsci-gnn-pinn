@@ -1,0 +1,9 @@
+audit,status,severity,value,threshold,reason
+phase120_gate_status,pass,info,phase120_matbench_steels_gap_ready_focused_review,phase120_matbench_steels_gap_ready_focused_review,Phase 122 consumes the Phase 120 registered Matbench steels target table
+phase121_gate_status,pass,info,phase121_matbench_steels_focused_review_ready_low_capacity_mechanism_gate,phase121_matbench_steels_focused_review_ready_low_capacity_mechanism_gate,low-capacity mechanism design requires the Phase 121 focused-review pass
+phase121_mechanism_allowed,pass,info,true,true,Phase 121 must explicitly allow only no-training mechanism design
+phase121_training_lock,pass,info,false,false,Phase 122 must not inherit an open training flag
+low_capacity_feature_cap,pass,info,34,34,selected mechanism must remain a low-capacity linear descriptor set
+phase121_validation_guard_gain,block,blocking,-0.426470666,0.010000000,validation-only selected low-capacity mechanism must beat the Phase 121 ExtraTrees guard
+phase121_test_reversal_guard,block,blocking,1.360014190,1.050000000,validation gain must not reverse badly on the held-out test split
+phase120_selected_test_comparison,info,info,-117.944258597,reported only,"Phase 120 all-element ExtraTrees remains a secondary comparison, not the Phase 122 selection target"

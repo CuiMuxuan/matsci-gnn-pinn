@@ -1,0 +1,73 @@
+{
+  "counts": {
+    "audit_rows": 8,
+    "blocking_audit_rows": 2,
+    "candidate_rows": 224,
+    "coefficient_rows": 3584,
+    "feature_columns": 50,
+    "field_rows": 312,
+    "mechanism_schema_rows": 43,
+    "metric_rows": 672
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "blocking_audit_rows": 2,
+    "blocking_audits": [
+      "phase121_validation_guard_gain",
+      "phase121_test_reversal_guard"
+    ],
+    "candidate_rows": 224,
+    "next_action": "close the low-capacity mechanism branch as diagnostic; do not train",
+    "phase120_selected_method": "extra_trees",
+    "phase120_selected_profile": "all_element_fractions",
+    "phase120_selected_test_rmse": 189.0311781955006,
+    "phase120_selected_val_rmse": 312.8538940008948,
+    "phase120_status": "phase120_matbench_steels_gap_ready_focused_review",
+    "phase121_guard_method": "extra_trees",
+    "phase121_guard_profile": "minor_elements_only",
+    "phase121_guard_test_rmse": 225.71487786172105,
+    "phase121_guard_val_rmse": 252.8597565315508,
+    "phase121_status": "phase121_matbench_steels_focused_review_ready_low_capacity_mechanism_gate",
+    "phase122_focused_validation_allowed": false,
+    "phase122_low_capacity_mechanism_positive": false,
+    "phase122_model_mechanism_allowed": false,
+    "phase122_model_training_allowed": false,
+    "selected_low_capacity_alpha": 1.0,
+    "selected_low_capacity_feature_count": 34,
+    "selected_low_capacity_l1_ratio": null,
+    "selected_low_capacity_model": "lasso",
+    "selected_low_capacity_model_label": "lasso;alpha=1",
+    "selected_low_capacity_profile": "mechanism_interaction_full",
+    "selected_low_capacity_test_rmse": 306.9754367925652,
+    "selected_low_capacity_val_rmse": 360.69702538903186,
+    "selected_relative_val_gain_vs_phase121": -0.42647066633565145,
+    "selected_target": "yield_strength_mpa",
+    "selected_test_gain_vs_phase121": -81.26055893084413,
+    "selected_test_reversal_ratio_vs_phase121": 1.3600141900288314,
+    "selected_val_gain_vs_phase121": -107.83726885748106,
+    "status": "phase122_matbench_steels_low_capacity_mechanism_closed_no_guarded_gain"
+  },
+  "inputs": {
+    "field_table": "docs/results/phase120_matbench_steels_baseline_gate/phase120_matbench_steels_field_table.csv",
+    "phase120_dir": "docs/results/phase120_matbench_steels_baseline_gate",
+    "phase120_gate": "docs/results/phase120_matbench_steels_baseline_gate/phase120_matbench_steels_gate.json",
+    "phase121_dir": "docs/results/phase121_matbench_steels_focused_review",
+    "phase121_gate": "docs/results/phase121_matbench_steels_focused_review/phase121_matbench_steels_focused_review_gate.json",
+    "phase121_split_sensitivity_table": "docs/results/phase121_matbench_steels_focused_review/phase121_matbench_steels_split_sensitivity_table.csv",
+    "split_manifest": "docs/results/phase120_matbench_steels_baseline_gate/phase120_matbench_steels_split_manifest.json"
+  },
+  "objective": "matbench_steels_low_capacity_mechanism_gate_no_training",
+  "outputs": {
+    "gate_json": "docs/results/phase122_matbench_steels_low_capacity_mechanism_gate/phase122_matbench_steels_low_capacity_mechanism_gate.json",
+    "manifest": "docs/results/phase122_matbench_steels_low_capacity_mechanism_gate/phase122_matbench_steels_low_capacity_mechanism_manifest.json",
+    "markdown": "docs/results/phase122_matbench_steels_low_capacity_mechanism_gate/phase122_matbench_steels_low_capacity_mechanism.md",
+    "mechanism_audit_table": "docs/results/phase122_matbench_steels_low_capacity_mechanism_gate/phase122_matbench_steels_mechanism_audit_table.csv",
+    "mechanism_candidate_table": "docs/results/phase122_matbench_steels_low_capacity_mechanism_gate/phase122_matbench_steels_mechanism_candidate_table.csv",
+    "mechanism_coefficient_table": "docs/results/phase122_matbench_steels_low_capacity_mechanism_gate/phase122_matbench_steels_mechanism_coefficient_table.csv",
+    "mechanism_feature_table": "docs/results/phase122_matbench_steels_low_capacity_mechanism_gate/phase122_matbench_steels_mechanism_feature_table.csv",
+    "mechanism_metric_table": "docs/results/phase122_matbench_steels_low_capacity_mechanism_gate/phase122_matbench_steels_mechanism_metric_table.csv",
+    "mechanism_schema_table": "docs/results/phase122_matbench_steels_low_capacity_mechanism_gate/phase122_matbench_steels_mechanism_schema_table.csv"
+  },
+  "phase": 122
+}

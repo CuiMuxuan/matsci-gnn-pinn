@@ -1,0 +1,44 @@
+feature,source,mechanism_role,expression,profiles,min,max,std
+entropy_fraction,phase120,composition_descriptor,entropy_fraction,solid_solution_proxy;mechanism_compact,0.573012926,1.149431843,0.131214079
+frac_Al,phase120,element_fraction,normalized atomic fraction of Al,minor_element_linear;all_element_linear;precipitation_proxy;mechanism_compact;mechanism_interaction_full,0.000207859,0.037613880,0.007022409
+frac_C,phase120,element_fraction,normalized atomic fraction of C,minor_element_linear;all_element_linear;precipitation_proxy;mechanism_compact;mechanism_interaction_full,0.000000000,0.020105654,0.005088564
+frac_Co,phase120,element_fraction,normalized atomic fraction of Co,all_element_linear;transition_interaction_proxy;mechanism_compact;mechanism_interaction_full,0.000090278,0.189840155,0.059680630
+frac_Cr,phase120,element_fraction,normalized atomic fraction of Cr,all_element_linear;transition_interaction_proxy;mechanism_compact;mechanism_interaction_full,0.000102089,0.185965578,0.058074181
+frac_Fe,phase120,element_fraction,normalized atomic fraction of Fe,all_element_linear;mechanism_interaction_full,0.619964290,0.860333810,0.051466924
+frac_Mn,phase120,element_fraction,normalized atomic fraction of Mn,minor_element_linear;all_element_linear;transition_interaction_proxy;mechanism_interaction_full,0.000099041,0.030008576,0.003994275
+frac_Mo,phase120,element_fraction,normalized atomic fraction of Mo,all_element_linear;transition_interaction_proxy;mechanism_compact;mechanism_interaction_full,0.000111096,0.057567371,0.010889034
+frac_N,phase120,element_fraction,normalized atomic fraction of N,minor_element_linear;all_element_linear;precipitation_proxy;mechanism_interaction_full,0.000000000,0.006012675,0.000734344
+frac_Nb,phase120,element_fraction,normalized atomic fraction of Nb,minor_element_linear;all_element_linear;mechanism_compact;mechanism_interaction_full,0.000000000,0.015200958,0.000981953
+frac_Ni,phase120,element_fraction,normalized atomic fraction of Ni,all_element_linear;transition_interaction_proxy;mechanism_compact;mechanism_interaction_full,0.000094900,0.202840952,0.061217092
+frac_Si,phase120,element_fraction,normalized atomic fraction of Si,minor_element_linear;all_element_linear;mechanism_interaction_full,0.000196833,0.089978065,0.011228753
+frac_Ti,phase120,element_fraction,normalized atomic fraction of Ti,minor_element_linear;all_element_linear;precipitation_proxy;mechanism_compact;mechanism_interaction_full,0.000000000,0.029509422,0.006606512
+frac_V,phase120,element_fraction,normalized atomic fraction of V,minor_element_linear;all_element_linear;mechanism_compact;mechanism_interaction_full,0.000000000,0.047420101,0.004991944
+frac_W,phase120,element_fraction,normalized atomic fraction of W,minor_element_linear;all_element_linear;mechanism_compact;mechanism_interaction_full,0.000000000,0.029301055,0.002905537
+light_fraction,phase120,composition_descriptor,light_fraction,solid_solution_proxy,0.001248967,0.106083038,0.011952777
+non_fe_fraction,phase120,composition_descriptor,non_fe_fraction,solid_solution_proxy;mechanism_compact,0.139666190,0.380035710,0.051466924
+phase122_Al_x_Ti,phase122,aluminum_titanium_precipitation,frac_Al * frac_Ti,precipitation_proxy;mechanism_interaction_full,0.000000000,0.000231963,0.000032949
+phase122_C_x_Co,phase122,carbon_cobalt_interaction,frac_C * frac_Co,mechanism_interaction_full,0.000000000,0.002754038,0.000551292
+phase122_C_x_Cr,phase122,carbon_chromium_precipitation,frac_C * frac_Cr,precipitation_proxy;mechanism_interaction_full,0.000000000,0.002434134,0.000546947
+phase122_C_x_Mo,phase122,carbon_molybdenum_precipitation,frac_C * frac_Mo,precipitation_proxy;mechanism_interaction_full,0.000000000,0.001041379,0.000146937
+phase122_C_x_Nb,phase122,carbon_niobium_precipitation,frac_C * frac_Nb,precipitation_proxy;mechanism_interaction_full,0.000000000,0.000096412,0.000007728
+phase122_C_x_Ni,phase122,carbon_nickel_interaction,frac_C * frac_Ni,mechanism_interaction_full,0.000000000,0.002592997,0.000281374
+phase122_C_x_Ti,phase122,carbon_titanium_precipitation,frac_C * frac_Ti,precipitation_proxy;mechanism_interaction_full,0.000000000,0.000041622,0.000005572
+phase122_C_x_V,phase122,carbon_vanadium_precipitation,frac_C * frac_V,precipitation_proxy;mechanism_interaction_full,0.000000000,0.000397075,0.000049322
+phase122_C_x_W,phase122,carbon_tungsten_precipitation,frac_C * frac_W,precipitation_proxy;mechanism_interaction_full,0.000000000,0.000515717,0.000031368
+phase122_Co_x_Ni,phase122,cobalt_nickel_balance,frac_Co * frac_Ni,transition_interaction_proxy;mechanism_interaction_full,0.000000018,0.028028771,0.006393129
+phase122_Cr_x_Mo,phase122,chromium_molybdenum_carbide_family,frac_Cr * frac_Mo,transition_interaction_proxy;mechanism_interaction_full,0.000000011,0.007211684,0.001443480
+phase122_Cr_x_Ni,phase122,chromium_nickel_balance,frac_Cr * frac_Ni,transition_interaction_proxy;mechanism_interaction_full,0.000005442,0.012395669,0.004263177
+phase122_Mo_x_Ni,phase122,molybdenum_nickel_solid_solution,frac_Mo * frac_Ni,transition_interaction_proxy;mechanism_interaction_full,0.000000012,0.006700641,0.001437913
+phase122_Ni_x_Ti,phase122,nickel_titanium_precipitation,frac_Ni * frac_Ti,precipitation_proxy;mechanism_interaction_full,0.000000000,0.005136279,0.001117080
+phase122_carbide_former_fraction,phase122,carbide_former_proxy,frac_Cr + frac_Mo + frac_V + frac_Nb + frac_W + frac_Ti,solid_solution_proxy;precipitation_proxy;transition_interaction_proxy;mechanism_compact;mechanism_interaction_full,0.000374525,0.203023170,0.054908954
+phase122_entropy_non_fe_interaction,phase122,complexity_interaction,entropy_fraction * non_fe_fraction,,0.080303168,0.430808706,0.078656898
+phase122_gamma_carbide_interaction,phase122,element_family_interaction,gamma_stabilizer_fraction * carbide_former_fraction,mechanism_compact,0.000062888,0.033688396,0.006983461
+phase122_gamma_stabilizer_fraction,phase122,phase_balance_proxy,frac_Ni + frac_Co + frac_Mn + frac_N,solid_solution_proxy;transition_interaction_proxy;mechanism_compact;mechanism_interaction_full,0.002226051,0.338501502,0.065521859
+phase122_light_to_non_fe,phase122,bounded_ratio_proxy,"light_fraction / max(non_fe_fraction, 1e-12)",solid_solution_proxy,0.003909460,0.386641638,0.046588472
+phase122_light_transition_interaction,phase122,element_family_interaction,light_fraction * transition_fraction,mechanism_compact;mechanism_interaction_full,0.001206457,0.094811568,0.011140919
+phase122_precipitation_carbon_sum,phase122,precipitation_proxy,sum(frac_C * carbide-former fractions),precipitation_proxy;mechanism_compact;mechanism_interaction_full,0.000000000,0.003263972,0.000690308
+phase122_refractory_to_transition,phase122,bounded_ratio_proxy,"refractory_fraction / max(transition_fraction, 1e-12)",solid_solution_proxy,0.000284255,0.074095155,0.015100345
+phase122_refractory_transition_interaction,phase122,element_family_interaction,refractory_fraction * transition_fraction,mechanism_compact;mechanism_interaction_full,0.000243489,0.063184541,0.013537227
+phase122_solid_solution_weighted,phase122,solid_solution_proxy,1*frac_Ni + 0.9*frac_Co + 0.7*frac_Cr + 1.1*frac_Mo + 0.4*frac_Mn + 0.3*frac_Si,solid_solution_proxy;transition_interaction_proxy;mechanism_compact;mechanism_interaction_full,0.091348802,0.343331624,0.046446031
+refractory_fraction,phase120,composition_descriptor,refractory_fraction,solid_solution_proxy,0.000272436,0.068422718,0.014294366
+transition_fraction,phase120,composition_descriptor,transition_fraction,solid_solution_proxy,0.893748616,0.997444701,0.013716394
