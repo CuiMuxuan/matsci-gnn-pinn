@@ -1,0 +1,35 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "base_target": "target_center_periphery_contrast",
+  "candidate_targets": [
+    "target_cp_camera_pair_delta",
+    "target_cp_deviation_from_layer_mean",
+    "target_cp_layer_mean"
+  ],
+  "min_unsolved_validation_normalized_rmse": 0.2,
+  "min_validation_relative_improvement": 0.05,
+  "next_action": "review target_cp_camera_pair_delta sequence target representation before any model training",
+  "phase106_gate_status": "phase106_spatial_target_gap_ready_focused_no_training_validation",
+  "phase107_gate_status": "phase107_source_region_feature_gate_blocked_no_phase106_gain",
+  "phase108_focused_review_allowed": true,
+  "phase108_model_training_allowed": false,
+  "selected_target": "target_cp_camera_pair_delta",
+  "selected_test_normalized_rmse": 0.3467638087202142,
+  "selected_test_rmse": 1.8099898753521704,
+  "selected_validation_method": "hist_gradient_boosting",
+  "selected_validation_normalized_rmse": 0.2785161490415761,
+  "selected_validation_rmse": 1.8094503483181577,
+  "status": "phase108_sequence_target_gap_ready_focused_review",
+  "target_columns": [
+    "target_cp_layer_mean",
+    "target_cp_camera_pair_delta",
+    "target_cp_abs_camera_pair_delta",
+    "target_cp_layer_camera_range",
+    "target_cp_deviation_from_layer_mean",
+    "target_cp_prev_same_camera_delta",
+    "target_cp_prev_layer_mean_delta",
+    "target_cp_prev_same_camera_abs_delta",
+    "target_cp_prev_layer_mean_abs_delta"
+  ]
+}
