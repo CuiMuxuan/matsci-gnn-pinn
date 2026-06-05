@@ -1,0 +1,9 @@
+audit,status,severity,value,threshold,reason
+phase123_gate_status,pass,info,phase123_matbench_expt_gap_gap_ready_focused_review,phase123_matbench_expt_gap_gap_ready_focused_review,Phase 125 consumes the Phase 123 registered Matbench experimental-gap target table
+phase124_gate_status,pass,info,phase124_matbench_expt_gap_focused_review_ready_low_capacity_mechanism_gate,phase124_matbench_expt_gap_focused_review_ready_low_capacity_mechanism_gate,low-capacity mechanism design requires the Phase 124 focused-review pass
+phase124_mechanism_allowed,pass,info,true,true,Phase 124 must explicitly allow only no-training mechanism design
+phase124_training_lock,pass,info,false,false,Phase 125 must not inherit an open training flag
+low_capacity_feature_cap,pass,info,35,36,selected mechanism must remain a low-capacity linear descriptor set
+phase124_validation_guard_gain,block,blocking,-0.499547173,0.010000000,validation-only selected low-capacity mechanism must beat the Phase 124 ExtraTrees guard
+phase124_test_reversal_guard,block,blocking,1.297420118,1.050000000,validation gain must not reverse badly on the held-out test split
+phase124_nearest_neighbor_comparison,info,info,1.124283576,reported only,"Phase 124 nearest-neighbor identity control remains a shortcut comparison, not the Phase 125 selection target"
