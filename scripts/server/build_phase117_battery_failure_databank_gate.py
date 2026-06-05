@@ -198,7 +198,16 @@ def ensure_source_file(path: Path, *, source_url: str, force_download: bool = Fa
     path.parent.mkdir(parents=True, exist_ok=True)
     downloaded = False
     if force_download or not path.exists() or path.stat().st_size < EXPECTED_MIN_BYTES:
-        with urllib.request.urlopen(source_url, timeout=60) as response:
+        request = urllib.request.Request(
+            source_url,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/125.0 Safari/537.36"
+                )
+            },
+        )
+        with urllib.request.urlopen(request, timeout=60) as response:
             payload = response.read()
         path.write_bytes(payload)
         downloaded = True
