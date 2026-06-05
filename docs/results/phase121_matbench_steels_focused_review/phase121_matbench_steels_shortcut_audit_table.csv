@@ -1,0 +1,6 @@
+audit,status,severity,value,threshold,reason
+phase120_gate_status,pass,info,phase120_matbench_steels_gap_ready_focused_review,phase120_matbench_steels_gap_ready_focused_review,focused review requires a Phase 120 focused-review gate
+original_split_admissible_gain,pass,info,0.500294385,0.050000000,Phase 120 selected composition target must preserve validation and test gain
+original_split_shortcut_dominance,pass,info,alloy_family_shortcut,negative val RMSE > admissible * 1.02,composition identity or family shortcuts must not dominate the selected profile
+split_sensitivity_pass_rate,pass,info,0.800000000,0.800000000,composition-profile gain must survive deterministic alloy-family and binned split perturbations
+shortcut_dominant_split_count,pass,info,0,0,no viable split may be dominated by composition identity or family shortcut profiles

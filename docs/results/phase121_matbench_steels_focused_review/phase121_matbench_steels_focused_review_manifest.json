@@ -1,0 +1,51 @@
+{
+  "counts": {
+    "audit_rows": 5,
+    "blocking_audit_rows": 0,
+    "profile_rows": 135,
+    "split_reviews": 9,
+    "viable_split_reviews": 5
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "blocking_audit_rows": 0,
+    "blocking_audits": [],
+    "next_action": "design a separate no-training low-capacity mechanism gate; keep model training closed",
+    "original_best_admissible_method": "extra_trees",
+    "original_best_admissible_profile": "minor_elements_only",
+    "original_best_admissible_test_rmse": 225.71487786172105,
+    "original_best_admissible_val_rmse": 252.8597565315508,
+    "original_best_negative_method": "hist_gradient_boosting",
+    "original_best_negative_profile": "alloy_family_shortcut",
+    "passed_split_reviews": 4,
+    "phase120_selected_method": "extra_trees",
+    "phase120_selected_profile": "all_element_fractions",
+    "phase120_status": "phase120_matbench_steels_gap_ready_focused_review",
+    "phase121_low_capacity_mechanism_design_allowed": true,
+    "phase121_model_mechanism_allowed": true,
+    "phase121_model_training_allowed": false,
+    "selected_target": "yield_strength_mpa",
+    "shortcut_dominant_splits": 0,
+    "split_pass_rate": 0.8,
+    "status": "phase121_matbench_steels_focused_review_ready_low_capacity_mechanism_gate",
+    "viable_split_reviews": 5
+  },
+  "inputs": {
+    "field_table": "docs/results/phase120_matbench_steels_baseline_gate/phase120_matbench_steels_field_table.csv",
+    "phase120_dir": "docs/results/phase120_matbench_steels_baseline_gate",
+    "phase120_gate": "docs/results/phase120_matbench_steels_baseline_gate/phase120_matbench_steels_gate.json",
+    "split_manifest": "docs/results/phase120_matbench_steels_baseline_gate/phase120_matbench_steels_split_manifest.json"
+  },
+  "objective": "matbench_steels_focused_split_shortcut_review_no_training",
+  "outputs": {
+    "gate_json": "docs/results/phase121_matbench_steels_focused_review/phase121_matbench_steels_focused_review_gate.json",
+    "manifest": "docs/results/phase121_matbench_steels_focused_review/phase121_matbench_steels_focused_review_manifest.json",
+    "markdown": "docs/results/phase121_matbench_steels_focused_review/phase121_matbench_steels_focused_review.md",
+    "profile_table": "docs/results/phase121_matbench_steels_focused_review/phase121_matbench_steels_focused_profile_table.csv",
+    "shortcut_audit_table": "docs/results/phase121_matbench_steels_focused_review/phase121_matbench_steels_shortcut_audit_table.csv",
+    "split_review_manifest": "docs/results/phase121_matbench_steels_focused_review/phase121_matbench_steels_split_review_manifest.json",
+    "split_sensitivity_table": "docs/results/phase121_matbench_steels_focused_review/phase121_matbench_steels_split_sensitivity_table.csv"
+  },
+  "phase": 121
+}
