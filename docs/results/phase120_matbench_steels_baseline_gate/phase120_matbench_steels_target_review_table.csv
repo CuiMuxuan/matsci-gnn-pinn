@@ -1,0 +1,2 @@
+target,row_count,train_rows,val_rows,test_rows,mean_val_rmse,mean_test_rmse,best_profile,best_method,best_val_rmse,best_test_rmse,val_gain_vs_mean,test_gain_vs_mean,shortcut_profile_val_rmse,shortcut_profile_test_rmse,phase120_candidate,status,reason
+yield_strength_mpa,312,244,32,36,506.017441374,370.151296272,all_element_fractions,extra_trees,312.853894001,189.031178196,193.163547373,181.120118076,488.625736761,423.743052958,true,phase120_candidate_gap_ready_focused_review,composition profile beats mean and preserves test gain
