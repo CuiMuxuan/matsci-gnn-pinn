@@ -1,0 +1,3 @@
+boundary_id,blocked_item,reason,phase113_model_mechanism_allowed,phase113_model_training_allowed,a100_training_allowed_now,a100_80gb_request_now
+phase113_no_training_on_phase112_candidates,Phase 112 melt-pool selected/candidate targets,"validation/test reversal targets: target_mp_mean_mean, target_mp_q90_mean, target_mp_max_mean, target_mp_max_range, target_mp_temporal_mean_range",false,false,false,false
+phase113_no_a100_80gb_request,A100-SXM4-80GB escalation,no model mechanism or seed-positive branch is open,false,false,false,false

@@ -1,0 +1,35 @@
+{
+  "counts": {
+    "boundary_rows": 2,
+    "mechanism_allowed_targets": 0,
+    "review_rows": 8
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "mechanism_allowed_targets": [],
+    "next_action": "close melt-pool target branch as diagnostic; do not train",
+    "phase112_mean_test_rmse_for_selected": 2.485288,
+    "phase112_selected_target": "target_mp_temporal_mean_range",
+    "phase112_selected_test_rmse": 2.8227071700279938,
+    "phase112_selected_validation_rmse": 1.6666052321034104,
+    "phase112_status": "phase112_melt_pool_target_gap_ready_focused_review",
+    "phase113_model_mechanism_allowed": false,
+    "phase113_model_training_allowed": false,
+    "status": "phase113_melt_pool_focused_review_closed_validation_test_reversal",
+    "validation_test_reversal_target_count": 5
+  },
+  "inputs": {
+    "phase112_gate": "docs/results/phase112_nist_ammt_melt_pool_target_gate/phase112_nist_ammt_melt_pool_target_gate.json",
+    "phase112_review_table": "docs/results/phase112_nist_ammt_melt_pool_target_gate/phase112_nist_ammt_melt_pool_target_review_table.csv"
+  },
+  "objective": "nist_ammt_melt_pool_focused_review_no_training",
+  "outputs": {
+    "boundary_table": "docs/results/phase113_nist_ammt_melt_pool_focused_review/phase113_nist_ammt_melt_pool_boundary_table.csv",
+    "gate_json": "docs/results/phase113_nist_ammt_melt_pool_focused_review/phase113_nist_ammt_melt_pool_focused_review_gate.json",
+    "manifest": "docs/results/phase113_nist_ammt_melt_pool_focused_review/phase113_nist_ammt_melt_pool_focused_review_manifest.json",
+    "markdown_summary": "docs/results/phase113_nist_ammt_melt_pool_focused_review/phase113_nist_ammt_melt_pool_focused_review.md",
+    "review_table": "docs/results/phase113_nist_ammt_melt_pool_focused_review/phase113_nist_ammt_melt_pool_focused_review_table.csv"
+  },
+  "phase": 113
+}
