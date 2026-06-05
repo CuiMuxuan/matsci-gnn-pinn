@@ -1,0 +1,37 @@
+target,dependency_column,dependency_family,non_missing_pairs,pearson_corr,abs_pearson_corr,status,reason
+Corrected-Total-Energy-Yield-kJ,Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,target_family,365,0.996384804,0.996384804,high_dependency_risk,absolute correlation exceeds dependency risk threshold
+Corrected-Total-Energy-Yield-kJ,Baseline-Total-Energy-Yield-kJ,target_family,365,0.993629990,0.993629990,high_dependency_risk,absolute correlation exceeds dependency risk threshold
+Corrected-Total-Energy-Yield-kJ,Energy-Percent-Positive-Ejecta-%,target_family,364,0.217128448,0.217128448,reviewed,below dependency risk threshold
+Corrected-Total-Energy-Yield-kJ,Energy-Percent-Negative-Ejecta-%,target_family,364,0.298874037,0.298874037,reviewed,below dependency risk threshold
+Corrected-Total-Energy-Yield-kJ,Pre-Test-Cell-Mass-g,safe_feature_scaling,365,0.494383966,0.494383966,reviewed,below dependency risk threshold
+Corrected-Total-Energy-Yield-kJ,Cell-Energy-Wh,safe_feature_scaling,365,0.682634663,0.682634663,reviewed,below dependency risk threshold
+Corrected-Total-Energy-Yield-kJ,Energy-Applied-to-Trigger-kJ,safe_feature_scaling,310,0.256993877,0.256993877,reviewed,below dependency risk threshold
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,Corrected-Total-Energy-Yield-kJ,target_family,365,0.996384804,0.996384804,high_dependency_risk,absolute correlation exceeds dependency risk threshold
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,Baseline-Total-Energy-Yield-kJ,target_family,365,0.995247282,0.995247282,high_dependency_risk,absolute correlation exceeds dependency risk threshold
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,Energy-Percent-Positive-Ejecta-%,target_family,364,0.186386304,0.186386304,reviewed,below dependency risk threshold
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,Energy-Percent-Negative-Ejecta-%,target_family,364,0.325397927,0.325397927,reviewed,below dependency risk threshold
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,Pre-Test-Cell-Mass-g,safe_feature_scaling,365,0.511387928,0.511387928,reviewed,below dependency risk threshold
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,Cell-Energy-Wh,safe_feature_scaling,365,0.696609110,0.696609110,reviewed,below dependency risk threshold
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,Energy-Applied-to-Trigger-kJ,safe_feature_scaling,310,0.254989153,0.254989153,reviewed,below dependency risk threshold
+Baseline-Total-Energy-Yield-kJ,Corrected-Total-Energy-Yield-kJ,target_family,365,0.993629990,0.993629990,high_dependency_risk,absolute correlation exceeds dependency risk threshold
+Baseline-Total-Energy-Yield-kJ,Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,target_family,365,0.995247282,0.995247282,high_dependency_risk,absolute correlation exceeds dependency risk threshold
+Baseline-Total-Energy-Yield-kJ,Energy-Percent-Positive-Ejecta-%,target_family,364,0.181821617,0.181821617,reviewed,below dependency risk threshold
+Baseline-Total-Energy-Yield-kJ,Energy-Percent-Negative-Ejecta-%,target_family,364,0.329870060,0.329870060,reviewed,below dependency risk threshold
+Baseline-Total-Energy-Yield-kJ,Pre-Test-Cell-Mass-g,safe_feature_scaling,365,0.456091763,0.456091763,reviewed,below dependency risk threshold
+Baseline-Total-Energy-Yield-kJ,Cell-Energy-Wh,safe_feature_scaling,365,0.686565909,0.686565909,reviewed,below dependency risk threshold
+Baseline-Total-Energy-Yield-kJ,Energy-Applied-to-Trigger-kJ,safe_feature_scaling,310,0.205803091,0.205803091,reviewed,below dependency risk threshold
+Energy-Percent-Positive-Ejecta-%,Corrected-Total-Energy-Yield-kJ,target_family,364,0.217128448,0.217128448,reviewed,below dependency risk threshold
+Energy-Percent-Positive-Ejecta-%,Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,target_family,364,0.186386304,0.186386304,reviewed,below dependency risk threshold
+Energy-Percent-Positive-Ejecta-%,Baseline-Total-Energy-Yield-kJ,target_family,364,0.181821617,0.181821617,reviewed,below dependency risk threshold
+Energy-Percent-Positive-Ejecta-%,Energy-Percent-Negative-Ejecta-%,target_family,364,-0.620969924,0.620969924,reviewed,below dependency risk threshold
+Energy-Percent-Positive-Ejecta-%,Pre-Test-Cell-Mass-g,safe_feature_scaling,364,-0.063939463,0.063939463,reviewed,below dependency risk threshold
+Energy-Percent-Positive-Ejecta-%,Cell-Energy-Wh,safe_feature_scaling,364,-0.252093524,0.252093524,reviewed,below dependency risk threshold
+Energy-Percent-Positive-Ejecta-%,Energy-Applied-to-Trigger-kJ,safe_feature_scaling,309,0.309232128,0.309232128,reviewed,below dependency risk threshold
+Post-Test-Mass-Unrecovered-g,Corrected-Total-Energy-Yield-kJ,target_family,365,0.726987972,0.726987972,high_dependency_risk,absolute correlation exceeds dependency risk threshold
+Post-Test-Mass-Unrecovered-g,Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,target_family,365,0.723008301,0.723008301,high_dependency_risk,absolute correlation exceeds dependency risk threshold
+Post-Test-Mass-Unrecovered-g,Baseline-Total-Energy-Yield-kJ,target_family,365,0.687146415,0.687146415,reviewed,below dependency risk threshold
+Post-Test-Mass-Unrecovered-g,Energy-Percent-Positive-Ejecta-%,target_family,364,0.262053800,0.262053800,reviewed,below dependency risk threshold
+Post-Test-Mass-Unrecovered-g,Energy-Percent-Negative-Ejecta-%,target_family,364,0.117085513,0.117085513,reviewed,below dependency risk threshold
+Post-Test-Mass-Unrecovered-g,Pre-Test-Cell-Mass-g,safe_feature_scaling,365,0.718488185,0.718488185,high_dependency_risk,absolute correlation exceeds dependency risk threshold
+Post-Test-Mass-Unrecovered-g,Cell-Energy-Wh,safe_feature_scaling,365,0.545044125,0.545044125,reviewed,below dependency risk threshold
+Post-Test-Mass-Unrecovered-g,Energy-Applied-to-Trigger-kJ,safe_feature_scaling,310,0.530547604,0.530547604,reviewed,below dependency risk threshold

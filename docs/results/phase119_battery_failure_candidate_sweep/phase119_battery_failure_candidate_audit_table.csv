@@ -1,0 +1,41 @@
+target,audit,status,severity,value,threshold,reason
+Corrected-Total-Energy-Yield-kJ,phase117_gate_status,pass,info,phase117_battery_failure_databank_gap_ready_focused_review,phase117_battery_failure_databank_gap_ready_focused_review,focused review requires a Phase 117 focused-review gate
+Corrected-Total-Energy-Yield-kJ,selected_target_post_test_family,pass,info,Corrected-Total-Energy-Yield-kJ,not a post-test field,post-test targets require leakage and scaling review before mechanism design
+Corrected-Total-Energy-Yield-kJ,original_split_admissible_gain,pass,info,0.507447735,0.050000000,selected target must preserve admissible validation and test gain
+Corrected-Total-Energy-Yield-kJ,original_split_negative_control_dominance,block,blocking,target_family_leakage,negative val RMSE > admissible * 1.02,target-family or shortcut negative controls must not dominate the selected safe profile
+Corrected-Total-Energy-Yield-kJ,split_sensitivity_pass_rate,pass,info,1.000000000,0.800000000,admissible validation/test gain must survive deterministic group split perturbations
+Corrected-Total-Energy-Yield-kJ,target_family_dependency,block,blocking,0.996384804,0.700000000,selected target must not be tightly coupled to other derived target-family columns
+Corrected-Total-Energy-Yield-kJ,pretest_mass_scaling_dependency,pass,info,0.494383966,0.700000000,mass-derived targets can be dominated by pre-test cell inventory scaling
+Corrected-Total-Energy-Yield-kJ,cell_mass_only_scaling_control,pass,info,25.583561095,mass-only val RMSE > admissible * 1.02,mass-only scaling should not explain nearly all selected-target signal
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,phase117_gate_status,pass,info,phase117_battery_failure_databank_gap_ready_focused_review,phase117_battery_failure_databank_gap_ready_focused_review,focused review requires a Phase 117 focused-review gate
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,selected_target_post_test_family,pass,info,Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,not a post-test field,post-test targets require leakage and scaling review before mechanism design
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,original_split_admissible_gain,pass,info,0.533828284,0.050000000,selected target must preserve admissible validation and test gain
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,original_split_negative_control_dominance,block,blocking,target_family_leakage,negative val RMSE > admissible * 1.02,target-family or shortcut negative controls must not dominate the selected safe profile
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,split_sensitivity_pass_rate,pass,info,1.000000000,0.800000000,admissible validation/test gain must survive deterministic group split perturbations
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,target_family_dependency,block,blocking,0.996384804,0.700000000,selected target must not be tightly coupled to other derived target-family columns
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,pretest_mass_scaling_dependency,pass,info,0.511387928,0.700000000,mass-derived targets can be dominated by pre-test cell inventory scaling
+Baseline-Plus-Heat-Loss-Total-Energy-Yield-kJ,cell_mass_only_scaling_control,pass,info,24.314916043,mass-only val RMSE > admissible * 1.02,mass-only scaling should not explain nearly all selected-target signal
+Baseline-Total-Energy-Yield-kJ,phase117_gate_status,pass,info,phase117_battery_failure_databank_gap_ready_focused_review,phase117_battery_failure_databank_gap_ready_focused_review,focused review requires a Phase 117 focused-review gate
+Baseline-Total-Energy-Yield-kJ,selected_target_post_test_family,pass,info,Baseline-Total-Energy-Yield-kJ,not a post-test field,post-test targets require leakage and scaling review before mechanism design
+Baseline-Total-Energy-Yield-kJ,original_split_admissible_gain,pass,info,0.505619946,0.050000000,selected target must preserve admissible validation and test gain
+Baseline-Total-Energy-Yield-kJ,original_split_negative_control_dominance,block,blocking,target_family_leakage,negative val RMSE > admissible * 1.02,target-family or shortcut negative controls must not dominate the selected safe profile
+Baseline-Total-Energy-Yield-kJ,split_sensitivity_pass_rate,pass,info,1.000000000,0.800000000,admissible validation/test gain must survive deterministic group split perturbations
+Baseline-Total-Energy-Yield-kJ,target_family_dependency,block,blocking,0.995247282,0.700000000,selected target must not be tightly coupled to other derived target-family columns
+Baseline-Total-Energy-Yield-kJ,pretest_mass_scaling_dependency,pass,info,0.456091763,0.700000000,mass-derived targets can be dominated by pre-test cell inventory scaling
+Baseline-Total-Energy-Yield-kJ,cell_mass_only_scaling_control,pass,info,23.478859711,mass-only val RMSE > admissible * 1.02,mass-only scaling should not explain nearly all selected-target signal
+Energy-Percent-Positive-Ejecta-%,phase117_gate_status,pass,info,phase117_battery_failure_databank_gap_ready_focused_review,phase117_battery_failure_databank_gap_ready_focused_review,focused review requires a Phase 117 focused-review gate
+Energy-Percent-Positive-Ejecta-%,selected_target_post_test_family,pass,info,Energy-Percent-Positive-Ejecta-%,not a post-test field,post-test targets require leakage and scaling review before mechanism design
+Energy-Percent-Positive-Ejecta-%,original_split_admissible_gain,pass,info,0.141520345,0.050000000,selected target must preserve admissible validation and test gain
+Energy-Percent-Positive-Ejecta-%,original_split_negative_control_dominance,block,blocking,target_family_leakage,negative val RMSE > admissible * 1.02,target-family or shortcut negative controls must not dominate the selected safe profile
+Energy-Percent-Positive-Ejecta-%,split_sensitivity_pass_rate,block,blocking,0.400000000,0.800000000,admissible validation/test gain must survive deterministic group split perturbations
+Energy-Percent-Positive-Ejecta-%,target_family_dependency,pass,info,0.620969924,0.700000000,selected target must not be tightly coupled to other derived target-family columns
+Energy-Percent-Positive-Ejecta-%,pretest_mass_scaling_dependency,pass,info,0.063939463,0.700000000,mass-derived targets can be dominated by pre-test cell inventory scaling
+Energy-Percent-Positive-Ejecta-%,cell_mass_only_scaling_control,pass,info,28.246316315,mass-only val RMSE > admissible * 1.02,mass-only scaling should not explain nearly all selected-target signal
+Post-Test-Mass-Unrecovered-g,phase117_gate_status,pass,info,phase117_battery_failure_databank_gap_ready_focused_review,phase117_battery_failure_databank_gap_ready_focused_review,focused review requires a Phase 117 focused-review gate
+Post-Test-Mass-Unrecovered-g,selected_target_post_test_family,risk,high,Post-Test-Mass-Unrecovered-g,not a post-test field,post-test targets require leakage and scaling review before mechanism design
+Post-Test-Mass-Unrecovered-g,original_split_admissible_gain,pass,info,0.396664045,0.050000000,selected target must preserve admissible validation and test gain
+Post-Test-Mass-Unrecovered-g,original_split_negative_control_dominance,block,blocking,target_family_plus_shortcuts,negative val RMSE > admissible * 1.02,target-family or shortcut negative controls must not dominate the selected safe profile
+Post-Test-Mass-Unrecovered-g,split_sensitivity_pass_rate,pass,info,0.800000000,0.800000000,admissible validation/test gain must survive deterministic group split perturbations
+Post-Test-Mass-Unrecovered-g,target_family_dependency,block,blocking,0.726987972,0.700000000,selected target must not be tightly coupled to other derived target-family columns
+Post-Test-Mass-Unrecovered-g,pretest_mass_scaling_dependency,risk,medium,0.718488185,0.700000000,mass-derived targets can be dominated by pre-test cell inventory scaling
+Post-Test-Mass-Unrecovered-g,cell_mass_only_scaling_control,pass,info,5.809880513,mass-only val RMSE > admissible * 1.02,mass-only scaling should not explain nearly all selected-target signal
