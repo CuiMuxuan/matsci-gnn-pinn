@@ -1,0 +1,10 @@
+audit,status,severity,value,threshold,reason
+phase123_gate_status,pass,info,phase123_matbench_expt_gap_gap_ready_focused_review,phase123_matbench_expt_gap_gap_ready_focused_review,focused review requires a Phase 123 focused-review gate
+original_split_admissible_gain,pass,info,0.473306848,0.050000000,Phase 123 selected chemistry target must preserve validation and test gain
+original_split_shortcut_dominance,pass,info,dominant_element_shortcut,negative val RMSE > admissible * 1.02,composition identity or chemistry-family shortcuts must not dominate the selected profile
+original_split_nearest_neighbor_dominance,pass,info,1.124283576,nearest val RMSE > admissible * 1.02,nearest-neighbor composition identity control must not dominate the selected profile
+original_split_zero_gap_balance,pass,info,0.056094152,0.150000000,registered split must not be explained by severe zero-gap class-balance mismatch
+original_split_near_duplicate_fraction,pass,info,0.001059322,0.500000000,registered split must not contain too many near-duplicate compositions relative to train
+split_sensitivity_pass_rate,pass,info,1.000000000,0.800000000,chemistry-profile gain must survive deterministic chemistry-family and binned split perturbations
+shortcut_dominant_split_count,pass,info,0,0,no viable split may be dominated by chemistry identity or family shortcut profiles
+nearest_neighbor_dominant_split_count,pass,info,0,0,no viable split may be dominated by nearest-neighbor composition identity control
