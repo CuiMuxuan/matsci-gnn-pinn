@@ -1,0 +1,32 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "best_negative_method": "extra_trees",
+  "best_negative_profile": "dominant_element_shortcut",
+  "best_negative_test_rmse": 1.7904316528190611,
+  "best_negative_val_rmse": 1.383652855971776,
+  "group_count": 909,
+  "group_split": "chemistry_family_key",
+  "leakage_safe": true,
+  "mean_test_rmse": 1.8848102983895085,
+  "mean_validation_rmse": 1.4997162108282787,
+  "phase128_focused_review_allowed": false,
+  "phase128_model_mechanism_allowed": false,
+  "phase128_model_training_allowed": false,
+  "reason": "composition, family, or dominant-element shortcut dominates the selected safe profile",
+  "row_count": 4764,
+  "selected_method": "knn",
+  "selected_profile": "composition_lattice_descriptors",
+  "selected_target": "refractive_index_n",
+  "selected_test_rmse": 1.8021183023688612,
+  "selected_validation_rmse": 1.3657117098062515,
+  "source_byte_size": 3608015,
+  "source_sha256": "83befa09bc2ec2f4b6143afc413157827a90e5e2e42c1eb507ccfa01bf26a1d6",
+  "source_url": "https://ml.materialsproject.org/projects/matbench_dielectric.json.gz",
+  "split_counts": {
+    "test": 1006,
+    "train": 2875,
+    "val": 883
+  },
+  "status": "phase128_matbench_dielectric_n_closed_no_stable_guarded_gap"
+}

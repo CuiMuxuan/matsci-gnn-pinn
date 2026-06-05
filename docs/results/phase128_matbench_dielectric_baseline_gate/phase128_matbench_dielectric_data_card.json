@@ -1,0 +1,11 @@
+{
+  "byte_size": 3608015,
+  "dataset": "matbench_dielectric",
+  "input": "pymatgen Structure JSON",
+  "phase128_no_training": true,
+  "raw_path": "data/raw/external/matbench_dielectric/matbench_dielectric.json.gz",
+  "row_count": 4764,
+  "sha256": "83befa09bc2ec2f4b6143afc413157827a90e5e2e42c1eb507ccfa01bf26a1d6",
+  "source_url": "https://ml.materialsproject.org/projects/matbench_dielectric.json.gz",
+  "target": "refractive_index_n"
+}
