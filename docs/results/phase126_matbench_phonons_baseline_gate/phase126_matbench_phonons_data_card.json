@@ -1,0 +1,11 @@
+{
+  "byte_size": 459672,
+  "dataset": "matbench_phonons",
+  "input": "pymatgen Structure JSON",
+  "phase126_no_training": true,
+  "raw_path": "data/raw/external/matbench_phonons/matbench_phonons.json.gz",
+  "row_count": 1265,
+  "sha256": "4db551f21ec5f577e6202725f10e34dfc509aa7df3a6bdaac497da7f6dbbb9b3",
+  "source_url": "https://ml.materialsproject.org/projects/matbench_phonons.json.gz",
+  "target": "last_phdos_peak"
+}

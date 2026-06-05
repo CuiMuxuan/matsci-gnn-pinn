@@ -1,0 +1,64 @@
+{
+  "counts": {
+    "field_rows": 1265,
+    "metric_rows": 45,
+    "schema_rows": 129
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "best_negative_method": "knn",
+    "best_negative_profile": "composition_hash_shortcut",
+    "best_negative_test_rmse": 454.8593661920072,
+    "best_negative_val_rmse": 502.9079603411282,
+    "group_count": 376,
+    "group_split": "chemistry_family_key",
+    "leakage_safe": true,
+    "mean_test_rmse": 453.3970386303015,
+    "mean_validation_rmse": 506.0411128933424,
+    "phase126_focused_review_allowed": true,
+    "phase126_model_mechanism_allowed": false,
+    "phase126_model_training_allowed": false,
+    "reason": "safe structure/composition profile beats mean and shortcut controls",
+    "row_count": 1265,
+    "selected_method": "extra_trees",
+    "selected_profile": "composition_descriptors",
+    "selected_target": "last_phdos_peak",
+    "selected_test_rmse": 316.10537014650754,
+    "selected_validation_rmse": 306.0100772180075,
+    "source_byte_size": 459672,
+    "source_sha256": "4db551f21ec5f577e6202725f10e34dfc509aa7df3a6bdaac497da7f6dbbb9b3",
+    "source_url": "https://ml.materialsproject.org/projects/matbench_phonons.json.gz",
+    "split_counts": {
+      "test": 279,
+      "train": 776,
+      "val": 210
+    },
+    "status": "phase126_matbench_phonons_peak_ready_focused_review"
+  },
+  "inputs": {
+    "raw_path": "data/raw/external/matbench_phonons/matbench_phonons.json.gz",
+    "source_url": "https://ml.materialsproject.org/projects/matbench_phonons.json.gz"
+  },
+  "objective": "matbench_phonons_baseline_first_gate_no_training",
+  "outputs": {
+    "data_card": "docs/results/phase126_matbench_phonons_baseline_gate/phase126_matbench_phonons_data_card.json",
+    "field_table": "docs/results/phase126_matbench_phonons_baseline_gate/phase126_matbench_phonons_field_table.csv",
+    "gate_json": "docs/results/phase126_matbench_phonons_baseline_gate/phase126_matbench_phonons_gate.json",
+    "manifest": "docs/results/phase126_matbench_phonons_baseline_gate/phase126_matbench_phonons_manifest.json",
+    "markdown": "docs/results/phase126_matbench_phonons_baseline_gate/phase126_matbench_phonons.md",
+    "metric_table": "docs/results/phase126_matbench_phonons_baseline_gate/phase126_matbench_phonons_metric_table.csv",
+    "schema_table": "docs/results/phase126_matbench_phonons_baseline_gate/phase126_matbench_phonons_schema_table.csv",
+    "split_manifest": "docs/results/phase126_matbench_phonons_baseline_gate/phase126_matbench_phonons_split_manifest.json",
+    "target_review_table": "docs/results/phase126_matbench_phonons_baseline_gate/phase126_matbench_phonons_target_review_table.csv"
+  },
+  "phase": 126,
+  "source": {
+    "byte_size": 459672,
+    "downloaded": true,
+    "expected_head_byte_size": 459672,
+    "path": "/root/matsci-gnn-pinn/data/raw/external/matbench_phonons/matbench_phonons.json.gz",
+    "sha256": "4db551f21ec5f577e6202725f10e34dfc509aa7df3a6bdaac497da7f6dbbb9b3",
+    "source_url": "https://ml.materialsproject.org/projects/matbench_phonons.json.gz"
+  }
+}
