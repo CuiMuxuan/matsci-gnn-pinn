@@ -18,8 +18,9 @@ PYTHONPATH=src PYTHONUTF8=1 PYTHONIOENCODING=utf-8 \
   --output-dir "$OUTPUT_DIR" \
   > "$LOG_DIR/phase124_matbench_expt_gap_focused_review_manifest.json"
 
-PYTHONPATH=src PYTHONUTF8=1 PYTHONIOENCODING=utf-8 \
-  "$CONDA_BIN" run -n "$CONDA_ENV" python -X utf8 - <<'PY'
+SUMMARY_SCRIPT="$(mktemp)"
+trap 'rm -f "$SUMMARY_SCRIPT"' EXIT
+cat > "$SUMMARY_SCRIPT" <<'PY'
 import json
 from pathlib import Path
 
@@ -38,3 +39,6 @@ print("matbench_expt_gap_focused_review_gate a100_80gb_request_now", gate["a100_
 if gate["phase124_model_training_allowed"] or gate["a100_training_allowed_now"] or gate["a100_80gb_request_now"]:
     raise SystemExit("Phase 124 must remain a no-training focused review")
 PY
+
+PYTHONPATH=src PYTHONUTF8=1 PYTHONIOENCODING=utf-8 \
+  "$CONDA_BIN" run -n "$CONDA_ENV" python -X utf8 "$SUMMARY_SCRIPT"
