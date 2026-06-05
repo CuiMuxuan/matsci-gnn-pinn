@@ -1,0 +1,8 @@
+profile,feature_columns,selected_validation_method,selected_validation_rmse,selected_validation_normalized_rmse,selected_test_rmse,selected_test_normalized_rmse,validation_relative_gain_over_mean,test_relative_gain_over_mean,validation_delta_vs_full,test_delta_vs_full,status
+mean_guard,,mean,1.262500,0.550597,1.327112,0.440754,0.000000,0.000000,0.322402,0.266420,reference_mean_guard
+full_phase108,"[""x"", ""y"", ""t"", ""source_p_mean"", ""source_p_nonzero_fraction"", ""source_x_range"", ""source_y_range"", ""target_camera_code""]",hist_gradient_boosting,0.940098,0.409992,1.060691,0.352271,0.255368,0.200752,0.000000,0.000000,reference_full_phase108_profile
+no_camera,"[""x"", ""y"", ""t"", ""source_p_mean"", ""source_p_nonzero_fraction"", ""source_x_range"", ""source_y_range""]",hist_gradient_boosting,0.940098,0.409992,1.060691,0.352271,0.255368,0.200752,0.000000,0.000000,profile_has_validation_signal
+camera_only,"[""target_camera_code""]",hist_gradient_boosting,1.262500,0.550597,1.327112,0.440754,0.000000,0.000000,0.322402,0.266420,profile_has_validation_signal
+source_only,"[""source_p_mean"", ""source_p_nonzero_fraction"", ""source_x_range"", ""source_y_range""]",extra_trees,1.257470,0.548403,1.622680,0.538916,0.003985,-0.222716,0.317372,0.561988,no_independent_source_validation_gain
+layer_time_only,"[""t""]",hist_gradient_boosting,0.716473,0.312465,1.137170,0.377671,0.432497,0.143124,-0.223625,0.076478,layer_time_shortcut_matches_or_beats_full_validation
+layer_time_camera,"[""t"", ""target_camera_code""]",hist_gradient_boosting,0.716473,0.312465,1.137170,0.377671,0.432497,0.143124,-0.223625,0.076478,layer_time_shortcut_matches_or_beats_full_validation

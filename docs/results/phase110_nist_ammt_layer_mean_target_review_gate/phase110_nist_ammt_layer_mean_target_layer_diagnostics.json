@@ -1,0 +1,15 @@
+{
+  "all_two_camera_layers_duplicate_target": true,
+  "camera_target_mean": {
+    "0": 27.062541703124992,
+    "1": 27.062541703124992
+  },
+  "camera_target_range": {
+    "0": 11.778544,
+    "1": 11.778544
+  },
+  "duplicated_target_two_camera_layer_count": 64,
+  "layer_count": 64,
+  "row_count": 128,
+  "two_camera_layer_count": 64
+}
