@@ -92,9 +92,9 @@ def test_phase120_parser_normalizes_composition_fractions():
     module = _load_module()
     fractions = module.parse_composition("Fe0.7Ni0.2Mo0.1")
     assert abs(sum(fractions.values()) - 1.0) < 1e-12
-    assert fractions["Fe"] == 0.7
-    assert fractions["Ni"] == 0.2
-    assert fractions["Mo"] == 0.1
+    assert abs(fractions["Fe"] - 0.7) < 1e-12
+    assert abs(fractions["Ni"] - 0.2) < 1e-12
+    assert abs(fractions["Mo"] - 0.1) < 1e-12
 
 
 def test_phase120_blocks_unexpected_source_schema(tmp_path: Path):
