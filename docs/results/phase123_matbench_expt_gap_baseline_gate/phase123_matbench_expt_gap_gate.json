@@ -1,0 +1,30 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "group_count": 2590,
+  "leakage_safe_group_split": true,
+  "mean_test_rmse": 1.6119919458068244,
+  "mean_validation_rmse": 1.3607037070631014,
+  "next_action": "enter focused split/shortcut review before any model mechanism",
+  "phase123_focused_review_allowed": true,
+  "phase123_model_mechanism_allowed": false,
+  "phase123_model_training_allowed": false,
+  "row_count": 4604,
+  "selected_method": "extra_trees",
+  "selected_profile": "chemistry_descriptors",
+  "selected_target": "gap_expt_ev",
+  "selected_test_rmse": 1.0531000513350326,
+  "selected_validation_rmse": 0.7166733240067203,
+  "shortcut_profile_test_rmse": 1.6083548560114254,
+  "shortcut_profile_val_rmse": 1.3604104664552734,
+  "source_byte_size": 37200,
+  "source_name": "Matbench v0.1 matbench_expt_gap",
+  "source_sha256": "783e7d1461eb83b00b2f2942da4b95fda5e58a0d1ae26b581c24cf8a82ca75b2",
+  "source_url": "https://ml.materialsproject.org/projects/matbench_expt_gap.json.gz",
+  "split_counts": {
+    "test": 986,
+    "train": 2674,
+    "val": 944
+  },
+  "status": "phase123_matbench_expt_gap_gap_ready_focused_review"
+}

@@ -1,0 +1,2 @@
+target,row_count,train_rows,val_rows,test_rows,mean_val_rmse,mean_test_rmse,best_profile,best_method,best_val_rmse,best_test_rmse,val_gain_vs_mean,test_gain_vs_mean,shortcut_profile_val_rmse,shortcut_profile_test_rmse,shortcut_blocks,phase123_candidate,status,reason
+gap_expt_ev,4604,2674,944,986,1.360703707,1.611991946,chemistry_descriptors,extra_trees,0.716673324,1.053100051,0.644030383,0.558891894,1.360410466,1.608354856,false,true,phase123_candidate_gap_ready_focused_review,"chemistry profile beats mean, preserves test gain, and is not shortcut-dominated"
