@@ -1,0 +1,84 @@
+{
+  "counts": {
+    "field_rows": 10985,
+    "metric_rows": 51,
+    "raw_rows": 10987,
+    "schema_rows": 129,
+    "skipped_rows": 2
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "best_negative_method": "extra_trees",
+    "best_negative_profile": "dominant_element_shortcut",
+    "best_negative_test_rmse": 0.2673721510490713,
+    "best_negative_val_rmse": 0.26172145604833713,
+    "group_count": 1716,
+    "group_split": "chemistry_family_key",
+    "leakage_safe": true,
+    "mean_test_rmse": 0.3758246704884537,
+    "mean_validation_rmse": 0.3699181578174136,
+    "parsed_row_count": 10985,
+    "phase130_focused_review_allowed": true,
+    "phase130_model_mechanism_allowed": false,
+    "phase130_model_training_allowed": false,
+    "raw_row_count": 10987,
+    "reason": "safe structure/composition profile beats mean and shortcut controls",
+    "row_count": 10985,
+    "selected_method": "hist_gradient_boosting",
+    "selected_profile": "composition_lattice_descriptors",
+    "selected_target": "log10_k_vrh",
+    "selected_test_rmse": 0.14817655187669163,
+    "selected_validation_rmse": 0.1452902688503053,
+    "skipped_row_count": 2,
+    "source_byte_size": 4174387,
+    "source_sha256": "44b113ddb7e23aa18731a62c74afa7e5aa654199e0db5f951c8248a00955c9cd",
+    "source_url": "https://ml.materialsproject.org/projects/matbench_log_kvrh.json.gz",
+    "split_counts": {
+      "test": 2353,
+      "train": 6385,
+      "val": 2247
+    },
+    "status": "phase130_matbench_log_kvrh_ready_focused_review"
+  },
+  "inputs": {
+    "raw_path": "data/raw/external/matbench_log_kvrh/matbench_log_kvrh.json.gz",
+    "source_url": "https://ml.materialsproject.org/projects/matbench_log_kvrh.json.gz"
+  },
+  "objective": "matbench_log_kvrh_baseline_first_gate_no_training",
+  "outputs": {
+    "data_card": "docs/results/phase130_matbench_log_kvrh_baseline_gate/phase130_matbench_log_kvrh_data_card.json",
+    "field_table": "docs/results/phase130_matbench_log_kvrh_baseline_gate/phase130_matbench_log_kvrh_field_table.csv",
+    "gate_json": "docs/results/phase130_matbench_log_kvrh_baseline_gate/phase130_matbench_log_kvrh_gate.json",
+    "manifest": "docs/results/phase130_matbench_log_kvrh_baseline_gate/phase130_matbench_log_kvrh_manifest.json",
+    "markdown": "docs/results/phase130_matbench_log_kvrh_baseline_gate/phase130_matbench_log_kvrh.md",
+    "metric_table": "docs/results/phase130_matbench_log_kvrh_baseline_gate/phase130_matbench_log_kvrh_metric_table.csv",
+    "schema_table": "docs/results/phase130_matbench_log_kvrh_baseline_gate/phase130_matbench_log_kvrh_schema_table.csv",
+    "split_manifest": "docs/results/phase130_matbench_log_kvrh_baseline_gate/phase130_matbench_log_kvrh_split_manifest.json",
+    "target_review_table": "docs/results/phase130_matbench_log_kvrh_baseline_gate/phase130_matbench_log_kvrh_target_review_table.csv"
+  },
+  "parse_audit": {
+    "parsed_rows": 10985,
+    "raw_rows": 10987,
+    "skipped_row_examples": [
+      {
+        "reason": "Structure has no parseable species occupancy",
+        "row_index": 2073
+      },
+      {
+        "reason": "Structure has no parseable species occupancy",
+        "row_index": 3080
+      }
+    ],
+    "skipped_rows": 2
+  },
+  "phase": 130,
+  "source": {
+    "byte_size": 4174387,
+    "downloaded": false,
+    "expected_head_byte_size": 4174387,
+    "path": "/root/matsci-gnn-pinn/data/raw/external/matbench_log_kvrh/matbench_log_kvrh.json.gz",
+    "sha256": "44b113ddb7e23aa18731a62c74afa7e5aa654199e0db5f951c8248a00955c9cd",
+    "source_url": "https://ml.materialsproject.org/projects/matbench_log_kvrh.json.gz"
+  }
+}
