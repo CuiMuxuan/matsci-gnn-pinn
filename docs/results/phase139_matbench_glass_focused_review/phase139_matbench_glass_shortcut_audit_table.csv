@@ -1,0 +1,11 @@
+audit,status,severity,value,threshold,reason
+phase138_gate_status,pass,info,phase138_matbench_glass_ready_focused_review,phase138_matbench_glass_ready_focused_review,focused review requires a Phase 138 focused-review gate
+original_split_admissible_gain,pass,info,0.269120485,0.050000000,Phase 138 selected glass target must preserve validation and test balanced-accuracy gain
+original_split_shortcut_dominance,pass,info,dominant_element_shortcut,negative val BA < admissible - 0.005,"composition, chemistry-family, or dominant-element shortcuts must not dominate"
+original_split_nearest_neighbor_dominance,pass,info,0.711579818,nearest val BA < admissible - 0.005,nearest-neighbor composition identity control must not dominate
+original_split_class_balance,pass,info,0.061959671,0.200000000,registered split class balance must not dominate interpretation
+original_split_near_duplicate_fraction,pass,info,0.000000000,0.600000000,registered split must not contain too many near-duplicate composition rows relative to train
+split_sensitivity_pass_rate,pass,info,1.000000000,0.750000000,"glass target gain must survive deterministic chemistry, dominant-element, and descriptor split perturbations"
+shortcut_dominant_split_count,pass,info,0,0,"no viable split may be dominated by composition, chemistry-family, or dominant-element shortcuts"
+nearest_neighbor_dominant_split_count,block,blocking,3,0,no viable split may be dominated by nearest-neighbor composition identity control
+class_balance_imbalanced_split_count,block,blocking,2,0,no viable split may have severe train/validation/test glass class-balance imbalance
