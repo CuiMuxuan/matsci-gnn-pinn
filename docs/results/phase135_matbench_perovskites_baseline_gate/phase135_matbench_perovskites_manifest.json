@@ -28,8 +28,8 @@
     "selected_method": "hist_gradient_boosting",
     "selected_profile": "composition_lattice_descriptors",
     "selected_target": "e_form",
-    "selected_test_rmse": 0.40884582200758857,
-    "selected_validation_rmse": 0.48956144791210665,
+    "selected_test_rmse": 0.4123037602305582,
+    "selected_validation_rmse": 0.4849587880753069,
     "skipped_row_count": 0,
     "source_byte_size": 4193112,
     "source_sha256": "4641e2417f8ec8b50096d2230864468dfa08278dc9d257c327f65d0305278483",
@@ -66,9 +66,9 @@
   "phase": 135,
   "source": {
     "byte_size": 4193112,
-    "downloaded": true,
+    "downloaded": false,
     "expected_head_byte_size": 4193112,
-    "path": "C:\\code\\matsci-gnn-pinn\\data\\raw\\external\\matbench_perovskites\\matbench_perovskites.json.gz",
+    "path": "/root/matsci-gnn-pinn/data/raw/external/matbench_perovskites/matbench_perovskites.json.gz",
     "sha256": "4641e2417f8ec8b50096d2230864468dfa08278dc9d257c327f65d0305278483",
     "source_url": "https://ml.materialsproject.org/projects/matbench_perovskites.json.gz"
   }

@@ -5,7 +5,7 @@
 - Rows: `18928`
 - Group split: `chemistry_family_key` with `342` groups
 - Selected profile/method: `composition_lattice_descriptors` / `hist_gradient_boosting`
-- Selected validation/test RMSE: `0.489561` / `0.408846`
+- Selected validation/test RMSE: `0.484959` / `0.412304`
 - Mean validation/test RMSE: `0.779943` / `0.713541`
 - Best negative control: `dominant_element_shortcut` / `extra_trees`
 - Focused review allowed: `True`
