@@ -4,10 +4,10 @@ composition,5680,0,5680,identifier,,,
 gfa,5680,5680,2,target,0.000000000,1.000000000,0.453622532
 dominant_element,5680,0,41,categorical_feature_or_shortcut_audit,,,
 chemistry_family_key,5680,0,335,categorical_feature_or_shortcut_audit,,,
-composition_hash16,5680,6,5680,identity_or_shortcut_audit,0.000000000,6398551487432326.000000000,2992130064877640.000000000
+composition_hash16,5680,8,5680,identity_or_shortcut_audit,3699833003376107.000000000,,
 element_count,5680,5680,3,numeric_chemistry_feature,1.000000000,3.000000000,0.291943673
-entropy_fraction,5680,5680,1174,numeric_chemistry_feature,-0.000000000,1.098611289,0.212774840
-max_fraction,5680,5680,278,numeric_chemistry_feature,0.334000000,1.000000000,0.143410615
+entropy_fraction,5680,5680,1305,numeric_chemistry_feature,-0.000000000,1.098611289,0.212774840
+max_fraction,5680,5680,281,numeric_chemistry_feature,0.334000000,1.000000000,0.143410615
 anion_fraction,5680,5680,67,numeric_chemistry_feature,0.000000000,0.420000000,0.043085484
 oxygen_fraction,5680,5680,7,numeric_chemistry_feature,0.000000000,0.416000000,0.010994971
 chalcogen_fraction,5680,5680,7,numeric_chemistry_feature,0.000000000,0.416000000,0.010994971
@@ -18,10 +18,10 @@ alkaline_earth_fraction,5680,5680,109,numeric_chemistry_feature,0.000000000,1.00
 transition_metal_fraction,5680,5680,304,numeric_chemistry_feature,0.000000000,1.000000000,0.324810125
 post_transition_fraction,5680,5680,132,numeric_chemistry_feature,0.000000000,1.000000000,0.297626365
 metalloid_fraction,5680,5680,162,numeric_chemistry_feature,0.000000000,0.952681388,0.114735069
-rare_earth_fraction,5680,5680,125,numeric_chemistry_feature,0.000000000,0.900000000,0.131426797
-mean_atomic_number,5680,5680,3259,numeric_chemistry_feature,8.165000000,74.421000000,9.292236319
+rare_earth_fraction,5680,5680,126,numeric_chemistry_feature,0.000000000,0.900000000,0.131426797
+mean_atomic_number,5680,5680,3427,numeric_chemistry_feature,8.165000000,74.421000000,9.292236319
 max_atomic_number,5680,5680,42,numeric_chemistry_feature,12.000000000,92.000000000,15.195772352
-mean_electronegativity,5680,5680,4269,numeric_chemistry_feature,0.999300000,2.556300000,0.215279626
+mean_electronegativity,5680,5680,4355,numeric_chemistry_feature,0.999300000,2.556300000,0.215279626
 electronegativity_range,5680,5680,146,numeric_chemistry_feature,0.000000000,2.150000000,0.252638986
 frac_H,5680,5680,1,numeric_chemistry_feature,0.000000000,0.000000000,0.000000000
 frac_He,5680,5680,1,numeric_chemistry_feature,0.000000000,0.000000000,0.000000000
@@ -49,7 +49,7 @@ frac_V,5680,5680,46,numeric_chemistry_feature,0.000000000,0.400000000,0.02925505
 frac_Cr,5680,5680,72,numeric_chemistry_feature,0.000000000,0.870000000,0.062517531
 frac_Mn,5680,5680,102,numeric_chemistry_feature,0.000000000,0.900000000,0.062827992
 frac_Fe,5680,5680,204,numeric_chemistry_feature,0.000000000,0.950000000,0.303249104
-frac_Co,5680,5680,185,numeric_chemistry_feature,0.000000000,1.000000000,0.213398501
+frac_Co,5680,5680,186,numeric_chemistry_feature,0.000000000,1.000000000,0.213398501
 frac_Ni,5680,5680,176,numeric_chemistry_feature,0.000000000,1.000000000,0.215870418
 frac_Cu,5680,5680,143,numeric_chemistry_feature,0.000000000,0.950000000,0.167114714
 frac_Zn,5680,5680,15,numeric_chemistry_feature,0.000000000,0.500000000,0.023956767
@@ -63,7 +63,7 @@ frac_Rb,5680,5680,1,numeric_chemistry_feature,0.000000000,0.000000000,0.00000000
 frac_Sr,5680,5680,27,numeric_chemistry_feature,0.000000000,0.170000000,0.008435932
 frac_Y,5680,5680,32,numeric_chemistry_feature,0.000000000,0.600000000,0.036643303
 frac_Zr,5680,5680,164,numeric_chemistry_feature,0.000000000,0.975000000,0.169939253
-frac_Nb,5680,5680,86,numeric_chemistry_feature,0.000000000,0.850000000,0.082623900
+frac_Nb,5680,5680,87,numeric_chemistry_feature,0.000000000,0.850000000,0.082623900
 frac_Mo,5680,5680,75,numeric_chemistry_feature,0.000000000,0.900000000,0.076588027
 frac_Tc,5680,5680,1,numeric_chemistry_feature,0.000000000,0.000000000,0.000000000
 frac_Ru,5680,5680,12,numeric_chemistry_feature,0.000000000,0.640000000,0.014987197

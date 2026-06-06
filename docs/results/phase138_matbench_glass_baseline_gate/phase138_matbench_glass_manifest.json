@@ -29,8 +29,8 @@
     "selected_method": "hist_gradient_boosting",
     "selected_profile": "composition_descriptors",
     "selected_target": "gfa",
-    "selected_test_balanced_accuracy": 0.709051724137931,
-    "selected_validation_balanced_accuracy": 0.7802453818582851,
+    "selected_test_balanced_accuracy": 0.7195464767616192,
+    "selected_validation_balanced_accuracy": 0.7703473945409429,
     "skipped_row_count": 0,
     "source_byte_size": 39729,
     "source_name": "Matbench v0.1 matbench_glass",
@@ -73,7 +73,7 @@
     "byte_size": 39729,
     "downloaded": false,
     "expected_head_byte_size": 39729,
-    "path": "C:\\code\\matsci-gnn-pinn\\data\\raw\\external\\matbench_glass\\matbench_glass.json.gz",
+    "path": "/root/matsci-gnn-pinn/data/raw/external/matbench_glass/matbench_glass.json.gz",
     "sha256": "36beb654e2a463ee2a6572105bea0ca2961eee7c7b26a25377bff2c3b338e53a",
     "source_url": "https://ml.materialsproject.org/projects/matbench_glass.json.gz"
   }
