@@ -1,0 +1,15 @@
+{
+  "a800_reproduction_required": true,
+  "byte_size": 4193112,
+  "dataset": "matbench_perovskites",
+  "input": "pymatgen Structure JSON",
+  "phase135_no_training": true,
+  "raw_path": "data/raw/external/matbench_perovskites/matbench_perovskites.json.gz",
+  "raw_row_count": 18928,
+  "row_count": 18928,
+  "sha256": "4641e2417f8ec8b50096d2230864468dfa08278dc9d257c327f65d0305278483",
+  "skipped_row_count": 0,
+  "skipped_row_examples": [],
+  "source_url": "https://ml.materialsproject.org/projects/matbench_perovskites.json.gz",
+  "target": "e_form"
+}

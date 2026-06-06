@@ -1,0 +1,75 @@
+{
+  "counts": {
+    "field_rows": 18928,
+    "metric_rows": 51,
+    "raw_rows": 18928,
+    "schema_rows": 129,
+    "skipped_rows": 0
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "best_negative_method": "extra_trees",
+    "best_negative_profile": "dominant_element_shortcut",
+    "best_negative_test_rmse": 0.6839485397480289,
+    "best_negative_val_rmse": 0.7660014071129493,
+    "group_count": 342,
+    "group_split": "chemistry_family_key",
+    "leakage_safe": true,
+    "mean_test_rmse": 0.7135410639164848,
+    "mean_validation_rmse": 0.7799429370818045,
+    "parsed_row_count": 18928,
+    "phase135_focused_review_allowed": true,
+    "phase135_model_mechanism_allowed": false,
+    "phase135_model_training_allowed": false,
+    "raw_row_count": 18928,
+    "reason": "safe structure/composition profile beats mean and shortcut controls",
+    "row_count": 18928,
+    "selected_method": "hist_gradient_boosting",
+    "selected_profile": "composition_lattice_descriptors",
+    "selected_target": "e_form",
+    "selected_test_rmse": 0.40884582200758857,
+    "selected_validation_rmse": 0.48956144791210665,
+    "skipped_row_count": 0,
+    "source_byte_size": 4193112,
+    "source_sha256": "4641e2417f8ec8b50096d2230864468dfa08278dc9d257c327f65d0305278483",
+    "source_url": "https://ml.materialsproject.org/projects/matbench_perovskites.json.gz",
+    "split_counts": {
+      "test": 3625,
+      "train": 10233,
+      "val": 5070
+    },
+    "status": "phase135_matbench_perovskites_ready_focused_review"
+  },
+  "inputs": {
+    "raw_path": "data/raw/external/matbench_perovskites/matbench_perovskites.json.gz",
+    "source_url": "https://ml.materialsproject.org/projects/matbench_perovskites.json.gz"
+  },
+  "objective": "matbench_perovskites_baseline_first_gate_no_training",
+  "outputs": {
+    "data_card": "docs/results/phase135_matbench_perovskites_baseline_gate/phase135_matbench_perovskites_data_card.json",
+    "field_table": "docs/results/phase135_matbench_perovskites_baseline_gate/phase135_matbench_perovskites_field_table.csv",
+    "gate_json": "docs/results/phase135_matbench_perovskites_baseline_gate/phase135_matbench_perovskites_gate.json",
+    "manifest": "docs/results/phase135_matbench_perovskites_baseline_gate/phase135_matbench_perovskites_manifest.json",
+    "markdown": "docs/results/phase135_matbench_perovskites_baseline_gate/phase135_matbench_perovskites.md",
+    "metric_table": "docs/results/phase135_matbench_perovskites_baseline_gate/phase135_matbench_perovskites_metric_table.csv",
+    "schema_table": "docs/results/phase135_matbench_perovskites_baseline_gate/phase135_matbench_perovskites_schema_table.csv",
+    "split_manifest": "docs/results/phase135_matbench_perovskites_baseline_gate/phase135_matbench_perovskites_split_manifest.json",
+    "target_review_table": "docs/results/phase135_matbench_perovskites_baseline_gate/phase135_matbench_perovskites_target_review_table.csv"
+  },
+  "parse_audit": {
+    "parsed_rows": 18928,
+    "raw_rows": 18928,
+    "skipped_row_examples": [],
+    "skipped_rows": 0
+  },
+  "phase": 135,
+  "source": {
+    "byte_size": 4193112,
+    "downloaded": true,
+    "expected_head_byte_size": 4193112,
+    "path": "C:\\code\\matsci-gnn-pinn\\data\\raw\\external\\matbench_perovskites\\matbench_perovskites.json.gz",
+    "sha256": "4641e2417f8ec8b50096d2230864468dfa08278dc9d257c327f65d0305278483",
+    "source_url": "https://ml.materialsproject.org/projects/matbench_perovskites.json.gz"
+  }
+}
