@@ -1,0 +1,54 @@
+{
+  "counts": {
+    "a100_80gb_allowed_external_rows": 0,
+    "a100_training_allowed_external_rows": 0,
+    "claim_boundary_rows": 5,
+    "external_diagnostic_rows": 9,
+    "next_decision_rows": 4,
+    "training_allowed_external_rows": 0
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "blocked_model_training_routes": 2,
+    "decision_rows": 4,
+    "external_diagnostics_complete": true,
+    "external_training_locks_verified": true,
+    "first_paper_draft_allowed_now": true,
+    "first_paper_submission_ready": false,
+    "main_paper_floor": "fixed-sampling broad12/broad21 spot_size under broad_process_v1, seeds 7/1/2",
+    "new_external_model_claim_ready": false,
+    "next_action": "draft or refine the first paper around the route-guarded spot_size floor, or open a fresh no-training baseline-first source intake; do not train from closed diagnostics",
+    "phase116_paper_evidence_consolidated": true,
+    "phase137_model_mechanism_allowed": false,
+    "phase137_model_training_allowed": false,
+    "status": "phase137_paper_evidence_refresh_ready_first_paper_narrow_claims",
+    "terminal_external_branches": 9,
+    "terminal_external_branches_expected": 9
+  },
+  "inputs": {
+    "battery_failure_terminal": "docs/results/phase119_battery_failure_candidate_sweep/phase119_battery_failure_candidate_sweep_gate.json",
+    "matbench_dielectric_terminal": "docs/results/phase128_matbench_dielectric_baseline_gate/phase128_matbench_dielectric_gate.json",
+    "matbench_expt_gap_terminal": "docs/results/phase125_matbench_expt_gap_low_capacity_mechanism_gate/phase125_matbench_expt_gap_low_capacity_mechanism_gate.json",
+    "matbench_jdft2d_terminal": "docs/results/phase133_matbench_jdft2d_focused_review/phase133_matbench_jdft2d_focused_review_gate.json",
+    "matbench_log_gvrh_terminal": "docs/results/phase134_matbench_log_gvrh_focused_review/phase134_matbench_log_gvrh_focused_review_gate.json",
+    "matbench_log_kvrh_terminal": "docs/results/phase131_matbench_log_kvrh_focused_review/phase131_matbench_log_kvrh_focused_review_gate.json",
+    "matbench_perovskites_terminal": "docs/results/phase136_matbench_perovskites_focused_review/phase136_matbench_perovskites_focused_review_gate.json",
+    "matbench_phonons_terminal": "docs/results/phase127_matbench_phonons_focused_review/phase127_matbench_phonons_focused_review_gate.json",
+    "matbench_steels_terminal": "docs/results/phase122_matbench_steels_low_capacity_mechanism_gate/phase122_matbench_steels_low_capacity_mechanism_gate.json",
+    "phase116_blockers": "docs/results/phase116_paper_evidence_consolidation/phase116_remaining_blocker_table.csv",
+    "phase116_claim_status": "docs/results/phase116_paper_evidence_consolidation/phase116_manuscript_claim_status_table.csv",
+    "phase116_gate": "docs/results/phase116_paper_evidence_consolidation/phase116_paper_evidence_consolidation_gate.json",
+    "phase116_positive_floor": "docs/results/phase116_paper_evidence_consolidation/phase116_positive_floor_table.csv"
+  },
+  "objective": "paper_evidence_refresh_after_phase117_136_external_diagnostics",
+  "outputs": {
+    "claim_boundary_refresh_table": "docs/results/phase137_paper_evidence_refresh/phase137_claim_boundary_refresh_table.csv",
+    "external_diagnostic_refresh_table": "docs/results/phase137_paper_evidence_refresh/phase137_external_diagnostic_refresh_table.csv",
+    "gate_json": "docs/results/phase137_paper_evidence_refresh/phase137_paper_evidence_refresh_gate.json",
+    "manifest": "docs/results/phase137_paper_evidence_refresh/phase137_paper_evidence_refresh_manifest.json",
+    "markdown": "docs/results/phase137_paper_evidence_refresh/phase137_paper_evidence_refresh.md",
+    "next_decision_table": "docs/results/phase137_paper_evidence_refresh/phase137_next_decision_table.csv"
+  },
+  "phase": 137
+}
