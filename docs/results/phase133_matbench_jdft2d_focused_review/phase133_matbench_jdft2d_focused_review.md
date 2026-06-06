@@ -18,10 +18,10 @@
 
 | Split | Pass | Best profile | Val RMSE | Test RMSE | Shortcut | NN | Target shift |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| phase132_registered_split | True | composition_lattice_descriptors | 96.9471 | 179.919 | False | False | 0.624223 |
-| chemistry_family_hash_1 | True | composition_lattice_descriptors | 77.4852 | 112.603 | False | False | 0.387357 |
-| chemistry_family_hash_2 | True | composition_lattice_descriptors | 86.2932 | 111.04 | False | False | 0.356284 |
+| phase132_registered_split | True | composition_lattice_descriptors | 97.2711 | 193.932 | False | False | 0.624223 |
+| chemistry_family_hash_1 | True | composition_lattice_descriptors | 80.6685 | 112.726 | False | False | 0.387357 |
+| chemistry_family_hash_2 | True | composition_lattice_descriptors | 83.7666 | 116.439 | False | False | 0.356284 |
 | lattice_volume_bins | True | lattice_descriptors | 84.0807 | 98.6195 | False | False | 0.191785 |
 | volume_per_site_bins | True | composition_lattice_descriptors | 69.6202 | 160.501 | True | False | 1.12966 |
 | element_count_bins | False | composition_lattice_descriptors | 144.29 | 64.2945 | False | False | 0.776209 |
-| density_anisotropy_bins | False | composition_lattice_descriptors | 101.031 | 93.316 | False | False | 1.14034 |
+| density_anisotropy_bins | False | composition_lattice_descriptors | 93.4402 | 91.6362 | False | False | 1.14034 |

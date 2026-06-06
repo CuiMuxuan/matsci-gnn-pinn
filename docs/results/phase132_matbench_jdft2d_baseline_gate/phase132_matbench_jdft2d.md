@@ -4,8 +4,8 @@
 - Target: `exfoliation_en`
 - Rows: `636`
 - Group split: `chemistry_family_key` with `239` groups
-- Selected profile/method: `composition_lattice_descriptors` / `extra_trees`
-- Selected validation/test RMSE: `97.1472` / `178.848`
+- Selected profile/method: `composition_lattice_descriptors` / `hist_gradient_boosting`
+- Selected validation/test RMSE: `97.0562` / `194.727`
 - Mean validation/test RMSE: `104.781` / `218.749`
 - Best negative control: `composition_hash_shortcut` / `knn`
 - Focused review allowed: `True`

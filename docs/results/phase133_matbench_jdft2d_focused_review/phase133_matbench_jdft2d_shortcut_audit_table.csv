@@ -1,6 +1,6 @@
 audit,status,severity,value,threshold,reason
 phase132_gate_status,pass,info,phase132_matbench_jdft2d_ready_focused_review,phase132_matbench_jdft2d_ready_focused_review,focused review requires a Phase 132 focused-review gate
-original_split_admissible_gain,pass,info,0.074765186,0.050000000,Phase 132 selected JDFT2D target must preserve validation and test gain
+original_split_admissible_gain,pass,info,0.071673620,0.050000000,Phase 132 selected JDFT2D target must preserve validation and test gain
 original_split_shortcut_dominance,pass,info,composition_hash_shortcut,negative val RMSE > admissible * 1.02,"composition, chemistry-family, or dominant-element shortcuts must not dominate"
 original_split_nearest_neighbor_dominance,pass,info,171.793238278,nearest val RMSE > admissible * 1.02,nearest-neighbor composition/lattice identity control must not dominate
 original_split_target_distribution_balance,pass,info,0.624222932,0.750000000,registered split target mean/median/q90 shift must not dominate interpretation
