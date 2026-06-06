@@ -1,0 +1,15 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "dataset": "Matbench v0.1 matbench_glass",
+  "input": "composition formula",
+  "license_note": "Public Matbench benchmark dataset; cite Matbench/matminer in manuscripts.",
+  "raw_row_count": 5680,
+  "row_count": 5680,
+  "skipped_row_count": 0,
+  "source_byte_size": 39729,
+  "source_sha256": "36beb654e2a463ee2a6572105bea0ca2961eee7c7b26a25377bff2c3b338e53a",
+  "source_url": "https://ml.materialsproject.org/projects/matbench_glass.json.gz",
+  "target": "gfa binary glass-forming ability label",
+  "training_allowed": false
+}
