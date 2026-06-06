@@ -1,0 +1,15 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "dataset": "Matbench v0.1 matbench_expt_is_metal",
+  "input": "composition formula",
+  "license_note": "Public Matbench benchmark dataset; cite Matbench/matminer in manuscripts.",
+  "raw_row_count": 4921,
+  "row_count": 4921,
+  "skipped_row_count": 0,
+  "source_byte_size": 34623,
+  "source_sha256": "8f2a4f9bacdcbc5c2c73615629ee7986f09d39bed40ba7db52b61b2889730887",
+  "source_url": "https://ml.materialsproject.org/projects/matbench_expt_is_metal.json.gz",
+  "target": "is_metal binary experimental metallicity label",
+  "training_allowed": false
+}
