@@ -1,0 +1,15 @@
+{
+  "a100_reproduction_pending_due_to_connectivity": true,
+  "byte_size": 267131,
+  "dataset": "matbench_jdft2d",
+  "input": "pymatgen Structure JSON",
+  "phase132_no_training": true,
+  "raw_path": "data/raw/external/matbench_jdft2d/matbench_jdft2d.json.gz",
+  "raw_row_count": 636,
+  "row_count": 636,
+  "sha256": "26057dc4524e193e32abffb296ce819b58b6e11d1278cae329a2f97817a4eddf",
+  "skipped_row_count": 0,
+  "skipped_row_examples": [],
+  "source_url": "https://ml.materialsproject.org/projects/matbench_jdft2d.json.gz",
+  "target": "exfoliation_en"
+}
