@@ -116,6 +116,11 @@ def test_phase143_refreshes_latest_external_evidence_and_keeps_training_locked(t
     blocked = next(row for row in claims if row["claim_id"] == "P143-CLAIM-003")
     assert "complete GNN-PINN" in blocked["wording_guard"]
     assert "Matbench glass/is-metal model success" in blocked["wording_guard"]
+    markdown = (tmp_path / "out/phase143_paper_evidence_refresh.md").read_text(encoding="utf-8")
+    assert "matbench_glass" in markdown
+    assert "P143-CLAIM-003" in markdown
+    assert "P143-DECISION-002" in markdown
+    assert "|  |  |  |  |" not in markdown
 
 
 def test_phase143_incomplete_if_latest_external_gate_unlocks_training(tmp_path: Path):

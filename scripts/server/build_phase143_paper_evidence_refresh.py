@@ -358,10 +358,10 @@ def build_markdown(
             phase137._markdown_table(
                 external_rows,
                 [
-                    ("Branch", "branch_id"),
-                    ("Status", "terminal_status"),
-                    ("Final use", "final_use"),
-                    ("Boundary", "paper_boundary"),
+                    ("branch_id", "Branch"),
+                    ("terminal_status", "Status"),
+                    ("final_use", "Final use"),
+                    ("paper_boundary", "Boundary"),
                 ],
             ),
             "",
@@ -370,10 +370,10 @@ def build_markdown(
             phase137._markdown_table(
                 claim_rows,
                 [
-                    ("Claim", "claim_id"),
-                    ("Status", "claim_status"),
-                    ("Allowed use", "allowed_use"),
-                    ("Guard", "wording_guard"),
+                    ("claim_id", "Claim"),
+                    ("claim_status", "Status"),
+                    ("allowed_use", "Allowed use"),
+                    ("wording_guard", "Guard"),
                 ],
             ),
             "",
@@ -382,10 +382,10 @@ def build_markdown(
             phase137._markdown_table(
                 decision_rows,
                 [
-                    ("Decision", "decision_id"),
-                    ("Route", "route"),
-                    ("Outcome", "decision"),
-                    ("Next action", "next_action"),
+                    ("decision_id", "Decision"),
+                    ("route", "Route"),
+                    ("decision", "Outcome"),
+                    ("next_action", "Next action"),
                 ],
             ),
         ]
