@@ -1,0 +1,5 @@
+audit,status,severity,value,threshold,reason
+phase156_gate_consistency,pass,info,phase156_uci_superconductivity_focused_review_ready_low_capacity_mechanism_gate,phase156_uci_superconductivity_focused_review_ready_low_capacity_mechanism_gate,Phase 157 requires Phase 156 to allow a no-training mechanism gate
+phase156_validation_guard_gain,block,blocking,-0.485311400491,0.01,selected low-capacity mechanism must beat the Phase 156 ExtraTrees guard on validation
+phase156_test_reversal_guard,block,blocking,1.59634401747,1.05,selected low-capacity mechanism must not substantially reverse on test
+low_capacity_feature_budget,pass,info,36,36,mechanism candidate must stay low-capacity and interpretable

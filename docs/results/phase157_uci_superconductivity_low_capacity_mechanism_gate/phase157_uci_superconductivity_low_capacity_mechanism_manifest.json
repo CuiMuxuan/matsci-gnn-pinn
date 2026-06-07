@@ -1,0 +1,53 @@
+{
+  "counts": {
+    "audit_rows": 4,
+    "candidate_rows": 156,
+    "coefficient_rows": 36,
+    "feature_rows": 49,
+    "field_rows": 21263,
+    "metric_rows": 468
+  },
+  "description": "no-training low-capacity mechanism gate for UCI superconductivity",
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "blocking_audits": [
+      "phase156_validation_guard_gain",
+      "phase156_test_reversal_guard"
+    ],
+    "candidate_rows": 156,
+    "next_action": "close Phase 157 low-capacity mechanism route as diagnostic; do not train",
+    "phase156_guard_method": "extra_trees",
+    "phase156_guard_profile": "weighted_feature_core",
+    "phase156_guard_test_rmse": 14.729638830519049,
+    "phase156_guard_validation_rmse": 12.406396805405294,
+    "phase157_focused_validation_allowed": false,
+    "phase157_model_mechanism_allowed": false,
+    "phase157_model_training_allowed": false,
+    "relative_validation_gain_vs_phase156": -0.48531140049120197,
+    "selected_low_capacity_feature_count": 36,
+    "selected_low_capacity_model": "huber",
+    "selected_low_capacity_model_label": "huber;alpha=0.1",
+    "selected_low_capacity_profile": "mechanism_full_low_capacity",
+    "selected_low_capacity_test_rmse": 23.513570826642813,
+    "selected_low_capacity_validation_rmse": 18.42736261408611,
+    "selected_target": "target_critical_temp_K",
+    "status": "phase157_uci_superconductivity_low_capacity_mechanism_closed_no_guarded_gain",
+    "test_reversal_ratio_vs_phase156": 1.5963440174733892
+  },
+  "inputs": {
+    "phase156_dir": "docs/results/phase156_uci_superconductivity_focused_review",
+    "raw_path": "data/raw/external/phase155_uci_superconductivity/superconductivty_data.zip"
+  },
+  "outputs": {
+    "audit_table": "docs/results/phase157_uci_superconductivity_low_capacity_mechanism_gate/phase157_uci_superconductivity_audit_table.csv",
+    "candidate_table": "docs/results/phase157_uci_superconductivity_low_capacity_mechanism_gate/phase157_uci_superconductivity_candidate_table.csv",
+    "coefficient_table": "docs/results/phase157_uci_superconductivity_low_capacity_mechanism_gate/phase157_uci_superconductivity_coefficient_table.csv",
+    "feature_schema": "docs/results/phase157_uci_superconductivity_low_capacity_mechanism_gate/phase157_uci_superconductivity_feature_schema.csv",
+    "gate": "docs/results/phase157_uci_superconductivity_low_capacity_mechanism_gate/phase157_uci_superconductivity_low_capacity_mechanism_gate.json",
+    "manifest": "docs/results/phase157_uci_superconductivity_low_capacity_mechanism_gate/phase157_uci_superconductivity_low_capacity_mechanism_manifest.json",
+    "markdown": "docs/results/phase157_uci_superconductivity_low_capacity_mechanism_gate/phase157_uci_superconductivity_low_capacity_mechanism_gate.md",
+    "metric_table": "docs/results/phase157_uci_superconductivity_low_capacity_mechanism_gate/phase157_uci_superconductivity_metric_table.csv"
+  },
+  "phase": 157
+}
