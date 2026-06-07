@@ -633,7 +633,7 @@ def _csv_value(value: Any) -> str:
     if value is None:
         return ""
     if isinstance(value, float):
-        return f"{value:.6g}"
+        return f"{value:.4g}"
     if isinstance(value, (dict, list, tuple)):
         return json.dumps(value, sort_keys=True)
     return str(value)

@@ -18,4 +18,4 @@ This is a no-training baseline-first intake for a possible second-paper positive
 ## Review
 | target | selected_profile | selected_method | selected_validation_rmse | selected_test_rmse | mean_validation_rmse | mean_test_rmse | best_shortcut_profile | best_shortcut_method | best_shortcut_validation_rmse | best_shortcut_test_rmse | validation_relative_improvement_over_mean | test_relative_improvement_over_mean | baseline_visible_gap | shortcut_dominant | phase159_focused_review_allowed | status | blocker |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| target_compressive_strength_mpa | full_concrete_features | hist_gradient_boosting | 5.66519 | 5.36638 | 16.9528 | 17.0899 | coarse_mix_presence_control | extra_trees | 8.11964 | 8.2133 | 0.665826 | 0.685991 | true | false | true | phase158_uci_concrete_ready_focused_review |  |
+| target_compressive_strength_mpa | full_concrete_features | hist_gradient_boosting | 5.665 | 5.366 | 16.95 | 17.09 | coarse_mix_presence_control | extra_trees | 8.12 | 8.213 | 0.6658 | 0.686 | true | false | true | phase158_uci_concrete_ready_focused_review |  |
