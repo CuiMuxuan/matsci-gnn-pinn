@@ -95,7 +95,8 @@ def _read_csv(path: Path) -> list[dict[str, str]]:
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 
 def _csv_value(value: Any) -> str:
@@ -111,7 +112,7 @@ def _csv_value(value: Any) -> str:
 def _write_csv(path: Path, rows: list[dict[str, Any]], fields: tuple[str, ...]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         for row in rows:
             writer.writerow({field: _csv_value(row.get(field, "")) for field in fields})
@@ -557,15 +558,15 @@ def build_package(*, root: Path, output_dir: Path, phase_inputs: dict[str, Path]
     _write_csv(claim_path, claim_rows, CLAIM_FIELDS)
     _write_csv(decision_path, decision_rows, DECISION_FIELDS)
     _write_json(gate_path, gate)
-    markdown_path.write_text(
-        build_markdown(
-            gate=gate,
-            route_rows=route_rows,
-            claim_rows=claim_rows,
-            decision_rows=decision_rows,
-        ),
-        encoding="utf-8",
-    )
+    with markdown_path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(
+            build_markdown(
+                gate=gate,
+                route_rows=route_rows,
+                claim_rows=claim_rows,
+                decision_rows=decision_rows,
+            )
+        )
 
     manifest = {
         "phase": 152,
