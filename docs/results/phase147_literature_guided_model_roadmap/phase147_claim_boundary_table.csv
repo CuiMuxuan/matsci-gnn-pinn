@@ -1,0 +1,4 @@
+boundary_id,claim_or_route,status,allowed_wording,blocked_wording,evidence_anchor
+P147-BOUNDARY-001,first_paper_main_claim,unchanged,route-guarded fixed-sampling broad12/broad21 spot_size under broad_process_v1,complete GNN-PINN or general process-condition modeling,docs/results/phase146_paper_evidence_refresh/phase146_paper_evidence_refresh_gate.json
+P147-BOUNDARY-002,capl_path_contact_graph,no_training_design_only,literature-motivated no-training path-contact graph audit,"CAPL/G-code success, source-path/Green success, or graph model success",docs/results/phase114_nist_ammt_gcode_strategy_source_gate/phase114_nist_ammt_gcode_strategy_source_gate.json
+P147-BOUNDARY-003,compute,a800_sufficient,continue with small artifact gates and A800 reproduction,request A100-SXM4-80GB before a seed-positive 40GB blocker,docs/results/phase115_nist_ammt_diagnostic_closure_package/phase115_nist_ammt_diagnostic_closure_gate.json

@@ -1,0 +1,15 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "decision_rows": 3,
+  "new_main_paper_claim_ready": false,
+  "next_action": "implement Phase 148 no-training path-contact graph audit only; compare against Phase 114 G-code strategy, scalar source, shuffled sequence, layer/time, and camera controls",
+  "phase146_first_paper_draft_allowed": true,
+  "phase147_model_mechanism_allowed": false,
+  "phase147_model_training_allowed": false,
+  "phase148_no_training_design_allowed": true,
+  "previous_nist_diagnostics_locked": true,
+  "recommended_phase148_route": "capl_path_contact_graph_audit",
+  "route_rows": 7,
+  "status": "phase147_literature_guided_model_roadmap_ready_phase148_no_training_design"
+}
