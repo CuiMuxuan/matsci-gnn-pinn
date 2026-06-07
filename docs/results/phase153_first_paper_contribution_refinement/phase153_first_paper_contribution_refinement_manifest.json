@@ -1,0 +1,53 @@
+{
+  "counts": {
+    "contribution_rows": 5,
+    "phase116_claim_status_rows": 17,
+    "phase116_positive_floor_rows": 6,
+    "phase152_claim_boundary_rows": 5,
+    "phase60_main_rows": 6,
+    "phase60_route_guard_rows": 8,
+    "phase88_claim_lock_rows": 7,
+    "phrasing_guard_rows": 7,
+    "section_rows": 5,
+    "submission_blocker_rows": 2
+  },
+  "description": "first-paper contribution refinement and claim-language guard package",
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "contribution_refinement_ready": true,
+    "contribution_rows": 5,
+    "first_paper_draft_allowed_now": true,
+    "first_paper_submission_ready": false,
+    "main_paper_floor": "fixed-sampling broad12/broad21 spot_size under broad_process_v1, seeds 7/1/2",
+    "new_model_claim_ready": false,
+    "next_action": "use this package to draft/refine the first-paper contribution section; resolve venue/literature gaps before submission polish",
+    "open_gap_rows": 4,
+    "operator_training_allowed_now": false,
+    "phase153_model_mechanism_allowed": false,
+    "phase153_model_training_allowed": false,
+    "phrasing_guard_rows": 7,
+    "section_rows": 5,
+    "status": "phase153_first_paper_contribution_refinement_ready_narrow_claims",
+    "submission_blocker_rows": 2
+  },
+  "inputs": {
+    "phase116_claim_status_table": "docs/results/phase116_paper_evidence_consolidation/phase116_manuscript_claim_status_table.csv",
+    "phase116_positive_floor_table": "docs/results/phase116_paper_evidence_consolidation/phase116_positive_floor_table.csv",
+    "phase152_claim_boundary_table": "docs/results/phase152_paper_evidence_neural_operator_route_closure/phase152_claim_boundary_refresh_table.csv",
+    "phase152_gate": "docs/results/phase152_paper_evidence_neural_operator_route_closure/phase152_paper_evidence_refresh_gate.json",
+    "phase60_main_table": "docs/results/phase60_manuscript_evidence_package/phase60_main_spot_size_seed_positive_table.csv",
+    "phase60_route_guard_table": "docs/results/phase60_manuscript_evidence_package/phase60_route_guard_boundary_table.csv",
+    "phase88_claim_lock_table": "docs/results/phase88_fallback_manuscript_finalization/phase88_claim_lock_table.csv"
+  },
+  "outputs": {
+    "contribution_table": "docs/results/phase153_first_paper_contribution_refinement/phase153_contribution_refinement_table.csv",
+    "gate": "docs/results/phase153_first_paper_contribution_refinement/phase153_first_paper_contribution_refinement_gate.json",
+    "manifest": "docs/results/phase153_first_paper_contribution_refinement/phase153_first_paper_contribution_refinement_manifest.json",
+    "markdown": "docs/results/phase153_first_paper_contribution_refinement/phase153_first_paper_contribution_refinement.md",
+    "open_gap_table": "docs/results/phase153_first_paper_contribution_refinement/phase153_open_gap_table.csv",
+    "phrasing_guard_table": "docs/results/phase153_first_paper_contribution_refinement/phase153_claim_phrasing_guard_table.csv",
+    "section_map": "docs/results/phase153_first_paper_contribution_refinement/phase153_manuscript_section_map.csv"
+  },
+  "phase": 153
+}

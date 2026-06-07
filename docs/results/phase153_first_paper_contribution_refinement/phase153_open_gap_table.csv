@@ -1,0 +1,5 @@
+gap_id,gap_type,status,why_it_matters,required_resolution,blocks_submission
+P153-GAP-001,target_venue,open,"Final section ordering, citation density, and submission language depend on venue.",User supplies target venue/author guide or accepted benchmark papers.,true
+P153-GAP-002,literature_verification,open,Novelty statements need verified benchmark papers and citation proximity.,Run literature verification before final Introduction/Related Work claims.,true
+P153-GAP-003,neural_operator_branch,closed_diagnostic,Prevents FNO/operator claims from entering the manuscript.,continue first-paper refinement around the route-guarded spot_size floor; do not write neural-operator/FNO success; open only a fresh no-training source intake if continuing model discovery,false
+P153-GAP-004,additional_model_training,closed_for_first_paper,New training would blur the frozen first-paper floor unless a fresh gate passes.,Open only a fresh no-training baseline-first intake before any new training.,false
