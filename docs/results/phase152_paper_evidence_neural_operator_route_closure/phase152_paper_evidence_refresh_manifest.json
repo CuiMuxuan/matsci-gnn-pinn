@@ -1,0 +1,54 @@
+{
+  "counts": {
+    "a100_training_allowed_route_rows": 0,
+    "blocked_neural_operator_claim_rows": 2,
+    "claim_boundary_rows": 5,
+    "decision_rows": 3,
+    "model_training_allowed_route_rows": 0,
+    "operator_training_allowed_route_rows": 0,
+    "route_closure_rows": 4
+  },
+  "description": "paper evidence refresh and neural-operator route closure",
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "claim_boundary_rows": 5,
+    "first_paper_draft_allowed_now": true,
+    "first_paper_submission_ready": false,
+    "latest_operator_diagnostics_complete": true,
+    "latest_operator_training_locks_verified": true,
+    "main_paper_floor": "fixed-sampling broad12/broad21 spot_size under broad_process_v1, seeds 7/1/2",
+    "neural_operator_route_closed_as_diagnostic": true,
+    "new_external_model_claim_ready": false,
+    "new_neural_operator_model_claim_ready": false,
+    "next_action": "continue first-paper refinement around the route-guarded spot_size floor; do not write neural-operator/FNO success; open only a fresh no-training source intake if continuing model discovery",
+    "operator_training_allowed_now": false,
+    "phase149_gate_status": "phase149_neural_operator_readiness_closed_not_ready_for_operator_training",
+    "phase150_gate_status": "phase150_dense_tensorization_inventory_ready_phase151_fixed_grid_baseline_review",
+    "phase151_gate_status": "phase151_fixed_grid_dense_baseline_closed_no_operator_gap",
+    "phase152_low_capacity_dense_design_candidates": 0,
+    "phase152_model_mechanism_allowed": false,
+    "phase152_model_training_allowed": false,
+    "route_closure_rows": 4,
+    "status": "phase152_paper_evidence_refresh_ready_first_paper_narrow_claims_neural_operator_closed"
+  },
+  "inputs": {
+    "phase146_gate": "docs/results/phase146_paper_evidence_refresh/phase146_paper_evidence_refresh_gate.json",
+    "phase149_gate": "docs/results/phase149_neural_operator_readiness_gate/phase149_neural_operator_readiness_gate.json",
+    "phase149_readiness_table": "docs/results/phase149_neural_operator_readiness_gate/phase149_neural_operator_readiness_table.csv",
+    "phase150_gate": "docs/results/phase150_dense_tensorization_inventory_gate/phase150_dense_tensorization_inventory_gate.json",
+    "phase150_inventory_table": "docs/results/phase150_dense_tensorization_inventory_gate/phase150_dense_source_inventory_table.csv",
+    "phase151_gate": "docs/results/phase151_fixed_grid_dense_baseline_review/phase151_fixed_grid_dense_baseline_gate.json",
+    "phase151_review_table": "docs/results/phase151_fixed_grid_dense_baseline_review/phase151_dense_baseline_review_table.csv",
+    "phase151_split_table": "docs/results/phase151_fixed_grid_dense_baseline_review/phase151_split_contract_table.csv"
+  },
+  "outputs": {
+    "claim_boundary_table": "docs/results/phase152_paper_evidence_neural_operator_route_closure/phase152_claim_boundary_refresh_table.csv",
+    "gate": "docs/results/phase152_paper_evidence_neural_operator_route_closure/phase152_paper_evidence_refresh_gate.json",
+    "manifest": "docs/results/phase152_paper_evidence_neural_operator_route_closure/phase152_paper_evidence_refresh_manifest.json",
+    "markdown": "docs/results/phase152_paper_evidence_neural_operator_route_closure/phase152_paper_evidence_refresh.md",
+    "next_decision_table": "docs/results/phase152_paper_evidence_neural_operator_route_closure/phase152_next_decision_table.csv",
+    "route_closure_table": "docs/results/phase152_paper_evidence_neural_operator_route_closure/phase152_neural_operator_route_closure_table.csv"
+  },
+  "phase": 152
+}
