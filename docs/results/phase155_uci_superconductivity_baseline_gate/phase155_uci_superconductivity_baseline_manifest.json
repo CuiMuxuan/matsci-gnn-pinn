@@ -1,0 +1,54 @@
+{
+  "counts": {
+    "field_rows": 21263,
+    "group_count": 3365,
+    "metric_rows": 48,
+    "review_rows": 1
+  },
+  "description": "baseline-first intake for UCI Superconductivty Data critical temperature",
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "best_shortcut_profile": "formula_shape_control",
+    "best_shortcut_test_rmse": 25.834005775245053,
+    "best_shortcut_validation_rmse": 23.337244344014987,
+    "field_rows": 21263,
+    "group_count": 3365,
+    "mean_test_rmse": 37.586549109388606,
+    "mean_validation_rmse": 35.46117667596528,
+    "next_action": "run Phase 156 split/shortcut focused review before any mechanism",
+    "phase155_model_mechanism_allowed": false,
+    "phase155_model_training_allowed": false,
+    "phase156_focused_review_allowed": true,
+    "raw_sha256": "87f4490d73390ff94ee01dbf0d7d32abc80b22f2c803d471765cfc46a9f6371e",
+    "selected_method": "extra_trees",
+    "selected_profile": "weighted_feature_core",
+    "selected_target": "target_critical_temp_K",
+    "selected_test_rmse": 14.729638830519049,
+    "selected_validation_rmse": 12.406396805405294,
+    "source": "UCI Superconductivty Data",
+    "source_doi": "10.24432/C53P47",
+    "status": "phase155_uci_superconductivity_ready_focused_review"
+  },
+  "outputs": {
+    "baseline_metric_table": "docs/results/phase155_uci_superconductivity_baseline_gate/phase155_baseline_metric_table.csv",
+    "baseline_review_table": "docs/results/phase155_uci_superconductivity_baseline_gate/phase155_baseline_review_table.csv",
+    "gate": "docs/results/phase155_uci_superconductivity_baseline_gate/phase155_uci_superconductivity_baseline_gate.json",
+    "manifest": "docs/results/phase155_uci_superconductivity_baseline_gate/phase155_uci_superconductivity_baseline_manifest.json",
+    "markdown": "docs/results/phase155_uci_superconductivity_baseline_gate/phase155_uci_superconductivity_baseline_gate.md",
+    "source_overview_table": "docs/results/phase155_uci_superconductivity_baseline_gate/phase155_source_overview_table.csv",
+    "split_manifest": "docs/results/phase155_uci_superconductivity_baseline_gate/phase155_split_manifest.json"
+  },
+  "phase": 155,
+  "source_info": {
+    "raw_bytes": 8300005,
+    "raw_path": "/root/matsci-gnn-pinn/data/raw/external/phase155_uci_superconductivity/superconductivty_data.zip",
+    "raw_sha256": "87f4490d73390ff94ee01dbf0d7d32abc80b22f2c803d471765cfc46a9f6371e",
+    "train_csv_bytes": 23859780,
+    "unique_m_csv_bytes": 4291603,
+    "zip_members": [
+      "train.csv",
+      "unique_m.csv"
+    ]
+  }
+}

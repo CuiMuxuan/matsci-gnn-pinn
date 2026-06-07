@@ -1,0 +1,2 @@
+source_id,source_url,source_doi,raw_path,raw_bytes,raw_sha256,train_rows,unique_rows,feature_columns,target,group_column,group_count,train_rows_split,val_rows_split,test_rows_split
+phase155_uci_superconductivity,https://archive.ics.uci.edu/static/public/464/superconductivty+data.zip,10.24432/C53P47,data/raw/external/phase155_uci_superconductivity/superconductivty_data.zip,8300005,87f4490d73390ff94ee01dbf0d7d32abc80b22f2c803d471765cfc46a9f6371e,21263,21263,173,target_critical_temp_K,element_set_key,3365,11644,3661,5958
