@@ -1,0 +1,4 @@
+candidate_id,split_axis,split_contract_status,leakage_safe_split,group_count,train_rows,val_rows,test_rows,train_groups,val_groups,test_groups,rationale
+ambench_line0_1_phase51_dense_csv,frame_block,diagnostic_frame_block_split_only,false,35,21,7,7,frame_block_train,frame_block_val,frame_block_test,"single-group source can only be split by frame block; this is diagnostic, not operator-safe"
+ambench_line0_1_dense_a800_csv,frame_block,diagnostic_frame_block_split_only,false,70,42,14,14,frame_block_train,frame_block_val,frame_block_test,"single-group source can only be split by frame block; this is diagnostic, not operator-safe"
+ambench_multiline_process_dense_csv,line_id,leakage_safe_line_group_split,true,7,125,40,66,"[""Line_0_1"", ""Line_1_1_1"", ""Line_1_2_1"", ""Line_2_1_1""]","[""Line_2_2_1""]","[""Line_3_1_1"", ""Line_3_2_1""]",line_id groups are disjoint across train/val/test

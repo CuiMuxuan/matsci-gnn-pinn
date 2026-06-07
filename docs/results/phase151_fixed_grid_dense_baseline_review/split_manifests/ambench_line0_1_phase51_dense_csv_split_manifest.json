@@ -1,0 +1,49 @@
+{
+  "leakage_safe_split": false,
+  "sample_id": "phase151_ambench_line0_1_phase51_dense_csv_fixed_grid_summary",
+  "split_axis": "frame_block",
+  "split_contract_status": "diagnostic_frame_block_split_only",
+  "splits": {
+    "test": [
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34
+    ],
+    "train": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "val": [
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "baseline_review_rows": 12,
+  "leakage_safe_source_rows": 1,
+  "next_action": "close neural-operator branch as diagnostic unless a new dense target/split is added",
+  "operator_training_allowed_now": false,
+  "phase150_gate_status": "phase150_dense_tensorization_inventory_ready_phase151_fixed_grid_baseline_review",
+  "phase151_model_mechanism_allowed": false,
+  "phase151_model_training_allowed": false,
+  "phase152_low_capacity_dense_design_candidates": 0,
+  "prior_training_locks_verified_false": true,
+  "split_contract_rows": 3,
+  "status": "phase151_fixed_grid_dense_baseline_closed_no_operator_gap",
+  "tensor_manifest_rows": 3
+}
