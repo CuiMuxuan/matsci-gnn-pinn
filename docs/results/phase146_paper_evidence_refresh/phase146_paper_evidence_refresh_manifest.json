@@ -1,0 +1,42 @@
+{
+  "counts": {
+    "a100_80gb_allowed_external_rows": 0,
+    "a100_training_allowed_external_rows": 0,
+    "claim_boundary_rows": 5,
+    "latest_external_diagnostic_rows": 1,
+    "next_decision_rows": 3,
+    "training_allowed_external_rows": 0
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "blocked_model_training_routes": 1,
+    "decision_rows": 3,
+    "first_paper_draft_allowed_now": true,
+    "first_paper_submission_ready": false,
+    "latest_external_branches": 1,
+    "latest_external_diagnostics_complete": true,
+    "latest_external_training_locks_verified": true,
+    "main_paper_floor": "fixed-sampling broad12/broad21 spot_size under broad_process_v1, seeds 7/1/2",
+    "new_external_model_claim_ready": false,
+    "next_action": "continue first-paper refinement around the route-guarded spot_size floor, or open a fresh no-training baseline-first source intake; do not train from closed diagnostics",
+    "phase143_first_paper_draft_allowed": true,
+    "phase146_model_mechanism_allowed": false,
+    "phase146_model_training_allowed": false,
+    "status": "phase146_paper_evidence_refresh_ready_first_paper_narrow_claims"
+  },
+  "inputs": {
+    "phase143_gate": "docs/results/phase143_paper_evidence_refresh/phase143_paper_evidence_refresh_gate.json",
+    "phase145_mpea_terminal": "docs/results/phase145_mpea_mechanical_focused_review/phase145_mpea_mechanical_focused_review_gate.json"
+  },
+  "objective": "paper_evidence_refresh_after_phase144_145_mpea_diagnostics",
+  "outputs": {
+    "claim_boundary_refresh_table": "docs/results/phase146_paper_evidence_refresh/phase146_claim_boundary_refresh_table.csv",
+    "external_diagnostic_refresh_table": "docs/results/phase146_paper_evidence_refresh/phase146_external_diagnostic_refresh_table.csv",
+    "gate_json": "docs/results/phase146_paper_evidence_refresh/phase146_paper_evidence_refresh_gate.json",
+    "manifest": "docs/results/phase146_paper_evidence_refresh/phase146_paper_evidence_refresh_manifest.json",
+    "markdown": "docs/results/phase146_paper_evidence_refresh/phase146_paper_evidence_refresh.md",
+    "next_decision_table": "docs/results/phase146_paper_evidence_refresh/phase146_next_decision_table.csv"
+  },
+  "phase": 146
+}
