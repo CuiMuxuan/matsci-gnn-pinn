@@ -1,0 +1,4 @@
+boundary_id,claim_or_route,status,allowed_wording,blocked_wording,evidence_anchor
+P149-BOUNDARY-001,neural_operator_fno,not_ready,FNO/neural operators remain future work pending dense tensor readiness,"FNO success, operator-learning contribution, dense field operator model",docs/results/ambench_multiline_process_fourier_spacetime_v1.md
+P149-BOUNDARY-002,first_paper_floor,unchanged,route-guarded fixed-sampling broad12/broad21 spot_size under broad_process_v1,recast the spot_size floor as a neural-operator result,docs/results/phase116_paper_evidence_consolidation/phase116_positive_floor_table.csv
+P149-BOUNDARY-003,compute,a800_sufficient,no-training readiness and inventory gates on A800,A100-SXM4-80GB request without measured 40GB operator-training bottleneck,docs/results/phase148_nist_ammt_path_contact_graph_audit/phase148_nist_ammt_path_contact_graph_audit_gate.json

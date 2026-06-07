@@ -1,0 +1,39 @@
+{
+  "counts": {
+    "blocker_rows": 5,
+    "boundary_rows": 3,
+    "decision_rows": 2,
+    "readiness_rows": 5
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "blocker_rows": 5,
+    "next_action": "do not train FNO/neural operators; if continuing this route, implement Phase 150 as a no-training dense tensorization inventory and baseline-gap audit",
+    "operator_training_allowed_now": false,
+    "phase116_positive_floor_ready": true,
+    "phase148_gate_status": "phase148_path_contact_graph_audit_closed_no_guarded_graph_gap",
+    "phase149_model_mechanism_allowed": false,
+    "phase149_model_training_allowed": false,
+    "phase150_dense_tensorization_inventory_allowed": true,
+    "readiness_rows": 5,
+    "status": "phase149_neural_operator_readiness_closed_not_ready_for_operator_training"
+  },
+  "inputs": {
+    "phase116_gate": "docs/results/phase116_paper_evidence_consolidation/phase116_paper_evidence_consolidation_gate.json",
+    "phase116_positive_floor": "docs/results/phase116_paper_evidence_consolidation/phase116_positive_floor_table.csv",
+    "phase148_gate": "docs/results/phase148_nist_ammt_path_contact_graph_audit/phase148_nist_ammt_path_contact_graph_audit_gate.json",
+    "phase33_fourier_diagnostic": "docs/results/ambench_multiline_process_fourier_spacetime_v1.md",
+    "phase55_spot_size_seed_validation": "docs/results/ambench_multiline_process_spot_size_seed_validation_v1.md"
+  },
+  "objective": "neural_operator_fno_readiness_gate_no_training",
+  "outputs": {
+    "boundary_table": "docs/results/phase149_neural_operator_readiness_gate/phase149_neural_operator_boundary_table.csv",
+    "decision_table": "docs/results/phase149_neural_operator_readiness_gate/phase149_neural_operator_decision_table.csv",
+    "gate_json": "docs/results/phase149_neural_operator_readiness_gate/phase149_neural_operator_readiness_gate.json",
+    "manifest": "docs/results/phase149_neural_operator_readiness_gate/phase149_neural_operator_readiness_manifest.json",
+    "markdown_summary": "docs/results/phase149_neural_operator_readiness_gate/phase149_neural_operator_readiness_gate.md",
+    "readiness_table": "docs/results/phase149_neural_operator_readiness_gate/phase149_neural_operator_readiness_table.csv"
+  },
+  "phase": 149
+}
