@@ -1,0 +1,7 @@
+audit_id,audit,status,severity,value,threshold,reason
+P156-AUDIT-001,phase155_gate_consistency,pass,info,phase155_uci_superconductivity_ready_focused_review,phase155_uci_superconductivity_ready_focused_review,Phase 156 requires a Phase 155 baseline-first gate that allowed focused review
+P156-AUDIT-002,stable_element_set_split_pass_rate,pass,info,1,0.75,baseline-visible signal should survive most leakage-safe element-set splits
+P156-AUDIT-003,registered_split_replay,pass,info,true,true,the Phase 155 registered split must replay as a guarded candidate
+P156-AUDIT-004,shortcut_dominant_split_count,pass,info,0,0,"formula-shape, element-set hash, or row-order controls must not dominate"
+P156-AUDIT-005,nearest_neighbor_dominant_split_count,pass,info,0,0,nearest-neighbor composition identity control must not explain the signal
+P156-AUDIT-006,target_distribution_imbalanced_split_count,pass,info,0,0,target mean/median/q90 shifts must not dominate focused-review interpretation
