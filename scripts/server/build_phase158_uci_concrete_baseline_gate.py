@@ -801,10 +801,14 @@ def build_package(
     _write_json(gate_path, gate)
     with markdown_path.open("w", encoding="utf-8", newline="\n") as handle:
         handle.write(build_markdown(gate=gate, overview_rows=overview_rows, review_rows=review_rows))
+    source_info_for_manifest = {
+        **source_info,
+        "raw_path": _display_path(raw_path, root),
+    }
     manifest = {
         "phase": 158,
         "description": "baseline-first intake for UCI concrete compressive strength",
-        "source_info": source_info,
+        "source_info": source_info_for_manifest,
         "outputs": {
             "source_overview_table": _display_path(overview_path, root),
             "baseline_metric_table": _display_path(metric_path, root),

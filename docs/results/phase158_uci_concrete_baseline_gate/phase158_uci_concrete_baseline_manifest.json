@@ -44,7 +44,7 @@
     "data_member": "Concrete_Data.xls",
     "data_member_bytes": 124928,
     "raw_bytes": 34444,
-    "raw_path": "C:\\code\\matsci-gnn-pinn\\data\\raw\\external\\phase158_uci_concrete\\concrete_compressive_strength.zip",
+    "raw_path": "data/raw/external/phase158_uci_concrete/concrete_compressive_strength.zip",
     "raw_sha256": "dad85d14de8aee4e07479daa774e6b569a313715b71a3b92c95a07cf91c2c9a7",
     "readme_bytes": 3808,
     "zip_members": [
