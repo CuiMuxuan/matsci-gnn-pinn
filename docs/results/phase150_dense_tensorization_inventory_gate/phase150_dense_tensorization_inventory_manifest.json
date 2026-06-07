@@ -1,0 +1,97 @@
+{
+  "candidate_sources": [
+    {
+      "candidate_id": "nist_ammt_layer_camera_bmp_zip",
+      "member_needles": [
+        "layer camera",
+        "layer_camera",
+        "layercamera"
+      ],
+      "path": "data/raw/nist_ammt/mds2_2044/In-situ Meas Data.zip",
+      "source_kind": "zip_bmp_members",
+      "target_family": "NIST AMMT registered Layer Camera BMP targets"
+    },
+    {
+      "candidate_id": "nist_ammt_melt_pool_bmp_zip",
+      "member_needles": [
+        "melt pool",
+        "melt_pool",
+        "meltpool"
+      ],
+      "path": "data/raw/nist_ammt/mds2_2044/In-situ Meas Data.zip",
+      "source_kind": "zip_bmp_members",
+      "target_family": "NIST AMMT Melt Pool Camera image sequence targets"
+    },
+    {
+      "candidate_id": "ambench_mds2_2716_raw_thermography_hdf5",
+      "dataset_regex": "ThermalData/.*/Signal$",
+      "path": "data/raw/ambench/2022_single_track/AMB2022-03/mds2-2716/Thermography/AMB2022-03-718-AMMT-StaringCamera_Signal.h5",
+      "source_kind": "hdf5_dataset",
+      "target_family": "AMB2022-03 raw thermography dense fields"
+    },
+    {
+      "candidate_id": "ambench_line0_1_phase51_dense_csv",
+      "path": "data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_phase51_dense.csv",
+      "source_kind": "dense_csv",
+      "target_column": "temperature_C",
+      "target_family": "AMB2022-03 Line_0_1 temperature indexed dense CSV"
+    },
+    {
+      "candidate_id": "ambench_line0_1_dense_a800_csv",
+      "path": "data/interim/ambench/2022_single_track/AMB2022-03/line_0_1_temperature_dense_a100_sxm4_40gb_v1.csv",
+      "source_kind": "dense_csv",
+      "target_column": "temperature_C",
+      "target_family": "AMB2022-03 Line_0_1 A800 indexed dense CSV"
+    },
+    {
+      "candidate_id": "ambench_multiline_process_dense_csv",
+      "path": "data/interim/ambench/2022_single_track/AMB2022-03/ambench_multiline_process_temperature_a100_sxm4_40gb_v1.csv",
+      "source_kind": "dense_csv",
+      "target_column": "temperature_C",
+      "target_family": "AMB2022-03 multiline process indexed dense CSV"
+    }
+  ],
+  "counts": {
+    "baseline_rows": 4,
+    "inventory_rows": 6,
+    "operator_gap_ready_rows": 0,
+    "tensorizable_candidate_rows": 6
+  },
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "inventory_rows": 6,
+    "next_action": "implement Phase 151 as a no-training fixed-grid tensor/split manifest and dense baseline review",
+    "operator_gap_ready_rows": 0,
+    "operator_training_allowed_now": false,
+    "phase148_gate_status": "phase148_path_contact_graph_audit_closed_no_guarded_graph_gap",
+    "phase149_gate_status": "phase149_neural_operator_readiness_closed_not_ready_for_operator_training",
+    "phase150_model_mechanism_allowed": false,
+    "phase150_model_training_allowed": false,
+    "phase151_fixed_grid_baseline_review_allowed": true,
+    "present_source_rows": 6,
+    "prior_training_locks_verified_false": true,
+    "status": "phase150_dense_tensorization_inventory_ready_phase151_fixed_grid_baseline_review",
+    "tensorizable_candidate_rows": 6
+  },
+  "inputs": {
+    "phase106_gate": "docs/results/phase106_nist_ammt_spatial_target_representation_gate/phase106_nist_ammt_spatial_target_gate.json",
+    "phase116_gate": "docs/results/phase116_paper_evidence_consolidation/phase116_paper_evidence_consolidation_gate.json",
+    "phase116_positive_floor": "docs/results/phase116_paper_evidence_consolidation/phase116_positive_floor_table.csv",
+    "phase148_gate": "docs/results/phase148_nist_ammt_path_contact_graph_audit/phase148_nist_ammt_path_contact_graph_audit_gate.json",
+    "phase149_gate": "docs/results/phase149_neural_operator_readiness_gate/phase149_neural_operator_readiness_gate.json",
+    "phase53_pivot": "docs/results/ambench_source_path_data_pivot_gate_v1.md"
+  },
+  "limits": {
+    "max_preview_rows": 20000
+  },
+  "objective": "dense_tensorization_inventory_and_baseline_gap_audit_no_training",
+  "outputs": {
+    "baseline_gap_audit_table": "docs/results/phase150_dense_tensorization_inventory_gate/phase150_dense_baseline_gap_audit_table.csv",
+    "gate_json": "docs/results/phase150_dense_tensorization_inventory_gate/phase150_dense_tensorization_inventory_gate.json",
+    "inventory_table": "docs/results/phase150_dense_tensorization_inventory_gate/phase150_dense_source_inventory_table.csv",
+    "manifest": "docs/results/phase150_dense_tensorization_inventory_gate/phase150_dense_tensorization_inventory_manifest.json",
+    "markdown_summary": "docs/results/phase150_dense_tensorization_inventory_gate/phase150_dense_tensorization_inventory_gate.md"
+  },
+  "phase": 150
+}

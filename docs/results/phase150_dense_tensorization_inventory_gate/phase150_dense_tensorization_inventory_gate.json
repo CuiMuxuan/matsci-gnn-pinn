@@ -1,0 +1,17 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "inventory_rows": 6,
+  "next_action": "implement Phase 151 as a no-training fixed-grid tensor/split manifest and dense baseline review",
+  "operator_gap_ready_rows": 0,
+  "operator_training_allowed_now": false,
+  "phase148_gate_status": "phase148_path_contact_graph_audit_closed_no_guarded_graph_gap",
+  "phase149_gate_status": "phase149_neural_operator_readiness_closed_not_ready_for_operator_training",
+  "phase150_model_mechanism_allowed": false,
+  "phase150_model_training_allowed": false,
+  "phase151_fixed_grid_baseline_review_allowed": true,
+  "present_source_rows": 6,
+  "prior_training_locks_verified_false": true,
+  "status": "phase150_dense_tensorization_inventory_ready_phase151_fixed_grid_baseline_review",
+  "tensorizable_candidate_rows": 6
+}
