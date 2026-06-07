@@ -1,0 +1,205 @@
+target,target_label,profile,profile_role,method,split,n_rows,rmse,mae,r2,nrmse_train_std
+hardness_hv,Vickers hardness,mean,baseline,mean,train,317,213.572883946,175.527954303,0.000000000,1.000000000
+hardness_hv,Vickers hardness,mean,baseline,mean,val,110,213.772881049,177.198150272,-0.000012433,1.000936435
+hardness_hv,Vickers hardness,mean,baseline,mean,test,103,208.862310066,164.804447031,-0.003424583,0.977943952
+hardness_hv,Vickers hardness,composition_descriptors,admissible,knn,train,317,130.671870372,98.817218717,0.625655040,0.611837364
+hardness_hv,Vickers hardness,composition_descriptors,admissible,knn,val,110,153.506587560,114.885000000,0.484350960,0.718755044
+hardness_hv,Vickers hardness,composition_descriptors,admissible,knn,test,103,174.688466333,124.209708738,0.298071225,0.817933733
+hardness_hv,Vickers hardness,composition_descriptors,admissible,extra_trees,train,317,40.399079940,17.242979320,0.964219144,0.189158283
+hardness_hv,Vickers hardness,composition_descriptors,admissible,extra_trees,val,110,118.095764410,82.702257891,0.694811038,0.552952988
+hardness_hv,Vickers hardness,composition_descriptors,admissible,extra_trees,test,103,145.062450608,95.319905385,0.515967412,0.679217548
+hardness_hv,Vickers hardness,composition_descriptors,admissible,hist_gradient_boosting,train,317,52.165446547,35.710052300,0.940341321,0.244251263
+hardness_hv,Vickers hardness,composition_descriptors,admissible,hist_gradient_boosting,val,110,111.258099127,80.941158676,0.729128414,0.520937382
+hardness_hv,Vickers hardness,composition_descriptors,admissible,hist_gradient_boosting,test,103,148.323895626,99.266420631,0.493957691,0.694488424
+hardness_hv,Vickers hardness,common_element_fractions,admissible,knn,train,317,109.930228866,85.167560463,0.735063350,0.514719972
+hardness_hv,Vickers hardness,common_element_fractions,admissible,knn,val,110,152.264354210,114.037878788,0.492662846,0.712938606
+hardness_hv,Vickers hardness,common_element_fractions,admissible,knn,test,103,142.738500825,104.841666667,0.531351917,0.668336252
+hardness_hv,Vickers hardness,common_element_fractions,admissible,extra_trees,train,317,40.400329286,17.268215913,0.964216931,0.189164132
+hardness_hv,Vickers hardness,common_element_fractions,admissible,extra_trees,val,110,111.916558072,79.336025042,0.725912727,0.524020447
+hardness_hv,Vickers hardness,common_element_fractions,admissible,extra_trees,test,103,126.495733144,82.006811062,0.631941938,0.592283678
+hardness_hv,Vickers hardness,common_element_fractions,admissible,hist_gradient_boosting,train,317,50.472809789,33.913751538,0.944150056,0.236325927
+hardness_hv,Vickers hardness,common_element_fractions,admissible,hist_gradient_boosting,val,110,115.383851150,83.312811125,0.708666625,0.540255153
+hardness_hv,Vickers hardness,common_element_fractions,admissible,hist_gradient_boosting,test,103,128.869619184,85.682037566,0.617997968,0.603398787
+hardness_hv,Vickers hardness,composition_process_context,admissible,knn,train,317,116.541094834,83.894821241,0.702240269,0.545673649
+hardness_hv,Vickers hardness,composition_process_context,admissible,knn,val,110,134.879142790,96.525833333,0.601902204,0.631536833
+hardness_hv,Vickers hardness,composition_process_context,admissible,knn,test,103,133.263290472,94.255016181,0.591506033,0.623971021
+hardness_hv,Vickers hardness,composition_process_context,admissible,extra_trees,train,317,12.352456258,2.529127234,0.996654859,0.057837194
+hardness_hv,Vickers hardness,composition_process_context,admissible,extra_trees,val,110,99.210272543,65.044984217,0.784615987,0.464526539
+hardness_hv,Vickers hardness,composition_process_context,admissible,extra_trees,test,103,127.101035080,77.395368123,0.628411079,0.595117848
+hardness_hv,Vickers hardness,composition_process_context,admissible,hist_gradient_boosting,train,317,31.068833271,19.543885289,0.978837953,0.145471807
+hardness_hv,Vickers hardness,composition_process_context,admissible,hist_gradient_boosting,val,110,92.386023255,64.516277706,0.813227589,0.432573750
+hardness_hv,Vickers hardness,composition_process_context,admissible,hist_gradient_boosting,test,103,138.128931438,90.393192973,0.561132029,0.646753131
+hardness_hv,Vickers hardness,process_only_control,negative_control,knn,train,317,130.269120517,99.092402734,0.627959056,0.609951592
+hardness_hv,Vickers hardness,process_only_control,negative_control,knn,val,110,136.201165952,104.636136364,0.594060017,0.637726866
+hardness_hv,Vickers hardness,process_only_control,negative_control,knn,test,103,154.933426572,112.629126214,0.447852851,0.725435850
+hardness_hv,Vickers hardness,process_only_control,negative_control,extra_trees,train,317,21.048117849,7.672134595,0.990287427,0.098552389
+hardness_hv,Vickers hardness,process_only_control,negative_control,extra_trees,val,110,125.213170700,93.708895991,0.656916205,0.586278409
+hardness_hv,Vickers hardness,process_only_control,negative_control,extra_trees,test,103,159.669343463,101.768096009,0.413581502,0.747610560
+hardness_hv,Vickers hardness,process_only_control,negative_control,hist_gradient_boosting,train,317,71.502029590,53.197891961,0.887915769,0.334789830
+hardness_hv,Vickers hardness,process_only_control,negative_control,hist_gradient_boosting,val,110,119.843385619,90.572054125,0.685711625,0.561135774
+hardness_hv,Vickers hardness,process_only_control,negative_control,hist_gradient_boosting,test,103,169.490003945,113.973931438,0.339226280,0.793593273
+hardness_hv,Vickers hardness,formula_hash_shortcut,negative_control,knn,train,317,183.798179311,151.398343849,0.259388953,0.860587617
+hardness_hv,Vickers hardness,formula_hash_shortcut,negative_control,knn,val,110,214.456109211,179.702727273,-0.006414821,1.004135475
+hardness_hv,Vickers hardness,formula_hash_shortcut,negative_control,knn,test,103,210.663735744,165.013592233,-0.020808188,0.986378663
+hardness_hv,Vickers hardness,reference_shortcut,negative_control,knn,train,317,248.790074928,206.734121977,-0.356981346,1.164895423
+hardness_hv,Vickers hardness,reference_shortcut,negative_control,knn,val,110,298.608367770,238.702803030,-0.951210508,1.398156743
+hardness_hv,Vickers hardness,reference_shortcut,negative_control,knn,test,103,307.505083342,257.606472492,-1.175049681,1.439813321
+hardness_hv,Vickers hardness,dominant_element_shortcut,negative_control,knn,train,317,207.248895927,166.960935857,0.058344111,0.970389556
+hardness_hv,Vickers hardness,dominant_element_shortcut,negative_control,knn,val,110,201.859532913,165.844242424,0.108341186,0.945155252
+hardness_hv,Vickers hardness,dominant_element_shortcut,negative_control,knn,test,103,229.586182203,170.197977346,-0.212428327,1.074978143
+hardness_hv,Vickers hardness,dominant_element_shortcut,negative_control,extra_trees,train,317,173.581238163,139.854351087,0.339438376,0.812749423
+hardness_hv,Vickers hardness,dominant_element_shortcut,negative_control,extra_trees,val,110,173.755167874,142.022674162,0.339343610,0.813563804
+hardness_hv,Vickers hardness,dominant_element_shortcut,negative_control,extra_trees,test,103,197.680217299,153.375720625,0.101142178,0.925586683
+yield_strength_mpa,yield strength in MPa,mean,baseline,mean,train,657,578.174774886,464.055438377,0.000000000,1.000000000
+yield_strength_mpa,yield strength in MPa,mean,baseline,mean,val,170,545.349261339,451.063221595,-0.016551512,0.943225621
+yield_strength_mpa,yield strength in MPa,mean,baseline,mean,test,240,563.927606569,482.746717466,-0.008547928,0.975358371
+yield_strength_mpa,yield strength in MPa,composition_descriptors,admissible,knn,train,657,478.856501679,368.168772197,0.314049942,0.828221020
+yield_strength_mpa,yield strength in MPa,composition_descriptors,admissible,knn,val,170,575.340630939,464.448946078,-0.131436078,0.995098119
+yield_strength_mpa,yield strength in MPa,composition_descriptors,admissible,knn,test,240,516.264604510,415.594913194,0.154731799,0.892921357
+yield_strength_mpa,yield strength in MPa,composition_descriptors,admissible,extra_trees,train,657,342.128469093,231.405901945,0.649845148,0.591738837
+yield_strength_mpa,yield strength in MPa,composition_descriptors,admissible,extra_trees,val,170,525.620510096,416.330647716,0.055668364,0.909103152
+yield_strength_mpa,yield strength in MPa,composition_descriptors,admissible,extra_trees,test,240,662.367266894,485.743890095,-0.391385761,1.145617719
+yield_strength_mpa,yield strength in MPa,composition_descriptors,admissible,hist_gradient_boosting,train,657,354.905787458,264.132955271,0.623202613,0.613838242
+yield_strength_mpa,yield strength in MPa,composition_descriptors,admissible,hist_gradient_boosting,val,170,521.688150593,423.407139460,0.069745291,0.902301818
+yield_strength_mpa,yield strength in MPa,composition_descriptors,admissible,hist_gradient_boosting,test,240,723.602740559,560.592971337,-0.660543421,1.251529420
+yield_strength_mpa,yield strength in MPa,common_element_fractions,admissible,knn,train,657,464.878393720,357.187757484,0.353512036,0.804044752
+yield_strength_mpa,yield strength in MPa,common_element_fractions,admissible,knn,val,170,537.723520453,437.339259804,0.011679056,0.930036286
+yield_strength_mpa,yield strength in MPa,common_element_fractions,admissible,knn,test,240,476.036220254,395.869059028,0.281329486,0.823343115
+yield_strength_mpa,yield strength in MPa,common_element_fractions,admissible,extra_trees,train,657,342.271781362,231.952325081,0.649551738,0.591986708
+yield_strength_mpa,yield strength in MPa,common_element_fractions,admissible,extra_trees,val,170,520.997343633,409.720459363,0.072207302,0.901107012
+yield_strength_mpa,yield strength in MPa,common_element_fractions,admissible,extra_trees,test,240,500.191852698,413.733141465,0.206543619,0.865122234
+yield_strength_mpa,yield strength in MPa,common_element_fractions,admissible,hist_gradient_boosting,train,657,354.184803142,262.217042469,0.624731971,0.612591241
+yield_strength_mpa,yield strength in MPa,common_element_fractions,admissible,hist_gradient_boosting,val,170,518.841290038,408.445165584,0.079870418,0.897377943
+yield_strength_mpa,yield strength in MPa,common_element_fractions,admissible,hist_gradient_boosting,test,240,530.888138493,430.223056677,0.106168050,0.918213941
+yield_strength_mpa,yield strength in MPa,composition_process_context,admissible,knn,train,657,391.144123128,297.048829274,0.542326951,0.676515372
+yield_strength_mpa,yield strength in MPa,composition_process_context,admissible,knn,val,170,452.005057186,350.881235294,0.301660641,0.781779276
+yield_strength_mpa,yield strength in MPa,composition_process_context,admissible,knn,test,240,489.584118824,382.422274306,0.239840944,0.846775301
+yield_strength_mpa,yield strength in MPa,composition_process_context,admissible,extra_trees,train,657,82.131612637,22.518388055,0.979820871,0.142053262
+yield_strength_mpa,yield strength in MPa,composition_process_context,admissible,extra_trees,val,170,330.142633403,220.088395221,0.627451212,0.571008366
+yield_strength_mpa,yield strength in MPa,composition_process_context,admissible,extra_trees,test,240,290.631267227,203.053902881,0.732123571,0.502670265
+yield_strength_mpa,yield strength in MPa,composition_process_context,admissible,hist_gradient_boosting,train,657,132.484735840,84.610880002,0.947493459,0.229143058
+yield_strength_mpa,yield strength in MPa,composition_process_context,admissible,hist_gradient_boosting,val,170,271.464175432,201.215105908,0.748113448,0.469519231
+yield_strength_mpa,yield strength in MPa,composition_process_context,admissible,hist_gradient_boosting,test,240,349.722319107,267.368773837,0.612120766,0.604873015
+yield_strength_mpa,yield strength in MPa,process_only_control,negative_control,knn,train,657,365.949987319,278.551764333,0.599386857,0.632940078
+yield_strength_mpa,yield strength in MPa,process_only_control,negative_control,knn,val,170,430.249361515,334.789686275,0.367267123,0.744151043
+yield_strength_mpa,yield strength in MPa,process_only_control,negative_control,knn,test,240,505.490904916,388.511131944,0.189642750,0.874287373
+yield_strength_mpa,yield strength in MPa,process_only_control,negative_control,extra_trees,train,657,95.662622679,30.904175727,0.972624234,0.165456237
+yield_strength_mpa,yield strength in MPa,process_only_control,negative_control,extra_trees,val,170,374.576368343,259.178357639,0.520420421,0.647860102
+yield_strength_mpa,yield strength in MPa,process_only_control,negative_control,extra_trees,test,240,351.254850685,250.569878762,0.608713836,0.607523652
+yield_strength_mpa,yield strength in MPa,process_only_control,negative_control,hist_gradient_boosting,train,657,186.643420546,133.181347047,0.895790553,0.322814880
+yield_strength_mpa,yield strength in MPa,process_only_control,negative_control,hist_gradient_boosting,val,170,341.470796677,257.707159729,0.601446096,0.590601340
+yield_strength_mpa,yield strength in MPa,process_only_control,negative_control,hist_gradient_boosting,test,240,398.966226752,293.427645884,0.495196803,0.690044333
+yield_strength_mpa,yield strength in MPa,formula_hash_shortcut,negative_control,knn,train,657,493.802930241,385.060265094,0.270560889,0.854072076
+yield_strength_mpa,yield strength in MPa,formula_hash_shortcut,negative_control,knn,val,170,548.227940012,451.894470588,-0.027311767,0.948204529
+yield_strength_mpa,yield strength in MPa,formula_hash_shortcut,negative_control,knn,test,240,562.450317406,479.481791667,-0.003270778,0.972803280
+yield_strength_mpa,yield strength in MPa,reference_shortcut,negative_control,knn,train,657,529.224860763,432.590275241,0.162157870,0.915337167
+yield_strength_mpa,yield strength in MPa,reference_shortcut,negative_control,knn,val,170,586.343060689,484.946990196,-0.175123501,1.014127710
+yield_strength_mpa,yield strength in MPa,reference_shortcut,negative_control,knn,test,240,633.254633712,509.852024306,-0.271764163,1.095265067
+yield_strength_mpa,yield strength in MPa,dominant_element_shortcut,negative_control,knn,train,657,569.216761053,411.434974632,0.030747166,0.984506391
+yield_strength_mpa,yield strength in MPa,dominant_element_shortcut,negative_control,knn,val,170,612.232337419,485.419127451,-0.281186819,1.058905307
+yield_strength_mpa,yield strength in MPa,dominant_element_shortcut,negative_control,knn,test,240,615.486009614,487.502763889,-0.201396055,1.064532796
+yield_strength_mpa,yield strength in MPa,dominant_element_shortcut,negative_control,extra_trees,train,657,527.354988286,410.277505395,0.168067986,0.912103072
+yield_strength_mpa,yield strength in MPa,dominant_element_shortcut,negative_control,extra_trees,val,170,599.557060401,486.601078139,-0.228686186,1.036982391
+yield_strength_mpa,yield strength in MPa,dominant_element_shortcut,negative_control,extra_trees,test,240,583.819704754,490.646384393,-0.080954287,1.009763362
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,mean,baseline,mean,train,342,699.569189717,516.445638145,0.000000000,1.000000000
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,mean,baseline,mean,val,92,745.521111713,604.240369947,-0.001941632,1.065686029
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,mean,baseline,mean,test,105,762.739310396,560.468681426,-0.000009585,1.090298603
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_descriptors,admissible,knn,train,342,512.370723672,368.605331384,0.463577155,0.732408933
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_descriptors,admissible,knn,val,92,656.317685916,514.484483696,0.223483400,0.938174087
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_descriptors,admissible,knn,test,105,755.293222273,536.133253968,0.019419894,1.079654784
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_descriptors,admissible,extra_trees,train,342,278.978225223,166.327918108,0.840969924,0.398785752
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_descriptors,admissible,extra_trees,val,92,659.912417642,481.138039156,0.214953954,0.943312581
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_descriptors,admissible,extra_trees,test,105,593.140108099,436.304139949,0.395263075,0.847864824
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_descriptors,admissible,hist_gradient_boosting,train,342,312.638913831,221.693434026,0.800278546,0.446902063
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_descriptors,admissible,hist_gradient_boosting,val,92,716.702363125,520.304655015,0.074022994,1.024491035
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_descriptors,admissible,hist_gradient_boosting,test,105,617.771182100,455.084713672,0.343994933,0.883073742
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,common_element_fractions,admissible,knn,train,342,469.340896382,334.378801170,0.549893330,0.670899896
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,common_element_fractions,admissible,knn,val,92,689.718368249,505.912327899,0.142436844,0.985918732
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,common_element_fractions,admissible,knn,test,105,568.972200264,450.974920635,0.443539940,0.813317980
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,common_element_fractions,admissible,extra_trees,train,342,280.584158554,168.620315769,0.839133747,0.401081355
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,common_element_fractions,admissible,extra_trees,val,92,658.290340231,447.317930054,0.218808527,0.940993900
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,common_element_fractions,admissible,extra_trees,test,105,591.387207286,435.922659231,0.398832139,0.845359138
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,common_element_fractions,admissible,hist_gradient_boosting,train,342,313.520744270,219.737257125,0.799150287,0.448162596
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,common_element_fractions,admissible,hist_gradient_boosting,val,92,755.663392028,565.409302830,-0.029388463,1.080183923
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,common_element_fractions,admissible,hist_gradient_boosting,test,105,663.576909920,489.913245041,0.243107094,0.948550793
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_process_context,admissible,knn,train,342,446.456526065,319.923019006,0.592716325,0.638187806
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_process_context,admissible,knn,val,92,601.203577322,448.450199275,0.348423156,0.859391160
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_process_context,admissible,knn,test,105,605.317974473,436.580158730,0.370176235,0.865272490
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_process_context,admissible,extra_trees,train,342,74.880745925,20.931649123,0.988542787,0.107038370
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_process_context,admissible,extra_trees,val,92,331.482371809,242.259716938,0.801918733,0.473837866
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_process_context,admissible,extra_trees,test,105,352.547437229,256.777771032,0.786357807,0.503949348
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_process_context,admissible,hist_gradient_boosting,train,342,187.716207422,123.429112143,0.927998392,0.268331153
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_process_context,admissible,hist_gradient_boosting,val,92,356.062460644,287.058357210,0.771453325,0.508973903
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,composition_process_context,admissible,hist_gradient_boosting,test,105,420.450685126,309.876828824,0.696134054,0.601013726
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,process_only_control,negative_control,knn,train,342,418.643703563,295.630850390,0.641880657,0.598430734
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,process_only_control,negative_control,knn,val,92,567.874953509,407.400000000,0.418663009,0.811749519
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,process_only_control,negative_control,knn,test,105,602.178922798,432.125674603,0.376691565,0.860785369
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,process_only_control,negative_control,extra_trees,train,342,85.824713609,28.783208577,0.984949069,0.122682238
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,process_only_control,negative_control,extra_trees,val,92,299.657584656,226.943919158,0.838127498,0.428345886
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,process_only_control,negative_control,extra_trees,test,105,326.683282801,248.005719048,0.816555065,0.466977802
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,process_only_control,negative_control,hist_gradient_boosting,train,342,281.639083263,199.479910840,0.837921841,0.402589318
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,process_only_control,negative_control,hist_gradient_boosting,val,92,373.517956633,272.719047858,0.748495651,0.533925682
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,process_only_control,negative_control,hist_gradient_boosting,test,105,472.518775130,345.874978809,0.616213192,0.675442518
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,formula_hash_shortcut,negative_control,knn,train,342,718.261977195,465.932097953,-0.054154835,1.026720427
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,formula_hash_shortcut,negative_control,knn,val,92,827.895204582,600.531159420,-0.235586810,1.183435773
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,formula_hash_shortcut,negative_control,knn,test,105,831.479527864,578.348698413,-0.188379153,1.188559388
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,reference_shortcut,negative_control,knn,train,342,580.905735943,390.972263645,0.310475057,0.830376387
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,reference_shortcut,negative_control,knn,val,92,701.671209161,519.578442029,0.112456100,1.003004734
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,reference_shortcut,negative_control,knn,test,105,667.721376576,482.522777778,0.233622999,0.954475106
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,dominant_element_shortcut,negative_control,knn,train,342,694.102300798,515.510823587,0.015568233,0.992185349
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,dominant_element_shortcut,negative_control,knn,val,92,718.253951873,561.132518116,0.070009359,1.026708955
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,dominant_element_shortcut,negative_control,knn,test,105,765.625699340,555.323730159,-0.007592459,1.094424555
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,dominant_element_shortcut,negative_control,extra_trees,train,342,654.764283071,458.470407633,0.123990908,0.935953574
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,dominant_element_shortcut,negative_control,extra_trees,val,92,743.864660024,564.206288196,0.002505792,1.063318212
+ultimate_tensile_strength_mpa,ultimate tensile strength in MPa,dominant_element_shortcut,negative_control,extra_trees,test,105,742.939693204,533.656597820,0.051234187,1.061996017
+elongation_pct,elongation in percent,mean,baseline,mean,train,403,22.708107689,19.593221435,0.000000000,1.000000000
+elongation_pct,elongation in percent,mean,baseline,mean,val,112,20.001306322,17.415862283,-0.047165994,0.880800223
+elongation_pct,elongation in percent,mean,baseline,mean,test,104,21.443857585,18.547467312,-0.021856804,0.944326048
+elongation_pct,elongation in percent,composition_descriptors,admissible,knn,train,403,18.114866612,14.081699752,0.363631915,0.797726823
+elongation_pct,elongation in percent,composition_descriptors,admissible,knn,val,112,21.642665954,18.107931548,-0.226084270,0.953080999
+elongation_pct,elongation in percent,composition_descriptors,admissible,knn,test,104,20.731936808,16.775280449,0.044866747,0.912975096
+elongation_pct,elongation in percent,composition_descriptors,admissible,extra_trees,train,403,13.234171409,8.823582109,0.660349999,0.582794991
+elongation_pct,elongation in percent,composition_descriptors,admissible,extra_trees,val,112,18.432783973,14.823031988,0.110633689,0.811726993
+elongation_pct,elongation in percent,composition_descriptors,admissible,extra_trees,test,104,16.972154094,14.016441928,0.359884793,0.747405038
+elongation_pct,elongation in percent,composition_descriptors,admissible,hist_gradient_boosting,train,403,13.630037026,10.030617789,0.639726614,0.600227778
+elongation_pct,elongation in percent,composition_descriptors,admissible,hist_gradient_boosting,val,112,20.024578435,15.666954264,-0.049604229,0.881825060
+elongation_pct,elongation in percent,composition_descriptors,admissible,hist_gradient_boosting,test,104,15.812558224,13.198964892,0.444366416,0.696339758
+elongation_pct,elongation in percent,common_element_fractions,admissible,knn,train,403,17.553304087,13.617535153,0.402475300,0.772997219
+elongation_pct,elongation in percent,common_element_fractions,admissible,knn,val,112,21.208579932,17.605453869,-0.177394462,0.933965094
+elongation_pct,elongation in percent,common_element_fractions,admissible,knn,test,104,19.124884502,14.995857372,0.187203444,0.842205117
+elongation_pct,elongation in percent,common_element_fractions,admissible,extra_trees,train,403,13.234171409,8.823582109,0.660349999,0.582794991
+elongation_pct,elongation in percent,common_element_fractions,admissible,extra_trees,val,112,17.979818981,14.576644605,0.153806981,0.791779713
+elongation_pct,elongation in percent,common_element_fractions,admissible,extra_trees,test,104,19.935585616,15.703473143,0.116834271,0.877906072
+elongation_pct,elongation in percent,common_element_fractions,admissible,hist_gradient_boosting,train,403,13.595293282,9.932503681,0.641560988,0.598697763
+elongation_pct,elongation in percent,common_element_fractions,admissible,hist_gradient_boosting,val,112,21.926150512,17.272723509,-0.258414141,0.965564846
+elongation_pct,elongation in percent,common_element_fractions,admissible,hist_gradient_boosting,test,104,22.316017821,17.319905497,-0.106668661,0.982733486
+elongation_pct,elongation in percent,composition_process_context,admissible,knn,train,403,17.509596606,14.045363937,0.405447251,0.771072467
+elongation_pct,elongation in percent,composition_process_context,admissible,knn,val,112,19.894977374,16.531205357,-0.036061909,0.876117801
+elongation_pct,elongation in percent,composition_process_context,admissible,knn,test,104,19.295651219,15.874631410,0.172623668,0.849725194
+elongation_pct,elongation in percent,composition_process_context,admissible,extra_trees,train,403,4.055422663,1.078629032,0.968105900,0.178589195
+elongation_pct,elongation in percent,composition_process_context,admissible,extra_trees,val,112,16.753778880,13.115978888,0.265275763,0.737788419
+elongation_pct,elongation in percent,composition_process_context,admissible,extra_trees,test,104,15.636380383,12.132081831,0.456678781,0.688581391
+elongation_pct,elongation in percent,composition_process_context,admissible,hist_gradient_boosting,train,403,7.521482434,4.998786552,0.890290307,0.331224536
+elongation_pct,elongation in percent,composition_process_context,admissible,hist_gradient_boosting,val,112,17.897818718,13.221417445,0.161507817,0.788168656
+elongation_pct,elongation in percent,composition_process_context,admissible,hist_gradient_boosting,test,104,16.928031612,13.312995658,0.363208680,0.745462010
+elongation_pct,elongation in percent,process_only_control,negative_control,knn,train,403,18.545532171,14.975053763,0.333014013,0.816692101
+elongation_pct,elongation in percent,process_only_control,negative_control,knn,val,112,19.912235288,16.626413690,-0.037860154,0.876877790
+elongation_pct,elongation in percent,process_only_control,negative_control,knn,test,104,19.707442986,16.448926282,0.136932486,0.867859324
+elongation_pct,elongation in percent,process_only_control,negative_control,extra_trees,train,403,4.983022541,1.499090157,0.951846949,0.219438036
+elongation_pct,elongation in percent,process_only_control,negative_control,extra_trees,val,112,22.834987512,16.938101128,-0.364898527,1.005587424
+elongation_pct,elongation in percent,process_only_control,negative_control,extra_trees,test,104,18.035573584,12.064492521,0.277156750,0.794234986
+elongation_pct,elongation in percent,process_only_control,negative_control,hist_gradient_boosting,train,403,10.455348208,7.880095147,0.788010128,0.460423579
+elongation_pct,elongation in percent,process_only_control,negative_control,hist_gradient_boosting,val,112,16.448957248,13.261719485,0.291767990,0.724364948
+elongation_pct,elongation in percent,process_only_control,negative_control,hist_gradient_boosting,test,104,19.463114120,15.468728441,0.158200098,0.857099781
+elongation_pct,elongation in percent,formula_hash_shortcut,negative_control,knn,train,403,19.428083319,16.374636063,0.268022007,0.855557125
+elongation_pct,elongation in percent,formula_hash_shortcut,negative_control,knn,val,112,22.085691554,19.163571429,-0.276793941,0.972590577
+elongation_pct,elongation in percent,formula_hash_shortcut,negative_control,knn,test,104,23.112230424,19.928365385,-0.187047041,1.017796407
+elongation_pct,elongation in percent,reference_shortcut,negative_control,knn,train,403,23.200974083,19.047458644,-0.043879930,1.021704424
+elongation_pct,elongation in percent,reference_shortcut,negative_control,knn,val,112,30.124989650,25.277403274,-1.375486796,1.326618231
+elongation_pct,elongation in percent,reference_shortcut,negative_control,knn,test,104,32.535389318,28.094647436,-1.352319064,1.432765326
+elongation_pct,elongation in percent,dominant_element_shortcut,negative_control,knn,train,403,22.059133742,18.399509926,0.056341150,0.971421047
+elongation_pct,elongation in percent,dominant_element_shortcut,negative_control,knn,val,112,21.901857206,18.222648810,-0.255627140,0.964495039
+elongation_pct,elongation in percent,dominant_element_shortcut,negative_control,knn,test,104,23.799752413,19.746362179,-0.258719878,1.048072906
+elongation_pct,elongation in percent,dominant_element_shortcut,negative_control,extra_trees,train,403,20.977323362,17.546966115,0.146628263,0.923781217
+elongation_pct,elongation in percent,dominant_element_shortcut,negative_control,extra_trees,val,112,22.802833586,19.001421905,-0.361057408,1.004171457
+elongation_pct,elongation in percent,dominant_element_shortcut,negative_control,extra_trees,test,104,22.467868496,18.752042221,-0.121780688,0.989420554

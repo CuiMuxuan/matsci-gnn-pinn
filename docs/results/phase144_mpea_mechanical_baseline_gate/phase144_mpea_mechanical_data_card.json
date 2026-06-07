@@ -1,0 +1,21 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "candidate_targets": {
+    "elongation_pct": "elongation in percent",
+    "hardness_hv": "Vickers hardness",
+    "ultimate_tensile_strength_mpa": "ultimate tensile strength in MPa",
+    "yield_strength_mpa": "yield strength in MPa",
+    "young_modulus_gpa": "experimental Young modulus in GPa"
+  },
+  "dataset": "Citrine Informatics MPEA dataset",
+  "input": "multi-principal-element alloy formula plus process/test context",
+  "license_note": "Public GitHub dataset with Apache-2.0 license in the source repository.",
+  "parsed_row_count": 1545,
+  "raw_row_count": 1545,
+  "skipped_row_count": 0,
+  "source_byte_size": 332126,
+  "source_sha256": "c5504d93fd324d1be26cf814d0694ee9ee95578d68a0b38aba6813b939fa2c5d",
+  "source_url": "https://raw.githubusercontent.com/CitrineInformatics/MPEA_dataset/master/MPEA_dataset.csv",
+  "training_allowed": false
+}
