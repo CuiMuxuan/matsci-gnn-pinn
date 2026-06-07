@@ -485,7 +485,7 @@ def _model(method: str):
         return make_pipeline(
             SimpleImputer(strategy="median"),
             StandardScaler(),
-            KNeighborsRegressor(n_neighbors=7, weights="distance"),
+            KNeighborsRegressor(n_neighbors=7, weights="distance", algorithm="brute"),
         )
     if method == "extra_trees":
         return make_pipeline(
