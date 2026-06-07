@@ -1,0 +1,55 @@
+{
+  "counts": {
+    "field_rows": 1030,
+    "group_count": 428,
+    "metric_rows": 54,
+    "review_rows": 1
+  },
+  "description": "baseline-first intake for UCI concrete compressive strength",
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "best_shortcut_profile": "coarse_mix_presence_control",
+    "best_shortcut_test_rmse": 8.213299238701294,
+    "best_shortcut_validation_rmse": 8.119641121860608,
+    "field_rows": 1030,
+    "group_count": 428,
+    "mean_test_rmse": 17.089866024605687,
+    "mean_validation_rmse": 16.952816048223262,
+    "next_action": "run Phase 159 split/shortcut focused review before any mechanism",
+    "phase158_model_mechanism_allowed": false,
+    "phase158_model_training_allowed": false,
+    "phase159_focused_review_allowed": true,
+    "raw_sha256": "dad85d14de8aee4e07479daa774e6b569a313715b71a3b92c95a07cf91c2c9a7",
+    "selected_method": "hist_gradient_boosting",
+    "selected_profile": "full_concrete_features",
+    "selected_target": "target_compressive_strength_mpa",
+    "selected_test_rmse": 5.366378013084623,
+    "selected_validation_rmse": 5.665189289211572,
+    "source": "UCI Concrete Compressive Strength",
+    "source_doi": "10.24432/C5PK67",
+    "status": "phase158_uci_concrete_ready_focused_review"
+  },
+  "outputs": {
+    "baseline_metric_table": "docs/results/phase158_uci_concrete_baseline_gate/phase158_baseline_metric_table.csv",
+    "baseline_review_table": "docs/results/phase158_uci_concrete_baseline_gate/phase158_baseline_review_table.csv",
+    "gate": "docs/results/phase158_uci_concrete_baseline_gate/phase158_uci_concrete_baseline_gate.json",
+    "manifest": "docs/results/phase158_uci_concrete_baseline_gate/phase158_uci_concrete_baseline_manifest.json",
+    "markdown": "docs/results/phase158_uci_concrete_baseline_gate/phase158_uci_concrete_baseline_gate.md",
+    "source_overview_table": "docs/results/phase158_uci_concrete_baseline_gate/phase158_source_overview_table.csv",
+    "split_manifest": "docs/results/phase158_uci_concrete_baseline_gate/phase158_split_manifest.json"
+  },
+  "phase": 158,
+  "source_info": {
+    "data_member": "Concrete_Data.xls",
+    "data_member_bytes": 124928,
+    "raw_bytes": 34444,
+    "raw_path": "C:\\code\\matsci-gnn-pinn\\data\\raw\\external\\phase158_uci_concrete\\concrete_compressive_strength.zip",
+    "raw_sha256": "dad85d14de8aee4e07479daa774e6b569a313715b71a3b92c95a07cf91c2c9a7",
+    "readme_bytes": 3808,
+    "zip_members": [
+      "Concrete_Data.xls",
+      "Concrete_Readme.txt"
+    ]
+  }
+}

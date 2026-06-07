@@ -1,0 +1,2 @@
+source_id,source_url,source_doi,raw_path,raw_bytes,raw_sha256,field_rows,feature_columns,target,group_column,group_count,train_rows_split,val_rows_split,test_rows_split
+phase158_uci_concrete,https://cdn.uci-ics-mlr-prod.aws.uci.edu/165/concrete%2Bcompressive%2Bstrength.zip,10.24432/C5PK67,data/raw/external/phase158_uci_concrete/concrete_compressive_strength.zip,34444,dad85d14de8aee4e07479daa774e6b569a313715b71a3b92c95a07cf91c2c9a7,1030,30,target_compressive_strength_mpa,mix_design_key,428,652,186,192
