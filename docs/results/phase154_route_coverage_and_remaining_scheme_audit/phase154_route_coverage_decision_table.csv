@@ -1,0 +1,5 @@
+decision_id,question,answer,evidence_anchor,project_action
+P154-DECISION-001,Are all currently executable model/research branches verified?,yes_under_current_data_and_gate_conditions,docs/results/phase154_route_coverage_and_remaining_scheme_audit/phase154_route_coverage_table.csv,do not reopen closed branches without a new baseline-first gate
+P154-DECISION-002,Are all possible future schemes exhausted?,no_future_preconditioned_routes_remain,docs/results/phase154_route_coverage_and_remaining_scheme_audit/phase154_remaining_scheme_table.csv,"treat future schemes as requiring new data, registration, venue evidence, or fresh source intake"
+P154-DECISION-003,Can the first paper proceed?,draft_yes_submission_not_ready,docs/results/phase154_route_coverage_and_remaining_scheme_audit/phase154_route_coverage_gate.json,continue writing around the narrow floor and resolve venue/literature blockers
+P154-DECISION-004,Should A100-SXM4-80GB be requested now?,no,docs/results/phase154_route_coverage_and_remaining_scheme_audit/phase154_route_coverage_table.csv,keep A800/A100-40GB as sufficient until a measured positive-branch bottleneck exists

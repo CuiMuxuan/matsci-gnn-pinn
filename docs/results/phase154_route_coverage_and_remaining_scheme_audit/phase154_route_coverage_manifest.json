@@ -1,0 +1,51 @@
+{
+  "counts": {
+    "decision_rows": 4,
+    "future_preconditioned_route_rows": 3,
+    "remaining_scheme_rows": 5,
+    "route_coverage_rows": 7
+  },
+  "description": "route coverage and remaining feasible-scheme audit",
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "all_possible_future_schemes_exhausted": false,
+    "currently_executable_model_routes_verified": true,
+    "decision_rows": 4,
+    "first_paper_draft_allowed_now": true,
+    "first_paper_submission_ready": false,
+    "future_preconditioned_route_rows": 3,
+    "new_model_claim_ready": false,
+    "next_action": "do not treat future scheme space as exhausted; either resolve first-paper venue/literature gaps or open a fresh no-training baseline-first source intake",
+    "operator_training_allowed_now": false,
+    "phase154_model_mechanism_allowed": false,
+    "phase154_model_training_allowed": false,
+    "remaining_scheme_rows": 5,
+    "route_coverage_rows": 7,
+    "status": "phase154_route_coverage_audit_ready_current_routes_verified_future_not_exhausted"
+  },
+  "input_counts": {
+    "phase116_claim_status_rows": 17,
+    "phase152_route_closure_rows": 4,
+    "phase153_contribution_rows": 5,
+    "phase153_open_gap_rows": 4,
+    "phase153_phrasing_guard_rows": 7
+  },
+  "inputs": {
+    "phase116_claim_status_table": "docs/results/phase116_paper_evidence_consolidation/phase116_manuscript_claim_status_table.csv",
+    "phase152_route_closure_table": "docs/results/phase152_paper_evidence_neural_operator_route_closure/phase152_neural_operator_route_closure_table.csv",
+    "phase153_contribution_table": "docs/results/phase153_first_paper_contribution_refinement/phase153_contribution_refinement_table.csv",
+    "phase153_gate": "docs/results/phase153_first_paper_contribution_refinement/phase153_first_paper_contribution_refinement_gate.json",
+    "phase153_open_gap_table": "docs/results/phase153_first_paper_contribution_refinement/phase153_open_gap_table.csv",
+    "phase153_phrasing_guard_table": "docs/results/phase153_first_paper_contribution_refinement/phase153_claim_phrasing_guard_table.csv"
+  },
+  "outputs": {
+    "decision_table": "docs/results/phase154_route_coverage_and_remaining_scheme_audit/phase154_route_coverage_decision_table.csv",
+    "gate": "docs/results/phase154_route_coverage_and_remaining_scheme_audit/phase154_route_coverage_gate.json",
+    "manifest": "docs/results/phase154_route_coverage_and_remaining_scheme_audit/phase154_route_coverage_manifest.json",
+    "markdown": "docs/results/phase154_route_coverage_and_remaining_scheme_audit/phase154_route_coverage_and_remaining_scheme_audit.md",
+    "remaining_scheme_table": "docs/results/phase154_route_coverage_and_remaining_scheme_audit/phase154_remaining_scheme_table.csv",
+    "route_coverage_table": "docs/results/phase154_route_coverage_and_remaining_scheme_audit/phase154_route_coverage_table.csv"
+  },
+  "phase": 154
+}
