@@ -1,0 +1,13 @@
+split_id,group_column,salt,n_groups,train_rows,val_rows,test_rows,target_distribution_shift_z,formula_cross_split_fraction,reference_cross_split_fraction,phase145_split_pass
+registered_formula_hash,registered,phase144_registered,377,317,110,103,0.138126149,0.000000000,0.523364486,true
+formula_hash_salt_0,formula_hash16,phase145_formula_0,377,326,105,99,0.343125294,0.000000000,0.579439252,true
+formula_hash_salt_1,formula_hash16,phase145_formula_1,377,326,115,89,0.306653545,0.000000000,0.551401869,true
+formula_hash_salt_2,formula_hash16,phase145_formula_2,377,285,107,138,0.588867715,0.000000000,0.514018692,true
+chemistry_family,chemistry_family_key,phase145_chemistry_family,98,342,109,79,0.320529288,0.000000000,0.345794393,true
+reference_holdout,reference_hash16,phase145_reference,107,274,123,133,0.573479846,0.053050398,0.000000000,false
+formula_reference_holdout,formula_reference_hash16,phase145_formula_reference,425,311,109,110,0.184136154,0.050397878,0.532710280,false
+processing_method_holdout,processing_method,phase145_processing_method,6,208,30,292,2.089433860,0.079575597,0.102803738,false
+phase_family_holdout,phase_family,phase145_phase_family,3,423,0,107,0.935352006,0.018567639,0.186915888,false
+test_type_holdout,test_type,phase145_test_type,3,478,0,52,1.829157427,0.023872679,0.037383178,false
+microstructure_holdout,microstructure,phase145_microstructure,29,197,214,119,1.013765266,0.047745358,0.271028037,false
+process_phase_holdout,process_phase_key,phase145_process_phase,17,250,260,20,1.262757276,0.074270557,0.224299065,false

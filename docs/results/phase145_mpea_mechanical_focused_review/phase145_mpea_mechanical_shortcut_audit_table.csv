@@ -1,0 +1,7 @@
+audit_id,audit,status,severity,value,threshold,reason
+P145-AUDIT-001,phase144_gate_consistency,pass,info,phase144_mpea_mechanical_ready_focused_review,phase144_mpea_mechanical_ready_focused_review,focused review requires a positive Phase 144 baseline-first gate
+P145-AUDIT-002,registered_split_replay,pass,info,ready_focused_review,registered split must remain a guarded candidate,Phase 145 must reproduce the Phase 144 selected split without training
+P145-AUDIT-003,stable_split_pass_rate,block,blocking,0.500000000,0.750000000,guarded gain should survive most viable formula/reference/process split reviews
+P145-AUDIT-004,shortcut_or_process_control_dominant_split_count,block,blocking,3,0,"process-only, formula, reference, or dominant-element controls must not dominate viable splits"
+P145-AUDIT-005,target_distribution_imbalanced_split_count,block,blocking,3,0,split target mean/median/q90 shifts must not dominate interpretation
+P145-AUDIT-006,formula_cross_split_fraction_count,pass,info,0,0,focused review should not rely on many formula identities crossing train/val/test
