@@ -1,0 +1,27 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "blocking_audits": [
+    "phase159_validation_guard_gain",
+    "phase159_test_reversal_guard"
+  ],
+  "candidate_rows": 156,
+  "next_action": "close Phase 160 low-capacity concrete mechanism route as diagnostic; do not train",
+  "phase159_guard_method": "hist_gradient_boosting",
+  "phase159_guard_profile": "full_concrete_features",
+  "phase159_guard_test_rmse": 5.366378013084623,
+  "phase159_guard_validation_rmse": 5.665189289211572,
+  "phase160_focused_validation_allowed": false,
+  "phase160_model_mechanism_allowed": false,
+  "phase160_model_training_allowed": false,
+  "relative_validation_gain_vs_phase159": -0.13305649749691803,
+  "selected_low_capacity_feature_count": 36,
+  "selected_low_capacity_model": "lasso",
+  "selected_low_capacity_model_label": "lasso;alpha=0.0001",
+  "selected_low_capacity_profile": "mechanism_full_low_capacity",
+  "selected_low_capacity_test_rmse": 6.296819241404047,
+  "selected_low_capacity_validation_rmse": 6.418979533691118,
+  "selected_target": "target_compressive_strength_mpa",
+  "status": "phase160_uci_concrete_low_capacity_mechanism_closed_no_guarded_gain",
+  "test_reversal_ratio_vs_phase159": 1.1733834675922505
+}
