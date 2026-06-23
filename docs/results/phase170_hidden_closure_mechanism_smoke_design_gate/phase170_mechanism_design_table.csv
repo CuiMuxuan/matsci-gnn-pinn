@@ -1,0 +1,8 @@
+mechanism_id,component,design_choice,bound,phase169_evidence,opens_training_now
+P170-MECH-001,task_scope,synthetic_sparse_sensor_inverse_heat_only,"no AM-Bench, no NIST AMMT, no raw data",Phase 169 is synthetic and no-training.,false
+P170-MECH-002,hidden_parameter_head,learn_center_shift_source_width_closure_coeff_as_explicit_latents,three scalar latents with bounded physical ranges,center/width/closure were identifiable under sparse sensors.,false
+P170-MECH-003,posterior_warm_start,use_calibrated_bayesian_hidden_source_closure_posterior_as_initialization_or_teacher_diagnostic,"warm-start/reporting only; no full BNN, HMC, VI, or EKI training now",calibrated posterior beat the non-Bayesian guard on validation score.,false
+P170-MECH-004,physics_residual,add_hidden_closure_term_to_heat_residual_with_bounded_weight,closure term is scalar and interpretable; no free residual MLP,no-closure source control was much worse than calibrated closure inference.,false
+P170-MECH-005,sampler_policy,uniform_grid_primary_with_optional_fixed_quota_hot_gradient_ablation,no retuning of Phase 167 failure-informed sampler as the main candidate,Phase 167 selected the uniform-grid PINN control.,false
+P170-MECH-006,loss_balancing,bounded_adaptive_weights_between_data_residual_and_latent_prior_terms,weights clipped to registered ranges and reported in artifacts,parameter calibration matters; loss weights must not hide parameter error.,false
+P170-MECH-007,selection_protocol,validation_only_selection_with_shifted_test_once,no test tuning and no promotion from one seed,Phase 169 used validation-only selection and shifted-test reversal guard.,false

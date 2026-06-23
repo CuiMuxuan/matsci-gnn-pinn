@@ -1,0 +1,6 @@
+rule_id,rule,threshold,failure_action
+P170-PROMOTE-001,phase171_entry,Phase 170 gate passes with all training/A100 locks false,repair design before any training
+P170-PROMOTE-002,validation_gain,future Phase 171 candidate validation score gain >=0.03 vs best trained control,close as diagnostic
+P170-PROMOTE-003,test_reversal,future shifted-test reversal ratio <=1.05,close and do not tune test
+P170-PROMOTE-004,closure_interpretability,future closure coefficient RMSE remains within Phase 169-scale guard,"write as predictive diagnostic only, not interpretable mechanism"
+P170-PROMOTE-005,claim_boundary,future result remains synthetic until separate AM data guard,do not write AM-Bench or general GNN-PINN claim

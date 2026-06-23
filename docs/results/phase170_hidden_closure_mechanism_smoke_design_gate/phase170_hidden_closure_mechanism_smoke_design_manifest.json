@@ -1,0 +1,59 @@
+{
+  "counts": {
+    "compute_rows": 4,
+    "control_rows": 8,
+    "evidence_rows": 6,
+    "loss_metric_rows": 7,
+    "mechanism_rows": 7,
+    "phase169_metric_rows": 18,
+    "promotion_rows": 5,
+    "risk_rows": 5
+  },
+  "description": "hidden-source/closure low-budget mechanism smoke design gate",
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "adaptive_sampling_training_allowed_now": false,
+    "bayesian_pinn_training_allowed_now": false,
+    "blocking_audits": [],
+    "candidate_mechanism": "calibrated_hidden_source_closure_parameter_head_design",
+    "cnn_operator_training_allowed_now": false,
+    "compute_rows": 4,
+    "control_rows": 8,
+    "evidence_rows": 6,
+    "gcn_pinn_training_allowed_now": false,
+    "loss_metric_rows": 7,
+    "mechanism_rows": 7,
+    "next_action": "enter Phase 171 bounded low-budget hidden-closure smoke implementation",
+    "phase169_best_control_method": "grid_least_squares_source_closure_control",
+    "phase169_metric_rows": 18,
+    "phase169_test_reversal_ratio": 1.0051240921,
+    "phase169_validation_score_gain": 0.0707838724,
+    "phase170_model_mechanism_allowed": false,
+    "phase170_model_training_allowed": false,
+    "phase171_low_budget_hidden_closure_smoke_allowed": true,
+    "phase171_training_allowed_now": false,
+    "promotion_rows": 5,
+    "risk_rows": 5,
+    "selected_phase169_method": "calibrated_bayesian_hidden_source_closure_posterior",
+    "status": "phase170_hidden_closure_mechanism_smoke_design_ready_phase171_low_budget_smoke"
+  },
+  "inputs": {
+    "phase167_gate": "docs/results/phase167_low_budget_pinn_smoke/phase167_low_budget_pinn_smoke_gate.json",
+    "phase169_gate": "docs/results/phase169_hidden_source_closure_identifiability_gate/phase169_hidden_source_closure_identifiability_gate.json",
+    "phase169_metric_table": "docs/results/phase169_hidden_source_closure_identifiability_gate/phase169_hidden_source_metric_table.csv"
+  },
+  "outputs": {
+    "compute_envelope_table": "docs/results/phase170_hidden_closure_mechanism_smoke_design_gate/phase170_compute_envelope_table.csv",
+    "control_table": "docs/results/phase170_hidden_closure_mechanism_smoke_design_gate/phase170_control_table.csv",
+    "evidence_table": "docs/results/phase170_hidden_closure_mechanism_smoke_design_gate/phase170_evidence_table.csv",
+    "gate": "docs/results/phase170_hidden_closure_mechanism_smoke_design_gate/phase170_hidden_closure_mechanism_smoke_design_gate.json",
+    "loss_metric_table": "docs/results/phase170_hidden_closure_mechanism_smoke_design_gate/phase170_loss_metric_table.csv",
+    "manifest": "docs/results/phase170_hidden_closure_mechanism_smoke_design_gate/phase170_hidden_closure_mechanism_smoke_design_manifest.json",
+    "markdown": "docs/results/phase170_hidden_closure_mechanism_smoke_design_gate/phase170_hidden_closure_mechanism_smoke_design_gate.md",
+    "mechanism_design_table": "docs/results/phase170_hidden_closure_mechanism_smoke_design_gate/phase170_mechanism_design_table.csv",
+    "promotion_rule_table": "docs/results/phase170_hidden_closure_mechanism_smoke_design_gate/phase170_promotion_rule_table.csv",
+    "risk_table": "docs/results/phase170_hidden_closure_mechanism_smoke_design_gate/phase170_risk_table.csv"
+  },
+  "phase": 170
+}

@@ -1,0 +1,9 @@
+control_id,control_name,role,required_metric,promotion_requirement
+P170-CTRL-001,posterior_only_calibrated_bayesian_no_neural,tests whether training adds value beyond Phase 169 inference,"field RMSE, closure RMSE, coverage, selection score",trained mechanism must beat or complement posterior-only on validation
+P170-CTRL-002,grid_least_squares_source_closure_control,required non-Bayesian inverse control,joint normalized parameter RMSE and field RMSE,candidate must beat validation score and avoid test reversal >1.05
+P170-CTRL-003,no_closure_source_control,tests whether closure term is necessary,closure coefficient RMSE and field RMSE,candidate must reduce validation error and closure error
+P170-CTRL-004,uniform_grid_pinn_control,equal-budget trained PINN control from Phase 167 lesson,"same optimizer steps, architecture width, and collocation budget",candidate must beat uniform validation score
+P170-CTRL-005,data_only_tiny_mlp_no_residual,tests whether physics residual helps,"field RMSE, hot q90, gradient q90",physics candidate must beat data-only on validation
+P170-CTRL-006,wrong_source_prior_control,tests hidden-source interpretability,parameter RMSE and field RMSE,candidate must not be solved by a wrong prior
+P170-CTRL-007,failure_sampler_retrain_block,prevents repeating Phase 167 failed route,registered as blocked unless used only as fixed ablation,cannot be the main selected candidate in Phase 171
+P170-CTRL-008,seed_stability_control,prevents single-seed promotion,at least three seeds when the smoke remains cheap,mean gain positive and worst seed not worse than best control by >5%

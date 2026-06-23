@@ -1,0 +1,6 @@
+risk_id,risk,guard,closure_action
+P170-RISK-001,repeating Phase 167 sampler route,failure_sampler_retrain_block is a required control,close if the main candidate is sampler retuning
+P170-RISK-002,Bayesian overclaim,posterior calibration must be reported separately from neural training,write as calibrated inference diagnostic only
+P170-RISK-003,grid-search control solves the problem,grid least-squares remains a required non-neural baseline,do not train if controls leave no modeling gap
+P170-RISK-004,synthetic-to-AM overreach,no raw AM data and no AM claim in this route,require a later AM data gate before AM-Bench claims
+P170-RISK-005,compute creep,all Phase 170 training and A100/80GB locks remain false,stop and redesign instead of scaling

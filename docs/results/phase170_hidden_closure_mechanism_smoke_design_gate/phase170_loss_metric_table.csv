@@ -1,0 +1,8 @@
+metric_id,metric_or_loss,split_use,guard,rationale
+P170-METRIC-001,validation_selection_score,validation only,primary selection; lower is better,Keeps model selection off the shifted test split.
+P170-METRIC-002,field_rmse,train/val/test,candidate validation gain >=0.03 vs best trained control,"Tests actual model error, unlike Phase 169 parameter-only inference."
+P170-METRIC-003,closure_coeff_rmse,validation and test,validation <=0.020 and test <=0.025 unless field error gain is clearly larger,Preserves the interpretable closure signal from Phase 169.
+P170-METRIC-004,posterior_or_interval_coverage,validation and test,"coverage in [0.65, 1.0] for any Bayesian-calibrated report",Prevents overclaiming Bayesian point estimates.
+P170-METRIC-005,hot_q90_and_gradient_q90_rmse,validation and test,must not degrade both region metrics while improving only global RMSE,Matches AM thermal-region concerns without using AM data.
+P170-METRIC-006,bounded_adaptive_loss_weights,artifact audit,weights must remain within registered ranges,Loss balancing is a mechanism only if weights remain interpretable.
+P170-METRIC-007,runtime_and_memory,artifact audit,small smoke must finish without 80GB hardware,A100-SXM4-80GB remains unjustified until measured 40GB blockage.
