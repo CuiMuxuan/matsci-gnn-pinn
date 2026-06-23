@@ -1,0 +1,5 @@
+variant_id,family,sampler_id,residual_weight,source_mode,is_control,description
+data_only_tiny_mlp_no_residual,control,none,0,none,true,tiny MLP fit to sparse sensors without PDE residual
+uniform_grid_pinn,control,uniform_grid_control,0.04,true_source,true,same tiny PINN budget with uniform collocation points
+wrong_prior_failure_sampler_control,control,failure_informed_hot_gradient,0.04,wrong_source_prior,true,failure-informed points with deliberately shifted heat-source prior
+failure_informed_hot_gradient_pinn,adaptive_candidate,failure_informed_hot_gradient,0.04,true_source,false,Phase 165 sampler with the same tiny PINN and true synthetic source
