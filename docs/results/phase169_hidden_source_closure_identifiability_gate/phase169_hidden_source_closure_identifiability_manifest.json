@@ -1,0 +1,48 @@
+{
+  "counts": {
+    "case_rows": 80,
+    "metric_rows": 18,
+    "phase168_design_rows": 5,
+    "prediction_rows": 480
+  },
+  "description": "hidden-source/closure no-training identifiability gate",
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "adaptive_sampling_training_allowed_now": false,
+    "bayesian_pinn_training_allowed_now": false,
+    "best_control_method": "grid_least_squares_source_closure_control",
+    "best_control_test_joint_normalized_rmse": 0.0598796394,
+    "best_control_validation_score": 0.1145589723,
+    "blocking_audits": [],
+    "candidate_method": "calibrated_bayesian_hidden_source_closure_posterior",
+    "candidate_test_closure_coeff_rmse": 0.0228727705,
+    "candidate_test_coverage90_mean": 0.8958333333,
+    "candidate_test_joint_normalized_rmse": 0.0601864682,
+    "candidate_validation_closure_coeff_rmse": 0.0154361866,
+    "candidate_validation_coverage90_mean": 0.9375,
+    "candidate_validation_score": 0.0437750999,
+    "next_action": "enter Phase 170 low-budget mechanism smoke design, still before training",
+    "phase169_model_mechanism_allowed": false,
+    "phase169_model_training_allowed": false,
+    "phase170_low_budget_mechanism_design_allowed": true,
+    "phase170_training_allowed_now": false,
+    "selected_method": "calibrated_bayesian_hidden_source_closure_posterior",
+    "status": "phase169_hidden_source_closure_identifiability_ready_phase170_low_budget_mechanism_design",
+    "test_reversal_ratio_vs_best_control": 1.0051240921,
+    "validation_score_gain_vs_best_control": 0.0707838724
+  },
+  "inputs": {
+    "phase168_design_table": "docs/results/phase168_hidden_source_closure_redesign_gate/phase168_phase169_design_contract_table.csv",
+    "phase168_gate": "docs/results/phase168_hidden_source_closure_redesign_gate/phase168_hidden_source_closure_redesign_gate.json"
+  },
+  "outputs": {
+    "case_manifest": "docs/results/phase169_hidden_source_closure_identifiability_gate/phase169_hidden_source_case_manifest.csv",
+    "gate": "docs/results/phase169_hidden_source_closure_identifiability_gate/phase169_hidden_source_closure_identifiability_gate.json",
+    "manifest": "docs/results/phase169_hidden_source_closure_identifiability_gate/phase169_hidden_source_closure_identifiability_manifest.json",
+    "markdown": "docs/results/phase169_hidden_source_closure_identifiability_gate/phase169_hidden_source_closure_identifiability_gate.md",
+    "metric_table": "docs/results/phase169_hidden_source_closure_identifiability_gate/phase169_hidden_source_metric_table.csv",
+    "prediction_table": "docs/results/phase169_hidden_source_closure_identifiability_gate/phase169_hidden_source_prediction_table.csv"
+  },
+  "phase": 169
+}
