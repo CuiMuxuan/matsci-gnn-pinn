@@ -337,7 +337,11 @@ def _review_for_split(
         return [], {**base, "phase159_split_pass": False}, split_info
 
     metric_rows, review_rows = p158.evaluate_baselines(df, split_info["assignments"])
-    metric_rows = [{**row, "split_id": split_id} for row in metric_rows]
+    metric_rows = [
+        {**row, "split_id": split_id}
+        for row in metric_rows
+        if row.get("method") != "knn"
+    ]
     review = review_rows[0]
     nearest = _nearest_neighbor_control(df, split_info["assignments"])
     nearest_dominant = (

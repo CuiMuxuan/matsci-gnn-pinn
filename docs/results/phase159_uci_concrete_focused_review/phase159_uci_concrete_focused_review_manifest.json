@@ -3,7 +3,7 @@
     "audit_rows": 6,
     "field_rows": 1030,
     "gate_review_rows": 6,
-    "metric_rows": 378,
+    "metric_rows": 231,
     "split_review_rows": 9
   },
   "description": "focused split/shortcut review for Phase 158 UCI concrete gate",
