@@ -1,0 +1,45 @@
+{
+  "counts": {
+    "compute_rows": 3,
+    "control_rows": 5,
+    "design_rows": 6,
+    "phase165_metric_rows": 10,
+    "reference_rows": 8,
+    "risk_rows": 4
+  },
+  "description": "low-budget synthetic PINN smoke design gate",
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "adaptive_sampling_training_allowed_now": false,
+    "bayesian_pinn_training_allowed_now": false,
+    "blocking_audits": [],
+    "design_rows": 6,
+    "next_action": "enter Phase 167 local low-budget synthetic PINN smoke only if local torch/runtime is suitable",
+    "phase166_model_mechanism_allowed": false,
+    "phase166_model_training_allowed": false,
+    "phase167_local_low_budget_pinn_smoke_allowed": true,
+    "phase167_training_allowed_now": false,
+    "reference_rows": 8,
+    "required_control_rows": 5,
+    "risk_rows": 4,
+    "selected_sampler": "failure_informed_hot_gradient",
+    "status": "phase166_low_budget_pinn_smoke_design_ready_phase167_local_smoke"
+  },
+  "inputs": {
+    "phase164_gate": "docs/results/phase164_synthetic_bayesian_inverse_heat_identifiability_gate/phase164_synthetic_bayesian_inverse_heat_identifiability_gate.json",
+    "phase165_gate": "docs/results/phase165_adaptive_residual_sampler_gate/phase165_adaptive_residual_sampler_gate.json",
+    "phase165_metric_table": "docs/results/phase165_adaptive_residual_sampler_gate/phase165_sampler_metric_table.csv"
+  },
+  "outputs": {
+    "compute_envelope_table": "docs/results/phase166_low_budget_pinn_smoke_design_gate/phase166_compute_envelope_table.csv",
+    "control_table": "docs/results/phase166_low_budget_pinn_smoke_design_gate/phase166_control_table.csv",
+    "design_table": "docs/results/phase166_low_budget_pinn_smoke_design_gate/phase166_smoke_design_table.csv",
+    "gate": "docs/results/phase166_low_budget_pinn_smoke_design_gate/phase166_low_budget_pinn_smoke_design_gate.json",
+    "manifest": "docs/results/phase166_low_budget_pinn_smoke_design_gate/phase166_low_budget_pinn_smoke_design_manifest.json",
+    "markdown": "docs/results/phase166_low_budget_pinn_smoke_design_gate/phase166_low_budget_pinn_smoke_design_gate.md",
+    "risk_table": "docs/results/phase166_low_budget_pinn_smoke_design_gate/phase166_risk_table.csv",
+    "route_reference_table": "docs/results/phase166_low_budget_pinn_smoke_design_gate/phase166_route_reference_table.csv"
+  },
+  "phase": 166
+}

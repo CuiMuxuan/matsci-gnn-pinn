@@ -1,0 +1,5 @@
+risk_id,risk,guard,closure_action
+P166-RISK-001,synthetic overfitting,test_shifted scenario and wrong-prior control,close as synthetic diagnostic if shifted test reverses
+P166-RISK-002,sampler advantage without model advantage,uniform-grid PINN and data-only MLP controls,do not promote if coverage gain does not reduce validation error
+P166-RISK-003,Bayesian language overclaim,calibrated grid posterior only; no full BNN claim,"write as posterior diagnostic, not Bayesian PINN success"
+P166-RISK-004,compute creep,max steps/width/seeds and no AM-Bench raw data,stop and redesign instead of scaling

@@ -1,0 +1,7 @@
+design_id,component,decision,bound,rationale,opens_training_now
+P166-DESIGN-001,task_scope,synthetic_1d_moving_heat_source_only,"no AM-Bench, no NIST AMMT, no external raw data",The Phase 164/165 positives are synthetic and must not be promoted to AM data.,false
+P166-DESIGN-002,model_budget,tiny_mlp_pinn_2_hidden_layers_width_32,"max 3 seeds, max 1500 optimizer steps, max 512 collocation points per step","Smoke should test mechanism plausibility, not scale.",false
+P166-DESIGN-003,sampler_variants,compare_uniform_grid_control_vs_failure_informed_hot_gradient,equal collocation point budget and identical data sensors,Isolates the Phase 165 sampler contribution.,false
+P166-DESIGN-004,bayesian_inverse_variant,use_calibrated_grid_posterior_as_parameter_prior_diagnostic,posterior informs reporting/calibration only; no full Bayesian neural net,Matches the Phase 164 calibrated hidden-parameter result without expensive BNN training.,false
+P166-DESIGN-005,metrics,validation_only_selection_rmse_residual_hot_gradient_parameter_error,test metrics reported once; no hyperparameter tuning on test,Preserves the gate discipline used in earlier phases.,false
+P166-DESIGN-006,promotion_rule,promote_only_if_failure_sampler_beats_uniform_and_data_only_controls,">=0.03 validation relative RMSE gain, no test reversal >1.05, parameter error non-worse",Prevents sampler-only coverage from being misread as model performance.,false

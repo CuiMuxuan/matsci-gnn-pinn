@@ -1,0 +1,6 @@
+control_id,control_name,role,required_metric,promotion_requirement
+P166-CTRL-001,train_mean_or_sensor_interpolation,non-neural target baseline,temperature RMSE and hot/gradient q90 RMSE,tiny PINN must beat this on validation and avoid test reversal
+P166-CTRL-002,data_only_tiny_mlp_no_residual,tests whether physics residual adds value,"temperature RMSE, residual RMSE, parameter error",PINN residual variants must beat or match data-only MLP
+P166-CTRL-003,uniform_grid_pinn,equal-budget sampler control,same optimizer steps and collocation budget,failure-informed sampler must beat uniform on validation
+P166-CTRL-004,wrong_parameter_prior_control,tests hidden-parameter interpretability,diffusivity/source-width error and prediction RMSE,calibrated prior route must not be worse than wrong-prior control
+P166-CTRL-005,seed_stability_control,prevents single-seed promotion,three seeds when the smoke is cheap enough,mean gain positive and worst seed not worse than uniform by >5%

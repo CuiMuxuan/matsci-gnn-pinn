@@ -1,0 +1,4 @@
+resource_id,resource,limit,allowed_now,escalation_rule
+P166-COMPUTE-001,local_cpu_or_existing_local_gpu,preferred for Phase 167 smoke if torch is available,true,use A800 only if local torch/runtime blocks the tiny synthetic smoke
+P166-COMPUTE-002,A800_40GB,allowed only for reproduction or if local environment cannot import torch,false,still no AM-Bench training and no large sweeps
+P166-COMPUTE-003,A100_SXM4_80GB,not justified,false,request only after a seed-positive branch hits measured 40GB memory/runtime blockage
