@@ -1,0 +1,7 @@
+audit_id,audit,status,severity,value,threshold,reason
+P159-AUDIT-001,phase158_gate_consistency,pass,info,phase158_uci_concrete_ready_focused_review,phase158_uci_concrete_ready_focused_review,Phase 159 requires a Phase 158 baseline-first gate that allowed focused review
+P159-AUDIT-002,stable_mix_design_split_pass_rate,pass,info,1,0.75,baseline-visible signal should survive most leakage-safe mix-design splits
+P159-AUDIT-003,registered_split_replay,pass,info,true,true,the Phase 158 registered split must replay as a guarded candidate
+P159-AUDIT-004,shortcut_dominant_split_count,pass,info,0,0,"age-only, coarse mix, mix-design hash, or row-order controls must not dominate"
+P159-AUDIT-005,nearest_neighbor_dominant_split_count,pass,info,0,0,nearest-neighbor concrete mixture identity control must not explain the signal
+P159-AUDIT-006,target_distribution_imbalanced_split_count,pass,info,0,0,target mean/median/q90 shifts must not dominate focused-review interpretation

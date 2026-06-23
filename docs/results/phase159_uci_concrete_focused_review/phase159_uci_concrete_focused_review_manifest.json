@@ -1,0 +1,50 @@
+{
+  "counts": {
+    "audit_rows": 6,
+    "field_rows": 1030,
+    "gate_review_rows": 6,
+    "metric_rows": 378,
+    "split_review_rows": 9
+  },
+  "description": "focused split/shortcut review for Phase 158 UCI concrete gate",
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "blocking_audits": [],
+    "nearest_neighbor_dominant_splits": 0,
+    "next_action": "run Phase 160 no-training low-capacity concrete mechanism gate before any neural training",
+    "passed_split_reviews": 6,
+    "phase158_selected_method": "hist_gradient_boosting",
+    "phase158_selected_profile": "full_concrete_features",
+    "phase158_test_rmse": 5.366378013084623,
+    "phase158_validation_rmse": 5.665189289211572,
+    "phase159_model_mechanism_allowed": true,
+    "phase159_model_training_allowed": false,
+    "registered_replay_method": "hist_gradient_boosting",
+    "registered_replay_profile": "full_concrete_features",
+    "registered_replay_test_rmse": 5.366378013084623,
+    "registered_replay_validation_rmse": 5.665189289211572,
+    "selected_target": "target_compressive_strength_mpa",
+    "shortcut_dominant_splits": 0,
+    "source": "UCI Concrete Compressive Strength",
+    "source_doi": "10.24432/C5PK67",
+    "split_pass_rate": 1.0,
+    "status": "phase159_uci_concrete_focused_review_ready_low_capacity_mechanism_gate",
+    "target_distribution_imbalanced_splits": 0,
+    "viable_split_reviews": 6
+  },
+  "inputs": {
+    "phase158_dir": "docs/results/phase158_uci_concrete_baseline_gate",
+    "raw_path": "data/raw/external/phase158_uci_concrete/concrete_compressive_strength.zip"
+  },
+  "outputs": {
+    "audit_table": "docs/results/phase159_uci_concrete_focused_review/phase159_uci_concrete_audit_table.csv",
+    "gate": "docs/results/phase159_uci_concrete_focused_review/phase159_uci_concrete_focused_review_gate.json",
+    "manifest": "docs/results/phase159_uci_concrete_focused_review/phase159_uci_concrete_focused_review_manifest.json",
+    "markdown": "docs/results/phase159_uci_concrete_focused_review/phase159_uci_concrete_focused_review.md",
+    "metric_table": "docs/results/phase159_uci_concrete_focused_review/phase159_uci_concrete_metric_table.csv",
+    "split_manifest": "docs/results/phase159_uci_concrete_focused_review/phase159_uci_concrete_split_manifest.json",
+    "split_review_table": "docs/results/phase159_uci_concrete_focused_review/phase159_uci_concrete_split_review_table.csv"
+  },
+  "phase": 159
+}
