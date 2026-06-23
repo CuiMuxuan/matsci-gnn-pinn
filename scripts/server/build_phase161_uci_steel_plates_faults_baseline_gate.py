@@ -682,6 +682,10 @@ def build_package(
         raise ValueError(f"Too few rows for Phase 161 review: {len(df)}")
     split = split_by_group(df)
     metric_rows, review_rows = evaluate_baselines(df, split["assignments"])
+    # KNN can differ by tiny amounts across platforms when distance ties occur.
+    # The gate JSON and review table remain authoritative; keep the tracked
+    # metric table deterministic across local/A800 runs.
+    tracked_metric_rows = [row for row in metric_rows if row.get("method") != "knn"]
     class_counts = {
         str(key): int(value)
         for key, value in df["target_fault_class"].value_counts().sort_index().items()
@@ -723,7 +727,7 @@ def build_package(
     manifest_path = output_dir / "phase161_uci_steel_plates_faults_baseline_manifest.json"
 
     _write_csv(overview_path, overview_rows, OVERVIEW_FIELDS)
-    _write_csv(metric_path, metric_rows, METRIC_FIELDS)
+    _write_csv(metric_path, tracked_metric_rows, METRIC_FIELDS)
     _write_csv(review_path, review_rows, REVIEW_FIELDS)
     _write_json(
         split_path,
@@ -759,7 +763,7 @@ def build_package(
         },
         "counts": {
             "field_rows": int(len(df)),
-            "metric_rows": len(metric_rows),
+            "metric_rows": len(tracked_metric_rows),
             "review_rows": len(review_rows),
             "group_count": int(split["group_count"]),
             "class_count": int(df["target_fault_class"].nunique()),
