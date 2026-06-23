@@ -1,0 +1,1004 @@
+#!/usr/bin/env python3
+"""Build Phase 171 bounded hidden-closure low-budget smoke.
+
+Phase 171 executes a small synthetic, NumPy-only mechanism smoke after the
+Phase 170 design gate. It tests whether an explicit calibrated hidden
+source/closure parameter head improves interpretable closure recovery beyond
+the strong posterior-only and grid least-squares controls. It does not train a
+PINN, does not read AM-Bench/NIST raw data, and does not justify A100-SXM4-80GB.
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import importlib.util
+import json
+import math
+import sys
+from pathlib import Path
+from statistics import mean, pstdev
+from typing import Any
+
+import numpy as np
+
+
+DEFAULT_OUTPUT_DIR = Path("docs/results/phase171_hidden_closure_low_budget_smoke")
+
+PHASE_INPUTS = {
+    "phase170_gate": Path(
+        "docs/results/phase170_hidden_closure_mechanism_smoke_design_gate/"
+        "phase170_hidden_closure_mechanism_smoke_design_gate.json"
+    ),
+    "phase170_control_table": Path(
+        "docs/results/phase170_hidden_closure_mechanism_smoke_design_gate/"
+        "phase170_control_table.csv"
+    ),
+}
+
+VARIANT_FIELDS = (
+    "variant_id",
+    "family",
+    "source_estimator",
+    "closure_estimator",
+    "executed",
+    "is_control",
+    "description",
+)
+
+CALIBRATION_FIELDS = (
+    "seed",
+    "coefficient_intercept",
+    "coefficient_posterior_closure",
+    "coefficient_grid_closure",
+    "coefficient_posterior_width",
+    "coefficient_posterior_center",
+    "train_case_count",
+)
+
+CASE_METRIC_FIELDS = (
+    "seed",
+    "case_id",
+    "split",
+    "variant_id",
+    "family",
+    "field_rmse",
+    "hot_q90_rmse",
+    "gradient_q90_rmse",
+    "closure_abs_error",
+    "coverage90_mean",
+    "selection_score",
+)
+
+SUMMARY_FIELDS = (
+    "variant_id",
+    "family",
+    "split",
+    "seed_count",
+    "case_count",
+    "field_rmse_mean",
+    "hot_q90_rmse_mean",
+    "gradient_q90_rmse_mean",
+    "closure_abs_error_mean",
+    "coverage90_mean",
+    "selection_score_mean",
+    "selection_score_std",
+)
+
+SEED_SUMMARY_FIELDS = (
+    "seed",
+    "variant_id",
+    "split",
+    "case_count",
+    "field_rmse_mean",
+    "closure_abs_error_mean",
+    "selection_score_mean",
+)
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _read_csv(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def _stable(value: Any) -> Any:
+    if isinstance(value, float):
+        return round(value, 10)
+    if isinstance(value, dict):
+        return {key: _stable(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_stable(item) for item in value]
+    return value
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(_stable(payload), indent=2, sort_keys=True) + "\n")
+
+
+def _csv_value(value: Any) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if value is None:
+        return ""
+    if isinstance(value, float):
+        return f"{round(value, 10):.10g}"
+    if isinstance(value, (dict, list, tuple)):
+        return json.dumps(_stable(value), sort_keys=True)
+    return str(value)
+
+
+def _write_csv(path: Path, rows: list[dict[str, Any]], fields: tuple[str, ...]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({field: _csv_value(row.get(field, "")) for field in fields})
+
+
+def _display_path(path: Path, root: Path | None = None) -> str:
+    if root is None:
+        return str(path).replace("\\", "/")
+    try:
+        return str(path.relative_to(root)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
+
+
+def _is_true(value: Any) -> bool:
+    if value is True:
+        return True
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes"}
+    return False
+
+
+def _load_phase169_module() -> Any:
+    script = Path(__file__).with_name(
+        "build_phase169_hidden_source_closure_identifiability_gate.py"
+    )
+    spec = importlib.util.spec_from_file_location("phase169_identifiability_source", script)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot load Phase 169 module from {script}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def build_variant_rows() -> list[dict[str, Any]]:
+    return [
+        {
+            "variant_id": "calibrated_hidden_source_closure_parameter_head",
+            "family": "mechanism_candidate",
+            "source_estimator": "phase169_calibrated_posterior_center_width",
+            "closure_estimator": "train_split_linear_calibration_head",
+            "executed": True,
+            "is_control": False,
+            "description": "explicit low-dimensional closure head calibrated from train cases",
+        },
+        {
+            "variant_id": "posterior_only_calibrated_bayesian_no_neural",
+            "family": "control",
+            "source_estimator": "phase169_calibrated_posterior_center_width",
+            "closure_estimator": "posterior_point_estimate",
+            "executed": True,
+            "is_control": True,
+            "description": "strong no-neural posterior-only control",
+        },
+        {
+            "variant_id": "grid_least_squares_source_closure_control",
+            "family": "control",
+            "source_estimator": "grid_search_best_sse_center_width",
+            "closure_estimator": "least_squares_closure_coefficient",
+            "executed": True,
+            "is_control": True,
+            "description": "required non-Bayesian inverse control",
+        },
+        {
+            "variant_id": "no_closure_source_control",
+            "family": "control",
+            "source_estimator": "grid_search_without_closure_term",
+            "closure_estimator": "zero_closure",
+            "executed": True,
+            "is_control": True,
+            "description": "tests whether the closure term is necessary",
+        },
+        {
+            "variant_id": "wrong_source_prior_control",
+            "family": "control",
+            "source_estimator": "deliberately_shifted_source_prior",
+            "closure_estimator": "least_squares_under_wrong_source",
+            "executed": True,
+            "is_control": True,
+            "description": "tests whether a wrong source prior can solve the task",
+        },
+        {
+            "variant_id": "data_only_sensor_regression_control",
+            "family": "control",
+            "source_estimator": "polynomial_sensor_regression_no_physics",
+            "closure_estimator": "zero_closure",
+            "executed": True,
+            "is_control": True,
+            "description": "NumPy data-only proxy for the registered data-only neural control",
+        },
+        {
+            "variant_id": "fixed_nominal_source_closure_control",
+            "family": "control",
+            "source_estimator": "fixed_nominal_center_width",
+            "closure_estimator": "least_squares_closure_coefficient",
+            "executed": True,
+            "is_control": True,
+            "description": "tests whether hidden source learning is necessary",
+        },
+        {
+            "variant_id": "failure_sampler_retrain_block",
+            "family": "blocked_control",
+            "source_estimator": "not_executed",
+            "closure_estimator": "not_executed",
+            "executed": False,
+            "is_control": True,
+            "description": "registered block against repeating the Phase 167 sampler-retuning route",
+        },
+    ]
+
+
+def _evaluation_grid(split: str) -> tuple[np.ndarray, np.ndarray, tuple[int, int]]:
+    if split == "val":
+        x_values = np.linspace(0.03, 0.97, 30)
+        t_values = np.linspace(0.04, 1.02, 22)
+    elif split == "test":
+        x_values = np.linspace(0.025, 0.975, 34)
+        t_values = np.linspace(0.035, 1.035, 24)
+    else:
+        raise ValueError(f"Unsupported split: {split}")
+    t_grid, x_grid = np.meshgrid(t_values, x_values, indexing="ij")
+    return x_grid.ravel(), t_grid.ravel(), (len(t_values), len(x_values))
+
+
+def _field_prediction(
+    p169: Any,
+    case: Any,
+    *,
+    center_shift: float,
+    width: float,
+    include_closure: bool,
+    split: str,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+    design = p169._design_matrix(
+        case.x,
+        case.t,
+        center_shift,
+        width,
+        include_closure=include_closure,
+    )
+    coef, *_ = np.linalg.lstsq(design, case.y, rcond=None)
+    x_eval, t_eval, shape = _evaluation_grid(split)
+    eval_design = p169._design_matrix(
+        x_eval,
+        t_eval,
+        center_shift,
+        width,
+        include_closure=include_closure,
+    )
+    pred = eval_design @ coef
+    true = p169._signal(
+        x_eval,
+        t_eval,
+        center_shift=case.center_shift,
+        width=case.source_width,
+        closure_coeff=case.closure_coeff,
+        amplitude=case.source_amplitude,
+        ambient=case.ambient,
+    )
+    gradient = np.abs(np.gradient(true.reshape(shape), axis=1)).ravel()
+    closure_pred = float(coef[-1] if include_closure else 0.0)
+    return pred, true, gradient, closure_pred
+
+
+def _best_no_closure_grid(
+    p169: Any,
+    case: Any,
+    center_grid: np.ndarray,
+    width_grid: np.ndarray,
+) -> tuple[float, float, float]:
+    best: tuple[float, float, float] | None = None
+    for center_shift in center_grid:
+        for width in width_grid:
+            sse, _ = p169._fit_grid(
+                case,
+                float(center_shift),
+                float(width),
+                include_closure=False,
+            )
+            if best is None or sse < best[0]:
+                best = (sse, float(center_shift), float(width))
+    assert best is not None
+    return best
+
+
+def _data_only_prediction(p169: Any, case: Any, split: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    x_eval, t_eval, shape = _evaluation_grid(split)
+    train_features = np.column_stack(
+        [
+            np.ones_like(case.x),
+            case.x,
+            case.t,
+            case.x**2,
+            case.t**2,
+            case.x * case.t,
+        ]
+    )
+    coef, *_ = np.linalg.lstsq(train_features, case.y, rcond=None)
+    eval_features = np.column_stack(
+        [
+            np.ones_like(x_eval),
+            x_eval,
+            t_eval,
+            x_eval**2,
+            t_eval**2,
+            x_eval * t_eval,
+        ]
+    )
+    pred = eval_features @ coef
+    true = p169._signal(
+        x_eval,
+        t_eval,
+        center_shift=case.center_shift,
+        width=case.source_width,
+        closure_coeff=case.closure_coeff,
+        amplitude=case.source_amplitude,
+        ambient=case.ambient,
+    )
+    gradient = np.abs(np.gradient(true.reshape(shape), axis=1)).ravel()
+    return pred, true, gradient
+
+
+def _coverage(row: dict[str, Any], case: Any) -> float:
+    checks: list[float] = []
+    for key, truth in (
+        ("center_shift", case.center_shift),
+        ("source_width", case.source_width),
+        ("closure_coeff", case.closure_coeff),
+    ):
+        low = row.get(f"{key}_ci90_low")
+        high = row.get(f"{key}_ci90_high")
+        if low in {"", None} or high in {"", None}:
+            continue
+        checks.append(1.0 if float(low) <= float(truth) <= float(high) else 0.0)
+    return float(mean(checks)) if checks else 0.0
+
+
+def _rmse(pred: np.ndarray, true: np.ndarray) -> float:
+    return float(math.sqrt(float(np.mean((pred - true) ** 2))))
+
+
+def _metric_payload(
+    *,
+    pred: np.ndarray,
+    true: np.ndarray,
+    gradient: np.ndarray,
+    closure_pred: float,
+    coverage90_mean: float,
+    case: Any,
+) -> dict[str, float]:
+    hot_mask = true >= float(np.quantile(true, 0.90))
+    gradient_mask = gradient >= float(np.quantile(gradient, 0.90))
+    field_rmse = _rmse(pred, true)
+    hot_rmse = _rmse(pred[hot_mask], true[hot_mask])
+    gradient_rmse = _rmse(pred[gradient_mask], true[gradient_mask])
+    closure_abs_error = abs(float(closure_pred) - float(case.closure_coeff))
+    calibration_penalty = 0.02 * abs(coverage90_mean - 0.90) if coverage90_mean > 0 else 0.02
+    selection_score = (
+        field_rmse
+        + 0.20 * hot_rmse
+        + 0.10 * gradient_rmse
+        + 0.75 * closure_abs_error
+        + calibration_penalty
+    )
+    return {
+        "field_rmse": field_rmse,
+        "hot_q90_rmse": hot_rmse,
+        "gradient_q90_rmse": gradient_rmse,
+        "closure_abs_error": closure_abs_error,
+        "coverage90_mean": coverage90_mean,
+        "selection_score": selection_score,
+    }
+
+
+def _summary_rows(case_rows: list[dict[str, Any]], variant_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    family = {row["variant_id"]: row["family"] for row in variant_rows}
+    rows: list[dict[str, Any]] = []
+    for variant_id in sorted({row["variant_id"] for row in case_rows}):
+        for split in ("val", "test"):
+            subset = [row for row in case_rows if row["variant_id"] == variant_id and row["split"] == split]
+            if not subset:
+                continue
+            seeds = sorted({int(row["seed"]) for row in subset})
+            scores = [float(row["selection_score"]) for row in subset]
+            rows.append(
+                {
+                    "variant_id": variant_id,
+                    "family": family.get(variant_id, "unknown"),
+                    "split": split,
+                    "seed_count": len(seeds),
+                    "case_count": len(subset),
+                    "field_rmse_mean": mean(float(row["field_rmse"]) for row in subset),
+                    "hot_q90_rmse_mean": mean(float(row["hot_q90_rmse"]) for row in subset),
+                    "gradient_q90_rmse_mean": mean(float(row["gradient_q90_rmse"]) for row in subset),
+                    "closure_abs_error_mean": mean(float(row["closure_abs_error"]) for row in subset),
+                    "coverage90_mean": mean(float(row["coverage90_mean"]) for row in subset),
+                    "selection_score_mean": mean(scores),
+                    "selection_score_std": pstdev(scores),
+                }
+            )
+    return rows
+
+
+def _seed_summary_rows(case_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for seed in sorted({int(row["seed"]) for row in case_rows}):
+        for variant_id in sorted({row["variant_id"] for row in case_rows}):
+            for split in ("val", "test"):
+                subset = [
+                    row
+                    for row in case_rows
+                    if int(row["seed"]) == seed
+                    and row["variant_id"] == variant_id
+                    and row["split"] == split
+                ]
+                if not subset:
+                    continue
+                rows.append(
+                    {
+                        "seed": seed,
+                        "variant_id": variant_id,
+                        "split": split,
+                        "case_count": len(subset),
+                        "field_rmse_mean": mean(float(row["field_rmse"]) for row in subset),
+                        "closure_abs_error_mean": mean(float(row["closure_abs_error"]) for row in subset),
+                        "selection_score_mean": mean(float(row["selection_score"]) for row in subset),
+                    }
+                )
+    return rows
+
+
+def run_smoke(
+    *,
+    seeds: tuple[int, ...] = (171, 172, 173),
+    noise_std: float = 0.025,
+    center_grid_size: int = 38,
+    width_grid_size: int = 34,
+) -> dict[str, list[dict[str, Any]]]:
+    p169 = _load_phase169_module()
+    center_grid = np.linspace(-0.060, 0.065, center_grid_size)
+    width_grid = np.linspace(0.030, 0.105, width_grid_size)
+    variant_rows = build_variant_rows()
+    case_rows: list[dict[str, Any]] = []
+    calibration_rows: list[dict[str, Any]] = []
+    for seed in seeds:
+        cases = p169.generate_cases(seed=seed, noise_std=noise_std)
+        raw_posteriors = {
+            case.case_id: p169.bayesian_hidden_source_closure_posterior(
+                case,
+                center_grid=center_grid,
+                width_grid=width_grid,
+            )
+            for case in cases
+        }
+        calibrated_posteriors = p169.calibrated_bayesian_predictions(cases, raw_posteriors)
+        no_closure_grid = {
+            case.case_id: _best_no_closure_grid(p169, case, center_grid, width_grid)
+            for case in cases
+        }
+        train_features: list[list[float]] = []
+        train_targets: list[float] = []
+        for case in cases:
+            if case.split != "train":
+                continue
+            posterior = calibrated_posteriors[case.case_id]
+            raw = raw_posteriors[case.case_id]
+            train_features.append(
+                [
+                    1.0,
+                    float(posterior["pred_closure_coeff"]),
+                    float(raw["best_grid_closure_coeff"]),
+                    float(posterior["pred_source_width"]),
+                    float(posterior["pred_center_shift"]),
+                ]
+            )
+            train_targets.append(float(case.closure_coeff))
+        calibration_coef = np.linalg.lstsq(
+            np.asarray(train_features, dtype=float),
+            np.asarray(train_targets, dtype=float),
+            rcond=None,
+        )[0]
+        calibration_rows.append(
+            {
+                "seed": seed,
+                "coefficient_intercept": float(calibration_coef[0]),
+                "coefficient_posterior_closure": float(calibration_coef[1]),
+                "coefficient_grid_closure": float(calibration_coef[2]),
+                "coefficient_posterior_width": float(calibration_coef[3]),
+                "coefficient_posterior_center": float(calibration_coef[4]),
+                "train_case_count": len(train_targets),
+            }
+        )
+        for case in cases:
+            if case.split not in {"val", "test"}:
+                continue
+            posterior = calibrated_posteriors[case.case_id]
+            raw = raw_posteriors[case.case_id]
+            posterior_pred, true, gradient, posterior_closure = _field_prediction(
+                p169,
+                case,
+                center_shift=float(posterior["pred_center_shift"]),
+                width=float(posterior["pred_source_width"]),
+                include_closure=True,
+                split=case.split,
+            )
+            feature = np.asarray(
+                [
+                    1.0,
+                    float(posterior["pred_closure_coeff"]),
+                    float(raw["best_grid_closure_coeff"]),
+                    float(posterior["pred_source_width"]),
+                    float(posterior["pred_center_shift"]),
+                ],
+                dtype=float,
+            )
+            candidate_closure = float(feature @ calibration_coef)
+            grid_pred, grid_true, grid_gradient, grid_closure = _field_prediction(
+                p169,
+                case,
+                center_shift=float(raw["best_grid_center_shift"]),
+                width=float(raw["best_grid_source_width"]),
+                include_closure=True,
+                split=case.split,
+            )
+            no_closure = no_closure_grid[case.case_id]
+            no_closure_pred, no_closure_true, no_closure_gradient, no_closure_value = _field_prediction(
+                p169,
+                case,
+                center_shift=float(no_closure[1]),
+                width=float(no_closure[2]),
+                include_closure=False,
+                split=case.split,
+            )
+            wrong_pred, wrong_true, wrong_gradient, wrong_closure = _field_prediction(
+                p169,
+                case,
+                center_shift=float(raw["best_grid_center_shift"]) + 0.035,
+                width=float(raw["best_grid_source_width"]) * 1.25,
+                include_closure=True,
+                split=case.split,
+            )
+            data_pred, data_true, data_gradient = _data_only_prediction(p169, case, case.split)
+            nominal_pred, nominal_true, nominal_gradient, nominal_closure = _field_prediction(
+                p169,
+                case,
+                center_shift=0.0,
+                width=0.064,
+                include_closure=True,
+                split=case.split,
+            )
+            variant_payloads = {
+                "calibrated_hidden_source_closure_parameter_head": (
+                    posterior_pred,
+                    true,
+                    gradient,
+                    candidate_closure,
+                    _coverage(posterior, case),
+                ),
+                "posterior_only_calibrated_bayesian_no_neural": (
+                    posterior_pred,
+                    true,
+                    gradient,
+                    posterior_closure,
+                    _coverage(posterior, case),
+                ),
+                "grid_least_squares_source_closure_control": (
+                    grid_pred,
+                    grid_true,
+                    grid_gradient,
+                    grid_closure,
+                    0.0,
+                ),
+                "no_closure_source_control": (
+                    no_closure_pred,
+                    no_closure_true,
+                    no_closure_gradient,
+                    no_closure_value,
+                    0.0,
+                ),
+                "wrong_source_prior_control": (
+                    wrong_pred,
+                    wrong_true,
+                    wrong_gradient,
+                    wrong_closure,
+                    0.0,
+                ),
+                "data_only_sensor_regression_control": (
+                    data_pred,
+                    data_true,
+                    data_gradient,
+                    0.0,
+                    0.0,
+                ),
+                "fixed_nominal_source_closure_control": (
+                    nominal_pred,
+                    nominal_true,
+                    nominal_gradient,
+                    nominal_closure,
+                    0.0,
+                ),
+            }
+            families = {row["variant_id"]: row["family"] for row in variant_rows}
+            for variant_id, (pred, truth, grad, closure_pred, coverage) in variant_payloads.items():
+                metrics = _metric_payload(
+                    pred=pred,
+                    true=truth,
+                    gradient=grad,
+                    closure_pred=float(closure_pred),
+                    coverage90_mean=float(coverage),
+                    case=case,
+                )
+                case_rows.append(
+                    {
+                        "seed": seed,
+                        "case_id": case.case_id,
+                        "split": case.split,
+                        "variant_id": variant_id,
+                        "family": families[variant_id],
+                        **metrics,
+                    }
+                )
+    summary_rows = _summary_rows(case_rows, variant_rows)
+    seed_summary_rows = _seed_summary_rows(case_rows)
+    return {
+        "variant_rows": variant_rows,
+        "calibration_rows": calibration_rows,
+        "case_metric_rows": case_rows,
+        "summary_rows": summary_rows,
+        "seed_summary_rows": seed_summary_rows,
+    }
+
+
+def _summary_lookup(rows: list[dict[str, Any]], variant_id: str, split: str) -> dict[str, Any]:
+    for row in rows:
+        if row["variant_id"] == variant_id and row["split"] == split:
+            return row
+    raise KeyError((variant_id, split))
+
+
+def _seed_lookup(rows: list[dict[str, Any]], seed: int, variant_id: str, split: str) -> dict[str, Any]:
+    for row in rows:
+        if int(row["seed"]) == seed and row["variant_id"] == variant_id and row["split"] == split:
+            return row
+    raise KeyError((seed, variant_id, split))
+
+
+def build_gate(
+    *,
+    phase170_gate: dict[str, Any],
+    control_rows: list[dict[str, str]],
+    variant_rows: list[dict[str, Any]],
+    summary_rows: list[dict[str, Any]],
+    seed_summary_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    phase170_ready = (
+        phase170_gate.get("status")
+        == "phase170_hidden_closure_mechanism_smoke_design_ready_phase171_low_budget_smoke"
+        and _is_true(phase170_gate.get("phase171_low_budget_hidden_closure_smoke_allowed"))
+        and not _is_true(phase170_gate.get("phase170_model_training_allowed"))
+    )
+    required_controls = {
+        "posterior_only_calibrated_bayesian_no_neural",
+        "grid_least_squares_source_closure_control",
+        "no_closure_source_control",
+        "uniform_grid_pinn_control",
+        "data_only_tiny_mlp_no_residual",
+        "wrong_source_prior_control",
+        "failure_sampler_retrain_block",
+        "seed_stability_control",
+    }
+    present_controls = {row.get("control_name", "") for row in control_rows}
+    control_contract_ready = required_controls.issubset(present_controls)
+    blocked_sampler_row = next(
+        (row for row in variant_rows if row["variant_id"] == "failure_sampler_retrain_block"),
+        None,
+    )
+    sampler_retrain_blocked = blocked_sampler_row is not None and not _is_true(
+        blocked_sampler_row.get("executed")
+    )
+    candidate_id = "calibrated_hidden_source_closure_parameter_head"
+    candidate_val = _summary_lookup(summary_rows, candidate_id, "val")
+    candidate_test = _summary_lookup(summary_rows, candidate_id, "test")
+    control_val_rows = [
+        row
+        for row in summary_rows
+        if row["split"] == "val" and row["family"] == "control"
+    ]
+    best_control_val = min(control_val_rows, key=lambda row: float(row["selection_score_mean"]))
+    best_control_test = _summary_lookup(summary_rows, best_control_val["variant_id"], "test")
+    selected_val = min(
+        [row for row in summary_rows if row["split"] == "val"],
+        key=lambda row: float(row["selection_score_mean"]),
+    )
+    posterior_val = _summary_lookup(
+        summary_rows,
+        "posterior_only_calibrated_bayesian_no_neural",
+        "val",
+    )
+    posterior_test = _summary_lookup(
+        summary_rows,
+        "posterior_only_calibrated_bayesian_no_neural",
+        "test",
+    )
+    validation_gain = float(best_control_val["selection_score_mean"]) - float(
+        candidate_val["selection_score_mean"]
+    )
+    test_reversal_ratio = float(candidate_test["selection_score_mean"]) / max(
+        float(best_control_test["selection_score_mean"]),
+        1e-12,
+    )
+    posterior_validation_closure_gain = float(posterior_val["closure_abs_error_mean"]) - float(
+        candidate_val["closure_abs_error_mean"]
+    )
+    posterior_test_closure_gain = float(posterior_test["closure_abs_error_mean"]) - float(
+        candidate_test["closure_abs_error_mean"]
+    )
+    posterior_field_reversal_ratio = float(candidate_test["field_rmse_mean"]) / max(
+        float(posterior_test["field_rmse_mean"]),
+        1e-12,
+    )
+    seeds = sorted({int(row["seed"]) for row in seed_summary_rows})
+    stable_seed_count = 0
+    for seed in seeds:
+        cand_seed = _seed_lookup(seed_summary_rows, seed, candidate_id, "val")
+        post_seed = _seed_lookup(
+            seed_summary_rows,
+            seed,
+            "posterior_only_calibrated_bayesian_no_neural",
+            "val",
+        )
+        if float(cand_seed["selection_score_mean"]) < float(post_seed["selection_score_mean"]):
+            stable_seed_count += 1
+    seed_pass_rate = stable_seed_count / max(1, len(seeds))
+    pass_gate = (
+        phase170_ready
+        and control_contract_ready
+        and sampler_retrain_blocked
+        and selected_val["variant_id"] == candidate_id
+        and validation_gain >= 0.0005
+        and test_reversal_ratio <= 1.02
+        and posterior_validation_closure_gain >= 0.001
+        and posterior_test_closure_gain >= 0.002
+        and posterior_field_reversal_ratio <= 1.001
+        and 0.65 <= float(candidate_val["coverage90_mean"]) <= 1.0
+        and 0.65 <= float(candidate_test["coverage90_mean"]) <= 1.0
+        and seed_pass_rate >= 1.0
+    )
+    blockers: list[str] = []
+    if not phase170_ready:
+        blockers.append("phase170_gate_not_ready")
+    if not control_contract_ready:
+        blockers.append("phase170_control_contract_missing")
+    if not sampler_retrain_blocked:
+        blockers.append("failure_sampler_retrain_block_missing")
+    if selected_val["variant_id"] != candidate_id:
+        blockers.append("validation_selected_control_variant")
+    if validation_gain < 0.0005:
+        blockers.append("validation_gain_vs_best_control")
+    if test_reversal_ratio > 1.02:
+        blockers.append("test_reversal_vs_best_control")
+    if posterior_validation_closure_gain < 0.001:
+        blockers.append("posterior_validation_closure_gain_guard")
+    if posterior_test_closure_gain < 0.002:
+        blockers.append("posterior_test_closure_gain_guard")
+    if posterior_field_reversal_ratio > 1.001:
+        blockers.append("posterior_field_reversal_guard")
+    if not (0.65 <= float(candidate_val["coverage90_mean"]) <= 1.0) or not (
+        0.65 <= float(candidate_test["coverage90_mean"]) <= 1.0
+    ):
+        blockers.append("coverage_guard")
+    if seed_pass_rate < 1.0:
+        blockers.append("seed_stability_guard")
+    return {
+        "status": (
+            "phase171_hidden_closure_low_budget_smoke_ready_phase172_trainable_design"
+            if pass_gate
+            else "phase171_hidden_closure_low_budget_smoke_closed_no_stable_mechanism_gain"
+        ),
+        "selected_variant": selected_val["variant_id"],
+        "candidate_variant": candidate_id,
+        "best_control_variant": best_control_val["variant_id"],
+        "candidate_validation_selection_score": candidate_val["selection_score_mean"],
+        "best_control_validation_selection_score": best_control_val["selection_score_mean"],
+        "validation_score_gain_vs_best_control": validation_gain,
+        "candidate_test_selection_score": candidate_test["selection_score_mean"],
+        "best_control_test_selection_score": best_control_test["selection_score_mean"],
+        "test_reversal_ratio_vs_best_control": test_reversal_ratio,
+        "posterior_validation_closure_gain": posterior_validation_closure_gain,
+        "posterior_test_closure_gain": posterior_test_closure_gain,
+        "posterior_field_reversal_ratio": posterior_field_reversal_ratio,
+        "candidate_validation_closure_abs_error": candidate_val["closure_abs_error_mean"],
+        "candidate_test_closure_abs_error": candidate_test["closure_abs_error_mean"],
+        "candidate_validation_coverage90_mean": candidate_val["coverage90_mean"],
+        "candidate_test_coverage90_mean": candidate_test["coverage90_mean"],
+        "seed_stability_pass_rate": seed_pass_rate,
+        "blocking_audits": blockers,
+        "phase172_trainable_hidden_closure_design_allowed": bool(pass_gate),
+        "phase171_model_mechanism_allowed": False,
+        "phase171_model_training_allowed": False,
+        "phase172_training_allowed_now": False,
+        "bayesian_pinn_training_allowed_now": False,
+        "adaptive_sampling_training_allowed_now": False,
+        "gcn_pinn_training_allowed_now": False,
+        "cnn_operator_training_allowed_now": False,
+        "a100_training_allowed_now": False,
+        "a100_80gb_request_now": False,
+        "next_action": (
+            "enter Phase 172 trainable hidden-closure smoke design before any training"
+            if pass_gate
+            else "close or redesign the hidden-closure mechanism before training"
+        ),
+    }
+
+
+def _markdown_table(rows: list[dict[str, Any]], fields: tuple[str, ...]) -> list[str]:
+    header = "| " + " | ".join(fields) + " |"
+    sep = "| " + " | ".join("---" for _ in fields) + " |"
+    body = [
+        "| " + " | ".join(_csv_value(row.get(field, "")) for field in fields) + " |"
+        for row in rows
+    ]
+    return [header, sep, *body]
+
+
+def build_markdown(
+    *,
+    gate: dict[str, Any],
+    variant_rows: list[dict[str, Any]],
+    summary_rows: list[dict[str, Any]],
+    seed_summary_rows: list[dict[str, Any]],
+) -> str:
+    val_test_summary = [row for row in summary_rows if row["split"] in {"val", "test"}]
+    lines = [
+        "# Phase 171 Hidden-Closure Low-Budget Smoke",
+        "",
+        "## Gate",
+        f"- Status: `{gate['status']}`",
+        f"- Selected variant: `{gate['selected_variant']}`",
+        f"- Best control variant: `{gate['best_control_variant']}`",
+        f"- Validation score gain vs best control: `{_csv_value(gate['validation_score_gain_vs_best_control'])}`",
+        f"- Posterior validation closure gain: `{_csv_value(gate['posterior_validation_closure_gain'])}`",
+        f"- Posterior test closure gain: `{_csv_value(gate['posterior_test_closure_gain'])}`",
+        f"- Phase 172 trainable hidden-closure design allowed: `{_csv_value(gate['phase172_trainable_hidden_closure_design_allowed'])}`",
+        f"- Phase 171 model training allowed: `{_csv_value(gate['phase171_model_training_allowed'])}`",
+        f"- A100 training allowed now: `{_csv_value(gate['a100_training_allowed_now'])}`",
+        f"- A100-SXM4-80GB request now: `{_csv_value(gate['a100_80gb_request_now'])}`",
+        "",
+        "## Interpretation",
+        (
+            "This smoke is synthetic and NumPy-only. A positive gate means the explicit "
+            "calibrated closure head improves the interpretable closure metric over the "
+            "posterior-only control without degrading field prediction; it is not PINN "
+            "training, AM-Bench evidence, or an A100-80GB justification."
+        ),
+        "",
+        "## Variants",
+        *_markdown_table(variant_rows, VARIANT_FIELDS),
+        "",
+        "## Summary Metrics",
+        *_markdown_table(val_test_summary, SUMMARY_FIELDS),
+        "",
+        "## Seed Summary",
+        *_markdown_table(seed_summary_rows, SEED_SUMMARY_FIELDS),
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def build_package(*, root: Path, output_dir: Path, phase_inputs: dict[str, Path]) -> dict[str, Any]:
+    root = root.resolve()
+    output_dir = output_dir if output_dir.is_absolute() else root / output_dir
+    resolved = {
+        name: path if path.is_absolute() else root / path
+        for name, path in phase_inputs.items()
+    }
+    phase170_gate = _read_json(resolved["phase170_gate"])
+    phase170_control_rows = _read_csv(resolved["phase170_control_table"])
+    smoke = run_smoke()
+    variant_rows = smoke["variant_rows"]
+    calibration_rows = smoke["calibration_rows"]
+    case_metric_rows = smoke["case_metric_rows"]
+    summary_rows = smoke["summary_rows"]
+    seed_summary_rows = smoke["seed_summary_rows"]
+    gate = build_gate(
+        phase170_gate=phase170_gate,
+        control_rows=phase170_control_rows,
+        variant_rows=variant_rows,
+        summary_rows=summary_rows,
+        seed_summary_rows=seed_summary_rows,
+    )
+
+    variant_path = output_dir / "phase171_variant_table.csv"
+    calibration_path = output_dir / "phase171_calibration_table.csv"
+    case_metric_path = output_dir / "phase171_case_metric_table.csv"
+    summary_path = output_dir / "phase171_variant_summary_table.csv"
+    seed_summary_path = output_dir / "phase171_seed_summary_table.csv"
+    gate_path = output_dir / "phase171_hidden_closure_low_budget_smoke_gate.json"
+    markdown_path = output_dir / "phase171_hidden_closure_low_budget_smoke.md"
+    manifest_path = output_dir / "phase171_hidden_closure_low_budget_smoke_manifest.json"
+
+    _write_csv(variant_path, variant_rows, VARIANT_FIELDS)
+    _write_csv(calibration_path, calibration_rows, CALIBRATION_FIELDS)
+    _write_csv(case_metric_path, case_metric_rows, CASE_METRIC_FIELDS)
+    _write_csv(summary_path, summary_rows, SUMMARY_FIELDS)
+    _write_csv(seed_summary_path, seed_summary_rows, SEED_SUMMARY_FIELDS)
+    _write_json(gate_path, gate)
+    with markdown_path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(
+            build_markdown(
+                gate=gate,
+                variant_rows=variant_rows,
+                summary_rows=summary_rows,
+                seed_summary_rows=seed_summary_rows,
+            )
+        )
+
+    manifest = {
+        "phase": 171,
+        "description": "bounded hidden-source/closure low-budget synthetic smoke",
+        "inputs": {name: _display_path(path, root) for name, path in resolved.items()},
+        "outputs": {
+            "variant_table": _display_path(variant_path, root),
+            "calibration_table": _display_path(calibration_path, root),
+            "case_metric_table": _display_path(case_metric_path, root),
+            "variant_summary_table": _display_path(summary_path, root),
+            "seed_summary_table": _display_path(seed_summary_path, root),
+            "gate": _display_path(gate_path, root),
+            "markdown": _display_path(markdown_path, root),
+            "manifest": _display_path(manifest_path, root),
+        },
+        "counts": {
+            "variant_rows": len(variant_rows),
+            "calibration_rows": len(calibration_rows),
+            "case_metric_rows": len(case_metric_rows),
+            "summary_rows": len(summary_rows),
+            "seed_summary_rows": len(seed_summary_rows),
+            "phase170_control_rows": len(phase170_control_rows),
+        },
+        "gate": gate,
+    }
+    _write_json(manifest_path, manifest)
+    return manifest
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    for name, default in PHASE_INPUTS.items():
+        parser.add_argument(f"--{name.replace('_', '-')}", type=Path, default=default)
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    phase_inputs = {name: getattr(args, name) for name in PHASE_INPUTS}
+    manifest = build_package(root=args.root, output_dir=args.output_dir, phase_inputs=phase_inputs)
+    print(json.dumps(manifest, indent=2, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()
