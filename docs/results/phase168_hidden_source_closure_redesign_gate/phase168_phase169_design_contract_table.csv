@@ -1,0 +1,6 @@
+design_id,component,phase169_requirement,control_or_guard,claim_boundary
+P168-DESIGN-001,target_physics,"recover source center, width, amplitude, diffusivity, and a bounded residual-closure coefficient","grid least-squares, wrong-source prior, and flexible non-physical regression controls",identifiability only; no trained Bayesian PINN claim
+P168-DESIGN-002,data_contract,synthetic sparse sensors with train/val/test parameter shifts and fixed random seeds,validation-only route selection and shifted test reporting,no AM-Bench or NIST AMMT data in Phase 169
+P168-DESIGN-003,model_contract,no neural training; compare posterior/grid/linearized/strong-baseline estimators,candidate must beat best non-neural control on validation and avoid test reversal,opens at most a later low-budget mechanism smoke design
+P168-DESIGN-004,compute_contract,CPU/local or A800 reproduction only for no-training numerical grids,a100_training_allowed_now=false and a100_80gb_request_now=false,80GB request requires a later seed-positive branch with measured 40GB blockage
+P168-DESIGN-005,failure_exit,close if source/closure parameters are solved by controls or not identifiable,blocking audits must remain explicit,"do not proceed to adaptive loss, Bayesian neural, GCN, or CNN/operator training after a failed identifiability gate"

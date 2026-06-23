@@ -1,0 +1,21 @@
+{
+  "a100_80gb_request_now": false,
+  "a100_training_allowed_now": false,
+  "adaptive_sampling_training_allowed_now": false,
+  "bayesian_pinn_training_allowed_now": false,
+  "blocking_audits": [],
+  "cnn_operator_training_allowed_now": false,
+  "design_rows": 5,
+  "evidence_rows": 4,
+  "gcn_pinn_training_allowed_now": false,
+  "next_action": "enter Phase 169 no-training hidden-source/closure identifiability gate",
+  "phase168_model_mechanism_allowed": false,
+  "phase168_model_training_allowed": false,
+  "phase168_retrain_same_sampler_route_allowed": false,
+  "phase169_hidden_source_closure_identifiability_gate_allowed": true,
+  "phase169_training_allowed_now": false,
+  "reference_rows": 8,
+  "route_rows": 5,
+  "selected_next_route": "hidden_source_closure_identifiability_gate",
+  "status": "phase168_hidden_source_closure_redesign_ready_phase169_identifiability_gate"
+}

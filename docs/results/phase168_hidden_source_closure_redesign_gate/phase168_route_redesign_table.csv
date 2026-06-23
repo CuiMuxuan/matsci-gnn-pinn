@@ -1,0 +1,6 @@
+route_id,route_name,mechanism,decision,why_after_phase167,opens_training_now,opens_a100_now
+P168-ROUTE-001,hidden_source_closure_identifiability_gate,infer low-dimensional moving-source and residual-closure parameters before training a PINN,selected_for_phase169_no_training_gate,"Phase 167 shows sampler choice alone loses to uniform control, while wrong source prior is strongly harmful; the physical pain point is source/closure identifiability.",false,false
+P168-ROUTE-002,adaptive_loss_balancing_gate,balance data/residual/source losses after a source/closure candidate is identifiable,defer_until_phase169_identifiability_passes,loss balancing without a better source/closure target would retune the same failed smoke,false,false
+P168-ROUTE-003,lightweight_bayesian_neural_uq,ensemble or EKI-style Bayesian neural posterior for uncertainty,defer_until_deterministic_closure_gap_exists,full Bayesian neural inference is not justified before a deterministic mechanism gap,false,false
+P168-ROUTE-004,gcn_or_path_graph_pinn,graph-structured non-grid PDE residual route,blocked_by_prior_path_graph_guard,Phase 148 already closed current path-contact graph evidence,false,false
+P168-ROUTE-005,cnn_or_neural_operator_dense_route,fixed-grid dense field residual completion,blocked_by_prior_dense_baseline_guard,Phase 151 found no leakage-safe dense baseline gap,false,false
