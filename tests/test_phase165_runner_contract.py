@@ -1,0 +1,24 @@
+from pathlib import Path
+
+
+def test_phase165_runner_is_no_training_sampler_gate():
+    script = Path("scripts/server/run_phase165_adaptive_residual_sampler_gate.sh").read_text(
+        encoding="utf-8"
+    )
+
+    assert "build_phase165_adaptive_residual_sampler_gate.py" in script
+    assert "phase165_adaptive_residual_sampler_manifest.json" in script
+    assert "adaptive_residual_sampler_phase165_gate" in script
+    assert "phase166_low_budget_pinn_smoke_design_allowed" in script
+    assert "phase165_low_capacity_training_allowed" in script
+    assert "phase165_model_mechanism_allowed" in script
+    assert "phase165_model_training_allowed" in script
+    assert "bayesian_pinn_training_allowed_now" in script
+    assert "adaptive_sampling_training_allowed_now" in script
+    assert "a100_training_allowed_now" in script
+    assert "a100_80gb_request_now" in script
+    assert "data/raw/nist_ammt" not in script
+    assert "data/raw/ambench" not in script
+    assert "data/raw/external" not in script
+    assert "train_macro_pinn" not in script
+    assert "torchrun" not in script

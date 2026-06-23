@@ -1,0 +1,6 @@
+sampler_id,sampler_family,description,uses_residual,uses_hot_gradient,is_control
+uniform_grid_control,control,deterministic approximately uniform grid subset,false,false,true
+jittered_stratified_control,control,stratified grid with deterministic seed jitter,false,false,true
+residual_density_adaptive,adaptive,sample proportional to analytic residual density,true,false,false
+rad_rar_d_residual_gradient,adaptive,residual-adaptive distribution using residual and gradient scores,true,true,false
+failure_informed_hot_gradient,adaptive,"failure-informed mix of residual, hotspot, gradient, and boundary quotas",true,true,false
