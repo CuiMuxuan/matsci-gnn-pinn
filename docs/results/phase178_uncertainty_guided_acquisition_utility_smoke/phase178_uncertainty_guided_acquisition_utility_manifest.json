@@ -1,0 +1,69 @@
+{
+  "counts": {
+    "case_metric_rows": 576,
+    "phase177_acquisition_rows": 6,
+    "phase177_control_rows": 10,
+    "policy_rows": 6,
+    "seed_summary_rows": 36,
+    "summary_rows": 12
+  },
+  "description": "no-training uncertainty-guided acquisition utility smoke",
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "adaptive_sampling_training_allowed_now": false,
+    "am_bench_training_allowed_now": false,
+    "bayesian_pinn_training_allowed_now": false,
+    "best_candidate_policy": "hybrid_uncertainty_hot_gradient_candidate",
+    "best_control_policy": "uniform_budget_control",
+    "best_control_test_utility_score": 0.2267990735,
+    "best_control_validation_closure_gain": 0.0114811592,
+    "best_control_validation_parameter_gain": 0.0507283087,
+    "best_control_validation_trace_contraction": 0.0132677196,
+    "best_control_validation_utility_score": 0.1042421681,
+    "blocking_audits": [
+      "validation_selected_control_policy",
+      "validation_utility_gain_vs_best_control",
+      "test_utility_reversal_vs_best_control",
+      "closure_gain_vs_best_control",
+      "seed_stability_guard"
+    ],
+    "candidate_test_utility_score": -0.7810986106,
+    "candidate_validation_closure_gain": -0.1138969877,
+    "candidate_validation_parameter_gain": -0.5119685927,
+    "candidate_validation_trace_contraction": -0.020898624,
+    "candidate_validation_utility_score": -1.0317720355,
+    "case_metric_rows": 576,
+    "closure_gain_vs_best_control": -0.1253781469,
+    "cnn_operator_training_allowed_now": false,
+    "gcn_pinn_training_allowed_now": false,
+    "next_action": "close uncertainty-guided acquisition route or redesign before any training",
+    "phase178_model_mechanism_allowed": false,
+    "phase178_model_training_allowed": false,
+    "phase179_training_allowed_now": false,
+    "phase179_training_design_allowed": false,
+    "policy_rows": 6,
+    "seed_count": 3,
+    "seed_stability_pass_rate": 0.0,
+    "selected_policy": "uniform_budget_control",
+    "status": "phase178_uncertainty_guided_acquisition_smoke_closed_no_guarded_acquisition_gain",
+    "summary_rows": 12,
+    "test_utility_reversal_vs_best_control": -1.258571109,
+    "validation_utility_gain_vs_best_control": -1.1360142036
+  },
+  "inputs": {
+    "phase177_acquisition_table": "docs/results/phase177_uncertainty_guided_latent_acquisition_design_gate/phase177_acquisition_policy_table.csv",
+    "phase177_control_table": "docs/results/phase177_uncertainty_guided_latent_acquisition_design_gate/phase177_control_table.csv",
+    "phase177_gate": "docs/results/phase177_uncertainty_guided_latent_acquisition_design_gate/phase177_uncertainty_guided_latent_acquisition_design_gate.json"
+  },
+  "outputs": {
+    "case_metric_table": "docs/results/phase178_uncertainty_guided_acquisition_utility_smoke/phase178_acquisition_case_metric_table.csv",
+    "gate": "docs/results/phase178_uncertainty_guided_acquisition_utility_smoke/phase178_uncertainty_guided_acquisition_utility_gate.json",
+    "manifest": "docs/results/phase178_uncertainty_guided_acquisition_utility_smoke/phase178_uncertainty_guided_acquisition_utility_manifest.json",
+    "markdown": "docs/results/phase178_uncertainty_guided_acquisition_utility_smoke/phase178_uncertainty_guided_acquisition_utility_smoke.md",
+    "policy_table": "docs/results/phase178_uncertainty_guided_acquisition_utility_smoke/phase178_acquisition_policy_table.csv",
+    "seed_summary_table": "docs/results/phase178_uncertainty_guided_acquisition_utility_smoke/phase178_acquisition_seed_summary_table.csv",
+    "summary_table": "docs/results/phase178_uncertainty_guided_acquisition_utility_smoke/phase178_acquisition_summary_table.csv"
+  },
+  "phase": 178
+}

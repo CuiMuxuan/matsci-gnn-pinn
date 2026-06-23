@@ -1,0 +1,7 @@
+policy_id,family,executed,is_control,description
+posterior_entropy_reduction_candidate,acquisition_candidate,true,false,selects points with high posterior predictive variance
+latent_ensemble_disagreement_candidate,acquisition_candidate,true,false,selects points with high top-latent ensemble disagreement
+hybrid_uncertainty_hot_gradient_candidate,acquisition_candidate,true,false,combines posterior variance with a fixed hot-gradient quota proxy
+uniform_budget_control,control,true,true,same-budget uniform candidate-pool acquisition
+random_budget_control,control,true,true,same-budget deterministic random acquisition
+no_new_observation_control,control,true,true,posterior update without adding observations
