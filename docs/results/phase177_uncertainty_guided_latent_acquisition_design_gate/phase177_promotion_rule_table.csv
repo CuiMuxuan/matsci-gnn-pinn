@@ -1,0 +1,6 @@
+rule_id,rule,threshold,failure_action
+P177-PROMOTE-001,phase178_entry,Phase 177 design passes with all training/A100 locks false,repair design before any smoke
+P177-PROMOTE-002,materially_different_route,"candidate route is posterior/ensemble acquisition, not Phase 175 low-capacity head",close as retune attempt
+P177-PROMOTE-003,acquisition_utility_gain,future no-training smoke must improve posterior contraction vs uniform/random/no-acquisition,close as solved by controls
+P177-PROMOTE-004,closure_and_field_guard,future smoke must improve closure without field/test reversal,write as diagnostic only
+P177-PROMOTE-005,claim_boundary,future smoke remains synthetic/no-training until a separate gate permits more,"do not claim Bayesian PINN, AM-Bench, graph/operator, or 80GB success"

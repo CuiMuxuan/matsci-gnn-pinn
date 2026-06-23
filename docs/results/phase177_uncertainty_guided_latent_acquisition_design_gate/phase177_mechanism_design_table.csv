@@ -1,0 +1,8 @@
+mechanism_id,component,design_choice,bound,materially_different_from_phase175,opens_training_now
+P177-MECH-001,task_scope,controlled_synthetic_inverse_heat_sparse_observation_acquisition,"no AM-Bench, no NIST AMMT, no registered camera target, no raw data",true,false
+P177-MECH-002,candidate_route,posterior_ensemble_uncertainty_guided_latent_acquisition,choose new observation locations before any model update; no low-capacity head,true,false
+P177-MECH-003,uncertainty_source,combine_phase169_posterior_variance_and_phase173_latent_disagreement,uncertainty is computed from train/validation-safe synthetic sensors only,true,false
+P177-MECH-004,objective,maximize_expected_closure_posterior_contraction_under_sparse_budget,registered acquisition budget; no test-target or shifted-test peeking,true,false
+P177-MECH-005,physics_guard,retain_explicit_center_width_closure_latents_with_bounded_ranges,"no free residual field, no residual MLP, no density proxy retuning",true,false
+P177-MECH-006,selection_protocol,validation_only_acquisition_policy_selection_shifted_test_once,Phase 178 may run only a no-training acquisition utility smoke if opened,true,false
+P177-MECH-007,claim_boundary,mechanism_design_not_model_training,all training/A100/80GB locks remain false,true,false

@@ -1,0 +1,9 @@
+metric_id,metric_or_guard,split_use,threshold,rationale
+P177-METRIC-001,validation_selection_score,validation only,future acquisition candidate must beat best control,prevents promotion from design text alone
+P177-METRIC-002,posterior_entropy_or_variance_contraction,validation audit,candidate contraction gain > uniform and random controls,tests the acquisition mechanism directly
+P177-METRIC-003,closure_abs_error_delta,validation/test audit,must improve or match Phase 173 closure error,keeps hidden-closure recovery as the target
+P177-METRIC-004,field_rmse_delta,validation/test audit,must not degrade field RMSE while improving uncertainty,prevents pure uncertainty-only gains
+P177-METRIC-005,coverage90_mean,validation/test audit,"remain in [0.65, 1.0] if intervals are reported",bounds Bayesian interpretation
+P177-METRIC-006,acquisition_diversity,artifact audit,no duplicate points; bounded boundary fraction,prevents collapse into one local hot spot
+P177-METRIC-007,test_reversal_ratio,shifted test once,<=1.02 vs best acquisition control,prevents validation-only overfit
+P177-METRIC-008,no_training_no_raw_data_lock,gate audit,all training/raw-data/A100-80GB locks false,keeps Phase 177 as design-only

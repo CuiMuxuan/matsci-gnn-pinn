@@ -1,0 +1,11 @@
+control_id,control_name,role,required_metric,promotion_requirement
+P177-CTRL-001,phase173_tiny_explicit_latent_hidden_closure_smoke,current strongest synthetic mechanism floor,"selection score, field RMSE, closure error",future acquisition smoke must improve latent/closure metrics over this floor
+P177-CTRL-002,phase169_posterior_only_calibrated_bayesian_no_neural,uncertainty baseline,"posterior contraction, interval coverage, closure RMSE",candidate must improve uncertainty or closure recovery beyond posterior-only
+P177-CTRL-003,grid_least_squares_source_closure_control,strong deterministic inverse control,joint normalized RMSE and closure coefficient error,candidate must beat validation score or close as solved
+P177-CTRL-004,uniform_budget_acquisition_control,same budget acquisition baseline,posterior contraction and validation selection score,candidate must beat uniform acquisition
+P177-CTRL-005,random_budget_acquisition_control,seeded random observation baseline,mean and worst-seed contraction,candidate must beat random mean and avoid worst-seed collapse
+P177-CTRL-006,no_new_observation_control,tests whether acquisition itself adds value,posterior contraction and closure error delta,candidate must improve beyond no-acquisition
+P177-CTRL-007,phase175_low_capacity_head_retrain_block,blocks the closed Phase 175 route,must remain non-selected,any reuse of the low-capacity head closes the design
+P177-CTRL-008,failure_sampler_retrain_block,blocks Phase 167 sampler retuning,must remain diagnostic-only,candidate cannot be only hot-gradient sampler retuning
+P177-CTRL-009,oracle_target_leakage_block,prevents test/target leakage,must be absent from acquisition features,any oracle target use closes the branch
+P177-CTRL-010,seed_stability_control,prevents single-seed acquisition promotion,three deterministic seeds when Phase 178 runs,mean gain positive and worst seed within registered tolerance

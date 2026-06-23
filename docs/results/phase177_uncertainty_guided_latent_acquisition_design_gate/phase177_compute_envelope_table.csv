@@ -1,0 +1,5 @@
+resource_id,resource,phase177_use,limit,training_allowed_now,escalation_rule
+P177-COMPUTE-001,local_python,design artifact generation and tests,"no torch training, no raw data",false,none
+P177-COMPUTE-002,future_phase178_no_training_smoke,planned only,analytic/synthetic acquisition utility only if Phase 177 passes,false,"must be implemented in Phase 178, not Phase 177"
+P177-COMPUTE-003,A800_40GB,reproduce design artifacts and tests only,no training; server optional for reproduction,false,do not use as evidence for larger hardware
+P177-COMPUTE-004,A100_SXM4_80GB,not allowed,not justified,false,request only after later seed-positive branch hits measured 40GB blockage

@@ -1,0 +1,7 @@
+evidence_id,source,finding,design_implication,claim_boundary
+P177-EVID-001,Phase 176 evidence refresh,synthetic hidden-closure claims are allowed only narrowly; Phase 177 design allowed=True,The next route must be materially different and design-only.,No second-paper core claim or training permission yet.
+P177-EVID-002,Phase 169 calibrated posterior,validation gain 0.0707838724 with coverage 0.9375,Use posterior uncertainty as a candidate acquisition signal.,Still no Bayesian neural training claim.
+P177-EVID-003,Phase 173 explicit latent smoke,explicit latent route beat uniform_grid_latent_trainable_control with validation gain 0.0166680534,"Use latent disagreement, not a larger head, to choose new observations.",Tiny synthetic result only.
+P177-EVID-004,Phase 175 closure,low-capacity candidate low_capacity_explicit_latent_hidden_closure_head closed with gain -0.0004223396,Block low-capacity head retuning and avoid capacity expansion.,The low-capacity head is a negative route.
+P177-EVID-005,Phase 167 sampler-to-PINN closure,sampler coverage alone did not become a trained PINN gain.,"Acquisition must target posterior contraction and latent error, not only hot-gradient coverage.",No adaptive PINN training claim.
+P177-EVID-006,Phase 148/151 route closures,current graph/path and dense operator routes remain blocked.,Do not add GCN/CNN/operator machinery in this design gate.,No graph/operator success claim.

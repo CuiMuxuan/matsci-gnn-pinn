@@ -1,0 +1,7 @@
+acquisition_id,policy,input_signal,selection_rule,leakage_guard,candidate_for_phase178
+P177-ACQ-001,posterior_entropy_reduction_candidate,"Phase 169 calibrated posterior variance over center, width, closure coefficient",rank candidate sensor locations by expected entropy reduction,candidate pool generated from train/validation synthetic coordinates only,true
+P177-ACQ-002,latent_ensemble_disagreement_candidate,Phase 173 explicit latent ensemble prediction disagreement,rank by disagreement in field and closure-sensitive regions,no shifted-test error or target residual is used,true
+P177-ACQ-003,hybrid_uncertainty_hot_gradient_candidate,posterior contraction score plus fixed hot/gradient quota,allocate a bounded quota to high-gradient regions after uncertainty ranking,hot/gradient field computed analytically in synthetic train split only,true
+P177-ACQ-004,uniform_budget_control,none,same number of new observation points on a uniform grid,same candidate pool and budget,false
+P177-ACQ-005,random_budget_control,seeded random coordinate order,same number of new observation points by deterministic random seed,same candidate pool and budget,false
+P177-ACQ-006,oracle_test_target_block,"test error, shifted-test labels, or target residuals",prohibited,any use closes the gate,false

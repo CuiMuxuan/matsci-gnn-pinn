@@ -1,0 +1,7 @@
+risk_id,risk,guard,closure_action
+P177-RISK-001,retuning the closed Phase 175 low-capacity head,explicit low-capacity head retrain block,close if selected route uses the Phase 175 head
+P177-RISK-002,sampler coverage repeats Phase 167 without model utility,posterior contraction and closure error are primary metrics,close if only hot-gradient coverage improves
+P177-RISK-003,oracle target leakage in acquisition,candidate pool excludes shifted-test labels and target residuals,close immediately on leakage
+P177-RISK-004,Bayesian overclaim,coverage and calibration are audit metrics only,do not write full Bayesian PINN success
+P177-RISK-005,synthetic-to-AM overreach,no raw AM data and no AM claim,require separate baseline-first AM data gate
+P177-RISK-006,compute creep,all Phase 177 training/A100/80GB locks are false,stop instead of scaling
