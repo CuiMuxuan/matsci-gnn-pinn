@@ -44,7 +44,7 @@ MIN_SPLIT_ROWS = 4_000
 MIN_RELATIVE_VAL_GAIN = 0.20
 MIN_RELATIVE_TEST_GAIN = 0.10
 SHORTCUT_DOMINANCE_TOLERANCE = 1.02
-MODEL_METHODS = ("ridge", "knn", "extra_trees", "hist_gradient_boosting")
+MODEL_METHODS = ("ridge", "extra_trees")
 
 TARGET_COLUMN = "Usage_kWh"
 RAW_NUMERIC_COLUMNS = (
@@ -585,9 +585,7 @@ def build_package(
         "numeric_feature_columns": int(
             sum(pd.api.types.is_numeric_dtype(df[column]) for column in df.columns)
         ),
-        "categorical_feature_columns": int(
-            sum(pd.api.types.is_object_dtype(df[column]) for column in df.columns)
-        ),
+        "categorical_feature_columns": int(len(RAW_CATEGORICAL_COLUMNS)),
         "target": TARGET_COLUMN,
         "group_column": split["group_column"],
         "group_count": int(split["group_count"]),
