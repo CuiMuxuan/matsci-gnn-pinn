@@ -108,7 +108,17 @@ def _read_csv(path: Path) -> list[dict[str, str]]:
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="\n") as handle:
-        handle.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        handle.write(json.dumps(_stable_json_value(payload), indent=2, sort_keys=True) + "\n")
+
+
+def _stable_json_value(value: Any) -> Any:
+    if isinstance(value, float):
+        return round(value, 10)
+    if isinstance(value, dict):
+        return {key: _stable_json_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_stable_json_value(item) for item in value]
+    return value
 
 
 def _csv_value(value: Any) -> str:
@@ -117,7 +127,7 @@ def _csv_value(value: Any) -> str:
     if value is None:
         return ""
     if isinstance(value, float):
-        return f"{value:.12g}"
+        return f"{round(value, 10):.10g}"
     if isinstance(value, (dict, list, tuple)):
         return json.dumps(value, sort_keys=True)
     return str(value)

@@ -12,13 +12,13 @@
     "adaptive_sampling_training_allowed_now": false,
     "bayesian_pinn_training_allowed_now": false,
     "best_control_method": "grid_least_squares_control",
-    "best_control_test_joint_normalized_rmse": 0.017117008873059725,
-    "best_control_validation_score": 0.10497118274481378,
+    "best_control_test_joint_normalized_rmse": 0.0171170089,
+    "best_control_validation_score": 0.1049711827,
     "blocking_audits": [],
     "candidate_test_coverage90_mean": 0.875,
-    "candidate_test_joint_normalized_rmse": 0.015988896981751592,
+    "candidate_test_joint_normalized_rmse": 0.015988897,
     "candidate_validation_coverage90_mean": 1.0,
-    "candidate_validation_score": 0.023645225795845166,
+    "candidate_validation_score": 0.0236452258,
     "cnn_pinn_training_allowed_now": false,
     "gcn_pinn_training_allowed_now": false,
     "next_action": "enter Phase 165 as a no-training adaptive residual sampler gate",
@@ -29,8 +29,8 @@
     "phase165_adaptive_sampler_gate_allowed": true,
     "selected_method": "calibrated_bayesian_grid_posterior",
     "status": "phase164_synthetic_bayesian_inverse_heat_identifiability_ready_phase165_sampler_gate",
-    "test_reversal_ratio_vs_best_control": 0.9340940990523376,
-    "validation_score_gain_vs_best_control": 0.0813259569489686
+    "test_reversal_ratio_vs_best_control": 0.9340940991,
+    "validation_score_gain_vs_best_control": 0.0813259569
   },
   "inputs": {
     "phase163_gate": "docs/results/phase163_pinn_bayesian_hybrid_roadmap/phase163_pinn_bayesian_hybrid_roadmap_gate.json",

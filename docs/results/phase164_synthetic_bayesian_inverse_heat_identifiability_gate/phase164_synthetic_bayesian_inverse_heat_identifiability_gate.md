@@ -4,8 +4,8 @@
 - Status: `phase164_synthetic_bayesian_inverse_heat_identifiability_ready_phase165_sampler_gate`
 - Selected method: `calibrated_bayesian_grid_posterior`
 - Best control method: `grid_least_squares_control`
-- Validation score gain vs best control: `0.081325956949`
-- Test reversal ratio vs best control: `0.934094099052`
+- Validation score gain vs best control: `0.0813259569`
+- Test reversal ratio vs best control: `0.9340940991`
 - Phase 165 adaptive sampler gate allowed: `true`
 - Phase 164 model training allowed: `false`
 - A100 training allowed now: `false`
@@ -17,13 +17,13 @@ The synthetic inverse task is intentionally physics-matched and local. A positiv
 ## Validation and Test Metrics
 | method | method_family | split | case_count | diffusivity_rmse | source_width_rmse | joint_normalized_rmse | coverage90_mean | calibration_gap | selection_score |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| bayesian_grid_posterior | bayesian_candidate | val | 5 | 0.000474854143429 | 0.00100569310452 | 0.0136452257958 | 0.3 | 0.6 | 0.0736452257958 |
-| bayesian_grid_posterior | bayesian_candidate | test | 4 | 0.000582766058195 | 0.00117191193781 | 0.0159888969818 | 0.375 | 0.525 | 0.0684888969818 |
-| calibrated_bayesian_grid_posterior | bayesian_candidate | val | 5 | 0.000474854143429 | 0.00100569310452 | 0.0136452257958 | 1 | 0.1 | 0.0236452257958 |
-| calibrated_bayesian_grid_posterior | bayesian_candidate | test | 4 | 0.000582766058195 | 0.00117191193781 | 0.0159888969818 | 0.875 | 0.025 | 0.0184888969818 |
-| extra_trees_sensor_control | control | val | 5 | 0.00864734762648 | 0.0141988019326 | 0.199071112985 | 0 | 0.9 | 0.289071112985 |
-| extra_trees_sensor_control | control | test | 4 | 0.00786336623676 | 0.0195130541399 | 0.261055230001 | 0 | 0.9 | 0.351055230001 |
-| grid_least_squares_control | control | val | 5 | 0.000459125311053 | 0.00111735208711 | 0.0149711827448 | 0 | 0.9 | 0.104971182745 |
-| grid_least_squares_control | control | test | 4 | 0.000534122368446 | 0.0012755575703 | 0.0171170088731 | 0 | 0.9 | 0.107117008873 |
-| moment_linearized_control | control | val | 5 | 0.0490684429288 | 0.0673435861671 | 0.976042196478 | 0 | 0.9 | 1.06604219648 |
-| moment_linearized_control | control | test | 4 | 0.0404890482665 | 0.0716044633155 | 0.992834565934 | 0 | 0.9 | 1.08283456593 |
+| bayesian_grid_posterior | bayesian_candidate | val | 5 | 0.0004748541 | 0.0010056931 | 0.0136452258 | 0.3 | 0.6 | 0.0736452258 |
+| bayesian_grid_posterior | bayesian_candidate | test | 4 | 0.0005827661 | 0.0011719119 | 0.015988897 | 0.375 | 0.525 | 0.068488897 |
+| calibrated_bayesian_grid_posterior | bayesian_candidate | val | 5 | 0.0004748541 | 0.0010056931 | 0.0136452258 | 1 | 0.1 | 0.0236452258 |
+| calibrated_bayesian_grid_posterior | bayesian_candidate | test | 4 | 0.0005827661 | 0.0011719119 | 0.015988897 | 0.875 | 0.025 | 0.018488897 |
+| extra_trees_sensor_control | control | val | 5 | 0.0086473476 | 0.0141988019 | 0.199071113 | 0 | 0.9 | 0.289071113 |
+| extra_trees_sensor_control | control | test | 4 | 0.0078633662 | 0.0195130541 | 0.26105523 | 0 | 0.9 | 0.35105523 |
+| grid_least_squares_control | control | val | 5 | 0.0004591253 | 0.0011173521 | 0.0149711827 | 0 | 0.9 | 0.1049711827 |
+| grid_least_squares_control | control | test | 4 | 0.0005341224 | 0.0012755576 | 0.0171170089 | 0 | 0.9 | 0.1071170089 |
+| moment_linearized_control | control | val | 5 | 0.0490684429 | 0.0673435862 | 0.9760421965 | 0 | 0.9 | 1.066042196 |
+| moment_linearized_control | control | test | 4 | 0.0404890483 | 0.0716044633 | 0.9928345659 | 0 | 0.9 | 1.082834566 |
