@@ -17,7 +17,7 @@ This no-training gate asks whether interpretable concrete mechanism features can
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | mechanism_full_low_capacity | lasso;alpha=0.0001 | 36 | 6.41897953369 | 6.2968192414 | -0.133056497497 | 1.17338346759 | true |
 | mechanism_full_low_capacity | ordinary_least_squares | 36 | 6.41978825588 | 6.29469810235 | -0.133199250396 | 1.17298820303 | false |
-| mechanism_full_low_capacity | ridge;alpha=0.0001 | 36 | 6.41983757133 | 6.29467470235 | -0.133207955391 | 1.17298384255 | false |
+| mechanism_full_low_capacity | ridge;alpha=0.0001 | 36 | 6.41983757133 | 6.29467470235 | -0.13320795539 | 1.17298384255 | false |
 | mechanism_full_low_capacity | ridge;alpha=0.01 | 36 | 6.42505307856 | 6.29528180098 | -0.134128579038 | 1.1730969726 | false |
 | mechanism_full_low_capacity | lasso;alpha=0.001 | 36 | 6.43508234118 | 6.29268004765 | -0.135898910463 | 1.17261214777 | false |
 | mechanism_full_low_capacity | lasso;alpha=0.01 | 36 | 6.45617698179 | 6.49851166457 | -0.13962246488 | 1.21096792822 | false |

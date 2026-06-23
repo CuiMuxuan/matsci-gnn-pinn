@@ -24,16 +24,16 @@
     "phase160_focused_validation_allowed": false,
     "phase160_model_mechanism_allowed": false,
     "phase160_model_training_allowed": false,
-    "relative_validation_gain_vs_phase159": -0.13305649749691803,
+    "relative_validation_gain_vs_phase159": -0.133056497496916,
     "selected_low_capacity_feature_count": 36,
     "selected_low_capacity_model": "lasso",
     "selected_low_capacity_model_label": "lasso;alpha=0.0001",
     "selected_low_capacity_profile": "mechanism_full_low_capacity",
-    "selected_low_capacity_test_rmse": 6.296819241404047,
-    "selected_low_capacity_validation_rmse": 6.418979533691118,
+    "selected_low_capacity_test_rmse": 6.29681924140402,
+    "selected_low_capacity_validation_rmse": 6.418979533691107,
     "selected_target": "target_compressive_strength_mpa",
     "status": "phase160_uci_concrete_low_capacity_mechanism_closed_no_guarded_gain",
-    "test_reversal_ratio_vs_phase159": 1.1733834675922505
+    "test_reversal_ratio_vs_phase159": 1.1733834675922454
   },
   "inputs": {
     "phase159_dir": "docs/results/phase159_uci_concrete_focused_review",
