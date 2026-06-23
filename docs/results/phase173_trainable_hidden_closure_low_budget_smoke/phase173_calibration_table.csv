@@ -1,0 +1,10 @@
+seed,variant_id,coefficient_intercept,coefficient_optimized_closure,coefficient_posterior_closure,coefficient_grid_closure,coefficient_source_width,coefficient_center_shift,train_case_count
+171,tiny_explicit_latent_hidden_closure_smoke,-0.0061514072,0.6913524721,-0.8249394366,1.048805644,-0.0241940961,0.0667985455,48
+171,phase171_numpy_closure_head_control,0.0187113882,0,1.319799562,-0.4303949143,-0.4306758305,0.1416454536,48
+171,uniform_grid_latent_trainable_control,-0.0145861613,0.9001897998,0,0,0.1057034536,0.0335890559,48
+172,tiny_explicit_latent_hidden_closure_smoke,-0.0079020409,1.14423609,-0.1613365067,0.0358645765,0.11510652,-0.0616741229,48
+172,phase171_numpy_closure_head_control,0.0309864249,0,2.950413296,-2.02811704,-0.547160637,0.1279581885,48
+172,uniform_grid_latent_trainable_control,-0.0026297932,1.01941594,0,0,0.0279480634,-0.037951063,48
+173,tiny_explicit_latent_hidden_closure_smoke,-0.0002672658,0.9588916137,0.9180393977,-0.905665386,-0.0270795056,0.0872783819,48
+173,phase171_numpy_closure_head_control,0.0250347095,0,3.192514956,-2.313261086,-0.4341383901,0.1644919699,48
+173,uniform_grid_latent_trainable_control,-0.0022389828,0.980762585,0,0,0.0082743116,0.0877422112,48
