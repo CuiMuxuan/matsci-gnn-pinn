@@ -1,0 +1,10 @@
+seed,variant_id,head_target,ridge_alpha,coefficient_intercept,coefficient_count,train_case_count
+171,low_capacity_explicit_latent_hidden_closure_head,center_shift,1e-06,7.47521e-05,10,48
+171,low_capacity_explicit_latent_hidden_closure_head,source_width,1e-06,-8.53365e-05,10,48
+171,low_capacity_explicit_latent_hidden_closure_head,closure_coeff,1e-06,-0.0074880471,10,48
+172,low_capacity_explicit_latent_hidden_closure_head,center_shift,1e-06,2.51272e-05,10,48
+172,low_capacity_explicit_latent_hidden_closure_head,source_width,1e-06,7.73956e-05,10,48
+172,low_capacity_explicit_latent_hidden_closure_head,closure_coeff,1e-06,-0.0070721224,10,48
+173,low_capacity_explicit_latent_hidden_closure_head,center_shift,1e-06,7.48842e-05,10,48
+173,low_capacity_explicit_latent_hidden_closure_head,source_width,1e-06,-0.0002332055,10,48
+173,low_capacity_explicit_latent_hidden_closure_head,closure_coeff,1e-06,0.0019065035,10,48
