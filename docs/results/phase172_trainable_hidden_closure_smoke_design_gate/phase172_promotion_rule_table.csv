@@ -1,0 +1,6 @@
+rule_id,rule,threshold,failure_action
+P172-PROMOTE-001,phase173_entry,Phase 172 design gate passes with all training locks false,repair design before training
+P172-PROMOTE-002,trainable_validation_gain,future trainable candidate validation score improves vs Phase 171 and posterior-only controls,close as unnecessary trainable mechanism
+P172-PROMOTE-003,test_reversal,future shifted-test reversal ratio <=1.05,close and do not tune test
+P172-PROMOTE-004,closure_interpretability,future closure error improves or matches Phase 171 without field degradation,write as predictive diagnostic only
+P172-PROMOTE-005,claim_boundary,future result remains synthetic until separate AM data gate,"do not claim AM-Bench, Bayesian PINN, or full GNN-PINN success"

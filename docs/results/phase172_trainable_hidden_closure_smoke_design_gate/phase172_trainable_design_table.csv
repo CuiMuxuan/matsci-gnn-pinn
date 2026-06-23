@@ -1,0 +1,8 @@
+design_id,component,decision,bound,phase171_evidence,opens_training_now
+P172-DESIGN-001,task_scope,synthetic_sparse_sensor_inverse_heat_only,"no AM-Bench, no NIST AMMT, no external raw data",Phase 171 positive is synthetic and NumPy-only.,false
+P172-DESIGN-002,trainable_mechanism,tiny_explicit_latent_head_for_center_width_closure,three scalar latents plus bounded correction head; no residual MLP,calibrated_hidden_source_closure_parameter_head,false
+P172-DESIGN-003,initialization,initialize_from_phase171_calibrated_closure_head_and_phase169_posterior,initialization only; not a Bayesian neural posterior,posterior closure gain was positive across seeds.,false
+P172-DESIGN-004,model_budget,tiny_width_16_or_numpy_differentiable_optimizer_smoke,"max 3 seeds, max 600 steps, no AM data, no GPU requirement",Phase 171 runner is small and deterministic.,false
+P172-DESIGN-005,sampler_policy,uniform_sensor_and_collocation_primary,failure-informed sampler remains blocked except as non-selected audit row,Phase 167 sampler retuning failed; Phase 171 blocked it.,false
+P172-DESIGN-006,selection_protocol,validation_only_selection_shifted_test_once,"no test tuning, no single-seed promotion",Phase 171 seed stability pass rate was positive.,false
+P172-DESIGN-007,claim_boundary,design_may_open_phase173_smoke_but_not_training_now,all Phase 172 training and A100 locks remain false,Phase 171 opened design only.,false

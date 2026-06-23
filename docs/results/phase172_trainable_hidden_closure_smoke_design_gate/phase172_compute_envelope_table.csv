@@ -1,0 +1,4 @@
+resource_id,resource,allowed_now,limit,escalation_rule
+P172-COMPUTE-001,local_cpu_numpy_or_tiny_torch,false,design only in Phase 172; Phase 173 may run if explicitly opened,prefer local if torch import works; otherwise A800 tiny smoke
+P172-COMPUTE-002,A800_40GB,false,reproduce design only now; future smoke must stay tiny,allowed only by a later Phase 173 runner
+P172-COMPUTE-003,A100_SXM4_80GB,false,not justified,request only after a seed-positive branch hits measured 40GB blockage

@@ -1,0 +1,8 @@
+loss_id,loss_or_metric,weight_or_guard,selection_use,rationale
+P172-LOSS-001,sensor_data_loss,primary data fit,train only,keeps the trainable smoke tied to observed sparse sensors
+P172-LOSS-002,heat_residual_with_explicit_closure,"bounded registered range [0.01, 0.10]",train only,tests a physical closure mechanism without a free residual MLP
+P172-LOSS-003,latent_prior_penalty,"posterior warm-start prior, not full Bayesian training",train audit,uses Phase 171 inference as a bounded prior
+P172-LOSS-004,validation_selection_score,candidate must beat controls,validation only,prevents test tuning
+P172-LOSS-005,closure_abs_error,must improve vs posterior-only,validation and test audit,preserves interpretability
+P172-LOSS-006,coverage90_mean,"must remain in [0.65, 1.0] if intervals are reported",validation/test audit,keeps Bayesian language calibrated
+P172-LOSS-007,hot_q90_gradient_q90_rmse,must not degrade both region metrics,validation/test audit,retains thermal hot/gradient relevance

@@ -1,0 +1,6 @@
+risk_id,risk,guard,closure_action
+P172-RISK-001,trainable smoke adds no value over Phase 171,Phase 171 closure head is a required control,close if trainable variant does not improve validation
+P172-RISK-002,overclaiming Bayesian PINN,posterior warm-start is not neural posterior inference,write as initialized latent model only
+P172-RISK-003,sampler retuning repeats Phase 167 failure,failure_sampler_retrain_block remains required,do not select sampler route
+P172-RISK-004,compute creep,no training in Phase 172 and future max budget registered,stop instead of scaling
+P172-RISK-005,synthetic-to-AM overreach,no raw data and no AM claim,require later AM data gate
