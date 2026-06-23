@@ -138,7 +138,7 @@ def _csv_value(value: Any) -> str:
     if isinstance(value, float):
         if math.isnan(value) or math.isinf(value):
             return ""
-        return f"{value:.8g}"
+        return f"{value:.4g}"
     if isinstance(value, (dict, list, tuple)):
         return json.dumps(value, sort_keys=True)
     return str(value)

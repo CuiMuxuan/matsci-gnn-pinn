@@ -15,13 +15,13 @@ This focused review checks whether the Phase 158 concrete source gate is stable 
 ## Split Review
 | split_id | gate_review_split | best_admissible_profile | best_admissible_method | best_admissible_validation_rmse | best_admissible_test_rmse | shortcut_dominant | nearest_neighbor_dominant | target_distribution_shift_z | phase159_split_pass |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| phase158_registered_mix_design | true | full_concrete_features | hist_gradient_boosting | 5.6651893 | 5.366378 | false | false | 0.34070542 | true |
-| mix_design_hash_0 | true | full_concrete_features | hist_gradient_boosting | 6.2229925 | 4.9405492 | false | false | 0.25279768 | true |
-| mix_design_hash_1 | true | binder_ratio_age_core | hist_gradient_boosting | 5.3844812 | 5.5472347 | false | false | 0.26652374 | true |
-| mix_design_hash_2 | true | raw_mix_age | hist_gradient_boosting | 4.7967403 | 6.1392577 | false | false | 0.3807168 | true |
-| mix_design_hash_3 | true | full_concrete_features | extra_trees | 5.7240662 | 5.3307297 | false | false | 0.22925526 | true |
-| mix_design_hash_4 | true | full_concrete_features | hist_gradient_boosting | 4.4180464 | 5.6399411 | false | false | 0.41370445 | true |
-| age_bucket_holdout | false | binder_ratio_age_core | extra_trees | 5.2896631 | 8.7341049 | false | false | 0.70493042 | true |
+| phase158_registered_mix_design | true | full_concrete_features | hist_gradient_boosting | 5.665 | 5.366 | false | false | 0.3407 | true |
+| mix_design_hash_0 | true | full_concrete_features | hist_gradient_boosting | 6.223 | 4.941 | false | false | 0.2528 | true |
+| mix_design_hash_1 | true | binder_ratio_age_core | hist_gradient_boosting | 5.384 | 5.547 | false | false | 0.2665 | true |
+| mix_design_hash_2 | true | raw_mix_age | hist_gradient_boosting | 4.797 | 6.139 | false | false | 0.3807 | true |
+| mix_design_hash_3 | true | full_concrete_features | extra_trees | 5.724 | 5.331 | false | false | 0.2293 | true |
+| mix_design_hash_4 | true | full_concrete_features | hist_gradient_boosting | 4.418 | 5.64 | false | false | 0.4137 | true |
+| age_bucket_holdout | false | binder_ratio_age_core | extra_trees | 5.29 | 8.734 | false | false | 0.7049 | true |
 | water_binder_bins | false |  |  |  |  |  |  |  | false |
 | binder_mass_bins | false |  |  |  |  |  |  |  | false |
 
