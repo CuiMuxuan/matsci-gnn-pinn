@@ -1,0 +1,6 @@
+rule_id,rule,threshold,failure_action
+P174-PROMOTE-001,phase175_entry,Phase 174 design gate passes with all training locks false,repair design before training
+P174-PROMOTE-002,low_capacity_validation_gain,future candidate improves validation score vs Phase 173 and controls,close as unnecessary low-capacity mechanism
+P174-PROMOTE-003,closure_interpretability,future closure error improves or matches Phase 173 without field degradation,write as predictive diagnostic only
+P174-PROMOTE-004,test_reversal,future shifted-test reversal ratio <=1.02,close and do not tune test
+P174-PROMOTE-005,claim_boundary,future result remains synthetic until separate AM data gate,"do not claim AM-Bench, Bayesian PINN, GNN/CNN/operator, or 80GB success"

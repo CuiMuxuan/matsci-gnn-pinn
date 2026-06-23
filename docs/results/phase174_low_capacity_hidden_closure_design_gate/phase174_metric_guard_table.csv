@@ -1,0 +1,8 @@
+metric_id,metric_or_guard,threshold,selection_use,rationale
+P174-METRIC-001,validation_selection_score,future candidate must improve vs Phase 173 and best control,validation only,prevents test tuning and controls solve-it artifacts
+P174-METRIC-002,field_rmse,must not trade closure gain for large field degradation,validation/test audit,"keeps the route predictive, not only interpretable"
+P174-METRIC-003,closure_abs_error,must improve or match Phase 173 within tolerance,validation/test audit,preserves hidden-closure interpretability
+P174-METRIC-004,coverage90_mean,"must remain in [0.65, 1.0] if intervals are reported",validation/test audit,keeps calibrated inference language bounded
+P174-METRIC-005,test_reversal_ratio,future shifted-test ratio <= 1.02 vs best control,test once after validation selection,closes unstable split behavior
+P174-METRIC-006,hot_q90_gradient_q90_rmse,must not degrade both region metrics,validation/test audit,retains thermal hot/gradient relevance
+P174-METRIC-007,budget_and_seed_stability,max 3 seeds and bounded tiny steps; all seeds pass,gate audit,prevents compute creep and single-seed promotion

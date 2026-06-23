@@ -1,0 +1,11 @@
+control_id,control_name,role,required_metric,promotion_requirement
+P174-CTRL-001,phase173_tiny_explicit_latent_hidden_closure_smoke,must beat or explain the current trainable-latent positive,"selection score, field RMSE, closure error",future low-capacity smoke must improve validation or close as unnecessary
+P174-CTRL-002,phase171_numpy_closure_head_control,non-trainable mechanism floor,closure_abs_error and selection_score,candidate must preserve Phase 171 closure interpretability gains
+P174-CTRL-003,posterior_only_calibrated_bayesian_no_neural,strong no-neural posterior control,"field RMSE, closure error, coverage",candidate must improve validation without degrading coverage
+P174-CTRL-004,grid_least_squares_source_closure_control,non-Bayesian inverse control,field RMSE and closure error,candidate must beat validation score and avoid test reversal
+P174-CTRL-005,no_closure_source_control,closure necessity control,field RMSE and closure error,candidate must show closure term remains necessary
+P174-CTRL-006,wrong_source_prior_control,hidden-source interpretability control,field RMSE and closure error,candidate must not be solved by wrong source prior
+P174-CTRL-007,data_only_tiny_control,tests whether physics/closure adds value,"field RMSE, hot q90, gradient q90",candidate must beat data-only validation score
+P174-CTRL-008,uniform_grid_latent_trainable_control,same trainable search budget without posterior/grid starts,selection_score and coverage penalty,candidate must beat or justify this control
+P174-CTRL-009,failure_sampler_retrain_block,prevents repeating Phase 167,must remain non-selected,cannot be the selected route
+P174-CTRL-010,seed_stability_control,prevents single-seed promotion,three seeds when cheap,all seeds pass or gate closes

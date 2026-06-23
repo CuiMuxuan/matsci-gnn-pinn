@@ -1,0 +1,8 @@
+design_id,component,decision,bound,phase173_evidence,opens_training_now
+P174-DESIGN-001,task_scope,synthetic_sparse_sensor_inverse_heat_only,"no AM-Bench, no NIST AMMT, no external raw data",Phase 173 positive is synthetic and NumPy-only.,false
+P174-DESIGN-002,candidate_mechanism,low_capacity_explicit_latent_closure_head,two explicit source latents plus one bounded closure head; no free residual field,tiny_explicit_latent_hidden_closure_smoke,false
+P174-DESIGN-003,initialization,posterior_warm_start_plus_phase173_latent_solution,initialization and prior audit only; not Bayesian neural posterior training,Phase 173 beat posterior-only and Phase 171 controls.,false
+P174-DESIGN-004,model_capacity,tiny_residual_free_parameter_head_or_numpy_differentiable_loop,"max 3 seeds, max 800 tiny steps in later smoke; Phase 174 does not train",Phase 173 max rounds per start and function evaluations stayed bounded.,false
+P174-DESIGN-005,loss_policy,data_fit_plus_closure_interpretability_plus_source_prior_guard,"no adaptive sampler retuning, no residual MLP, no test tuning","Phase 173 selected explicit latent route, not sampler route.",false
+P174-DESIGN-006,selection_protocol,validation_only_selection_shifted_test_once,"must beat Phase 173, Phase 171, posterior, grid, and uniform-start controls",Phase 173 seed stability pass rate was 1.0.,false
+P174-DESIGN-007,claim_boundary,may_open_phase175_smoke_but_not_training_now,all Phase 174 training and A100 locks remain false,Phase 173 opened design only.,false

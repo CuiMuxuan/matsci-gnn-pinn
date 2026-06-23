@@ -1,0 +1,4 @@
+resource_id,resource,allowed_now,limit,escalation_rule
+P174-COMPUTE-001,local_cpu_numpy_or_tiny_torch,false,design only in Phase 174; Phase 175 may run only if explicitly opened,prefer NumPy/local smoke before any GPU use
+P174-COMPUTE-002,A800_40GB,false,reproduce design only now; future smoke must stay tiny,allowed only by a later Phase 175 runner
+P174-COMPUTE-003,A100_SXM4_80GB,false,not justified,request only after a seed-positive branch hits measured 40GB blockage

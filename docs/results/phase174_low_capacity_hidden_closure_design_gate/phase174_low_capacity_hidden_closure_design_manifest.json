@@ -1,0 +1,60 @@
+{
+  "counts": {
+    "compute_rows": 3,
+    "control_rows": 10,
+    "design_rows": 7,
+    "metric_rows": 7,
+    "phase173_summary_rows": 16,
+    "phase173_training_audit_rows": 480,
+    "promotion_rows": 5,
+    "risk_rows": 5
+  },
+  "description": "low-capacity hidden-closure mechanism design gate",
+  "gate": {
+    "a100_80gb_request_now": false,
+    "a100_training_allowed_now": false,
+    "adaptive_sampling_training_allowed_now": false,
+    "bayesian_pinn_training_allowed_now": false,
+    "blocking_audits": [],
+    "candidate_low_capacity_route": "low_capacity_explicit_latent_hidden_closure_head",
+    "cnn_operator_training_allowed_now": false,
+    "compute_rows": 3,
+    "control_rows": 10,
+    "design_rows": 7,
+    "gcn_pinn_training_allowed_now": false,
+    "metric_rows": 7,
+    "next_action": "enter Phase 175 bounded low-capacity hidden-closure smoke",
+    "phase173_best_control_variant": "uniform_grid_latent_trainable_control",
+    "phase173_candidate_variant": "tiny_explicit_latent_hidden_closure_smoke",
+    "phase173_phase171_test_closure_gain": 0.0032139974,
+    "phase173_phase171_validation_score_gain": 0.0372880265,
+    "phase173_seed_stability_pass_rate": 1.0,
+    "phase173_selected_variant": "tiny_explicit_latent_hidden_closure_smoke",
+    "phase173_trainable_audit_rows": 240,
+    "phase173_validation_gain": 0.0166680534,
+    "phase174_model_mechanism_allowed": false,
+    "phase174_model_training_allowed": false,
+    "phase175_low_capacity_smoke_allowed": true,
+    "phase175_training_allowed_now": false,
+    "promotion_rows": 5,
+    "risk_rows": 5,
+    "status": "phase174_low_capacity_hidden_closure_design_ready_phase175_low_capacity_smoke"
+  },
+  "inputs": {
+    "phase173_gate": "docs/results/phase173_trainable_hidden_closure_low_budget_smoke/phase173_trainable_hidden_closure_low_budget_smoke_gate.json",
+    "phase173_training_audit_table": "docs/results/phase173_trainable_hidden_closure_low_budget_smoke/phase173_training_audit_table.csv",
+    "phase173_variant_summary_table": "docs/results/phase173_trainable_hidden_closure_low_budget_smoke/phase173_variant_summary_table.csv"
+  },
+  "outputs": {
+    "compute_envelope_table": "docs/results/phase174_low_capacity_hidden_closure_design_gate/phase174_compute_envelope_table.csv",
+    "control_table": "docs/results/phase174_low_capacity_hidden_closure_design_gate/phase174_control_table.csv",
+    "design_table": "docs/results/phase174_low_capacity_hidden_closure_design_gate/phase174_low_capacity_design_table.csv",
+    "gate": "docs/results/phase174_low_capacity_hidden_closure_design_gate/phase174_low_capacity_hidden_closure_design_gate.json",
+    "manifest": "docs/results/phase174_low_capacity_hidden_closure_design_gate/phase174_low_capacity_hidden_closure_design_manifest.json",
+    "markdown": "docs/results/phase174_low_capacity_hidden_closure_design_gate/phase174_low_capacity_hidden_closure_design_gate.md",
+    "metric_guard_table": "docs/results/phase174_low_capacity_hidden_closure_design_gate/phase174_metric_guard_table.csv",
+    "promotion_rule_table": "docs/results/phase174_low_capacity_hidden_closure_design_gate/phase174_promotion_rule_table.csv",
+    "risk_table": "docs/results/phase174_low_capacity_hidden_closure_design_gate/phase174_risk_table.csv"
+  },
+  "phase": 174
+}
