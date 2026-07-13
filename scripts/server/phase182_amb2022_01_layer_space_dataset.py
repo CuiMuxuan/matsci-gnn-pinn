@@ -480,7 +480,6 @@ def build_dataset(
                     actual_sources[name] = {
                         "path": str(path),
                         "sha256": actual_sha,
-                        "source_units": None,
                     }
                 with h5py.File(target_paths["TAM"], "r") as tam_handle, h5py.File(target_paths["SCR"], "r") as scr_handle:
                     tam_grid_x = np.asarray(tam_handle["Calibration/Registration/Xgrid_v"][...], dtype=np.float32)
