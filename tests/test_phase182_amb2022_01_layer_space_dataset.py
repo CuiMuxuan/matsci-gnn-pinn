@@ -70,3 +70,12 @@ def test_feature_matrix_has_no_build_identity_column():
     assert matrix.shape == (4, len(module.FEATURE_NAMES))
     assert "build_id" not in module.FEATURE_NAMES
     assert np.isfinite(matrix).all()
+
+
+def test_scr_unit_resolution_preserves_declared_metadata_defect():
+    module = _load_module()
+    corrected = module.resolve_scr_units("s")
+    already_correct = module.resolve_scr_units("C/s")
+    assert corrected["canonical_units"] == "C/s"
+    assert corrected["metadata_correction_applied"] is True
+    assert already_correct["metadata_correction_applied"] is False

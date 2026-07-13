@@ -49,6 +49,7 @@ SCAN_FILENAME = "AMB2022-01-AMMT-XYPT_v1.h5"
 BUILD_IDS = ("B6", "B7", "B8")
 SPLIT_CODES = {"B6": 0, "B7": 1, "B8": 2}
 SPLIT_NAMES = {0: "train", 1: "val", 2: "test"}
+SCR_CANONICAL_UNITS = "C/s"
 FEATURE_NAMES = (
     "x_mm",
     "y_mm",
@@ -110,6 +111,19 @@ def _attr_float(value: Any) -> float:
 
 def _target_filename(build_id: str, target_name: str) -> str:
     return f"AMB2022-01-718-AMMT-{build_id}-StaringCamera_{target_name}.h5"
+
+
+def resolve_scr_units(declared_units: str) -> dict[str, Any]:
+    """Preserve a known HDF5 metadata defect while exposing the documented CR unit."""
+    declared_units = declared_units.strip()
+    if declared_units not in {"s", SCR_CANONICAL_UNITS}:
+        raise ValueError(f"Unexpected SCR units attribute: {declared_units!r}")
+    return {
+        "declared_units": declared_units,
+        "canonical_units": SCR_CANONICAL_UNITS,
+        "metadata_correction_applied": declared_units != SCR_CANONICAL_UNITS,
+        "evidence": "NIST CR_v1.m computes DT./Dt and labels the result [oC/s]",
+    }
 
 
 def _read_phase181_gate(path: Path, build_ids: Iterable[str]) -> dict[str, Any]:
@@ -431,7 +445,8 @@ def build_dataset(
                 "features", shape=(total_rows, len(FEATURE_NAMES)), dtype="f4", **matrix_compression
             )
             tam_ds = output.create_dataset("target_tam_s", shape=(total_rows,), dtype="f4", **vector_compression)
-            scr_ds = output.create_dataset("target_scr_value", shape=(total_rows,), dtype="f4", **vector_compression)
+            scr_ds = output.create_dataset("target_scr_C_per_s", shape=(total_rows,), dtype="f4", **vector_compression)
+            scr_ds.attrs["units"] = SCR_CANONICAL_UNITS
             valid_ds = output.create_dataset("target_valid_mask", shape=(total_rows, 2), dtype="u1", **mask_compression)
             tam_fraction_ds = output.create_dataset("tam_valid_fraction", shape=(total_rows,), dtype="f4", **vector_compression)
             scr_fraction_ds = output.create_dataset("scr_valid_fraction", shape=(total_rows,), dtype="f4", **vector_compression)
@@ -481,7 +496,10 @@ def build_dataset(
                         )
                         if not (np.allclose(tam_grid_x, x_coords) and np.allclose(tam_grid_y, y_coords) and np.allclose(tam_grid_z, z_coords)):
                             raise ValueError(f"{build_id} {name} registration grid differs from the admitted reference grid")
-                        actual_sources[name]["source_units"] = _attr_text(dataset.attrs.get("units", ""))
+                        declared_units = _attr_text(dataset.attrs.get("units", ""))
+                        actual_sources[name]["source_units_declared"] = declared_units
+                        if name == "SCR":
+                            actual_sources[name]["unit_resolution"] = resolve_scr_units(declared_units)
 
                     valid_both_count = 0
                     for layer_index in layer_indices:
@@ -524,7 +542,10 @@ def build_dataset(
                         "rows": len(layer_indices) * n_blocks,
                         "target_valid_both_rows": valid_both_count,
                         "target_valid_both_fraction": valid_both_count / max(1, len(layer_indices) * n_blocks),
-                        "source_units": {name: source["source_units"] for name, source in actual_sources.items()},
+                        "source_units": {
+                            name: source.get("source_units_declared") for name, source in actual_sources.items()
+                        },
+                        "scr_unit_resolution": actual_sources["SCR"]["unit_resolution"],
                     }
                 source_records.append({"build_id": build_id, "targets": actual_sources})
     except Exception:
@@ -571,10 +592,12 @@ def build_dataset(
             "build_identity_in_feature_matrix": False,
         },
         "quality": build_quality,
-        "scr_unit_boundary": (
-            "The source HDF5 attribute is retained verbatim. It is not normalized or relabeled until "
-            "the NIST processing documentation resolves the unit annotation."
-        ),
+        "scr_unit_resolution": {
+            "canonical_units": SCR_CANONICAL_UNITS,
+            "metadata_defect": "B6/B8 HDF5 declares s while B7 declares C/s",
+            "documented_algorithm_evidence": "NIST CR_v1.m line 61 labels DT./Dt as [oC/s]",
+            "source_metadata_retained_per_build": True,
+        },
     }
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return manifest
