@@ -99,9 +99,13 @@ def _dataset_lengths(group: Any, names: Iterable[str]) -> dict[str, int]:
         if name not in group:
             raise KeyError(f"Missing XYPT dataset {group.name}/{name}")
         shape = tuple(int(value) for value in group[name].shape)
-        if len(shape) != 1:
-            raise ValueError(f"Expected one-dimensional XYPT dataset {group.name}/{name}, got {shape}")
-        lengths[name] = shape[0]
+        if len(shape) == 1:
+            lengths[name] = shape[0]
+        elif len(shape) == 2 and 1 in shape:
+            # MATLAB HDF5 exports vectors as either 1-by-n or n-by-1 arrays.
+            lengths[name] = max(shape)
+        else:
+            raise ValueError(f"Expected vector-shaped XYPT dataset {group.name}/{name}, got {shape}")
     return lengths
 
 

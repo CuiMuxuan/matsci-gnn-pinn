@@ -23,6 +23,30 @@ def _target(build_id: str, target_name: str, *, ready: bool = True) -> dict[str,
     }
 
 
+def test_dataset_lengths_accepts_matlab_row_and_column_vectors():
+    module = _load_module()
+
+    class Dataset:
+        def __init__(self, shape: tuple[int, ...]) -> None:
+            self.shape = shape
+
+    class Group(dict):
+        name = "/XYPT/1"
+
+    group = Group(
+        X=Dataset((1, 12)),
+        Y=Dataset((12, 1)),
+        P=Dataset((12,)),
+        T=Dataset((1, 12)),
+    )
+    assert module._dataset_lengths(group, ("X", "Y", "P", "T")) == {
+        "X": 12,
+        "Y": 12,
+        "P": 12,
+        "T": 12,
+    }
+
+
 def test_trigger_layer_space_gate_admits_complete_registered_targets():
     module = _load_module()
     targets = [
