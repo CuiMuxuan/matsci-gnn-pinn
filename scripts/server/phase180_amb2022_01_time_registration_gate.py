@@ -63,7 +63,8 @@ def inspect(data_root: Path) -> dict[str, Any]:
     with tc_path.open(encoding="utf-8-sig", newline="") as handle:
         rows = list(csv.DictReader(handle))
     thermocouple_seconds = clock_seconds(rows[-1]["Time"]) - clock_seconds(rows[0]["Time"])
-    trigger_text = "trigger vector" in readme.lower() and "instrument trigger" in readme.lower()
+    readme_lower = readme.lower()
+    trigger_text = "instrument trigger" in readme_lower and "/xypt/n/t" in readme_lower
     gate = build_gate(
         xypt_seconds=sample_count / digital_rate,
         thermocouple_seconds=thermocouple_seconds,
