@@ -33,7 +33,15 @@ EXPECTED_BIT_DEPTH = 12.0
 RAW_THRESHOLD_DL = 100.0
 EXPECTED_SIGNAL_UNITS = "digital levels"
 EXPECTED_LINE_SIGNAL_GROUP_COUNT = 21
-EXPECTED_NON_LINE_SIGNAL_GROUP_COUNT = 6
+EXPECTED_NON_LINE_SIGNAL_GROUP_IDS = (
+    "X_pad1",
+    "X_pad2",
+    "Y_pad1",
+    "Y_pad1_SS",
+    "Y_pad2",
+    "Y_pad2_SS",
+)
+EXPECTED_NON_LINE_SIGNAL_GROUP_COUNT = len(EXPECTED_NON_LINE_SIGNAL_GROUP_IDS)
 FRAME_CHUNK_SIZE = 16
 RAW_QUANTILE = 0.99
 HISTOGRAM_BINS = 1 << int(EXPECTED_BIT_DEPTH)
@@ -278,8 +286,8 @@ def build_gate(
         blockers.append("unexpected_line_signal_group_count")
     if int(extraction_audit.get("non_line_signal_group_count", 0)) != EXPECTED_NON_LINE_SIGNAL_GROUP_COUNT:
         blockers.append("unexpected_non_line_signal_group_count")
-    if any(not group_id.startswith("Pad_") for group_id in extraction_audit.get("non_line_signal_group_ids", [])):
-        blockers.append("non_line_signal_group_not_explicitly_excluded_pad")
+    if sorted(extraction_audit.get("non_line_signal_group_ids", [])) != list(EXPECTED_NON_LINE_SIGNAL_GROUP_IDS):
+        blockers.append("unexpected_non_line_signal_group_ids")
     if extraction_audit.get("unique_signal_shapes") != [list(EXPECTED_SIGNAL_SHAPE)]:
         blockers.append("raw_signal_shape_contract_broken")
     if extraction_audit.get("schema_mismatch_ids"):

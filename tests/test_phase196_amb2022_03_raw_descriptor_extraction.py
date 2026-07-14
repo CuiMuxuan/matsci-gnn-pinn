@@ -34,7 +34,7 @@ def _audit(module, *, targets_read: bool = False, schema_mismatch_ids: list[str]
     return {
         "line_signal_group_count": module.EXPECTED_LINE_SIGNAL_GROUP_COUNT,
         "non_line_signal_group_count": module.EXPECTED_NON_LINE_SIGNAL_GROUP_COUNT,
-        "non_line_signal_group_ids": [f"Pad_{index:02d}" for index in range(6)],
+        "non_line_signal_group_ids": list(module.EXPECTED_NON_LINE_SIGNAL_GROUP_IDS),
         "unique_signal_shapes": [list(module.EXPECTED_SIGNAL_SHAPE)],
         "schema_mismatch_ids": schema_mismatch_ids or [],
         "cross_section_targets_read": targets_read,
@@ -101,8 +101,13 @@ def test_phase196_gate_blocks_target_reads_and_schema_mismatch():
     schema_gate = module.build_gate(
         _phase195(), _rows(module), _audit(module, schema_mismatch_ids=["Line_00"])
     )
+    unexpected_pad_audit = _audit(module)
+    unexpected_pad_audit["non_line_signal_group_ids"] = ["Pad_00"] * 6
+    unexpected_pad_gate = module.build_gate(_phase195(), _rows(module), unexpected_pad_audit)
 
     assert target_gate["phase197_calibration_table_design_allowed"] is False
     assert "cross_section_target_boundary_broken" in target_gate["blocking_audits"]
     assert schema_gate["phase197_calibration_table_design_allowed"] is False
     assert "raw_signal_schema_contract_broken" in schema_gate["blocking_audits"]
+    assert unexpected_pad_gate["phase197_calibration_table_design_allowed"] is False
+    assert "unexpected_non_line_signal_group_ids" in unexpected_pad_gate["blocking_audits"]
