@@ -113,11 +113,20 @@ def inspect_thermalcal(path: Path) -> dict[str, Any]:
             calibration.visititems(calibration_visitor)
         else:  # pragma: no cover
             raise TypeError(f"Unsupported ThermalCal HDF5 object: {type(calibration)!r}")
-        coefficient_values = [
+        dataset_coefficient_values = [
             value
             for dataset in coefficient_datasets
             for value in (dataset["values"] or [])
         ]
+        attribute_coefficients = {
+            key: float(summary["values"][0])
+            for key, summary in sorted(attributes.items())
+            if key.startswith("Coeff_")
+            and isinstance(summary.get("values"), list)
+            and len(summary["values"]) == 1
+            and isinstance(summary["values"][0], (float, int))
+        }
+        coefficient_values = [*attribute_coefficients.values(), *dataset_coefficient_values]
         signal_attributes: dict[str, dict[str, Any]] | None = None
 
         def visitor(name: str, item: Any) -> None:
@@ -130,6 +139,7 @@ def inspect_thermalcal(path: Path) -> dict[str, Any]:
         "thermalcal_dataset_path": "Calibration/ThermalCal",
         "thermalcal_object_kind": object_kind,
         "thermalcal_coefficient_datasets": coefficient_datasets,
+        "thermalcal_attribute_coefficients": attribute_coefficients,
         "thermalcal_coefficient_values": coefficient_values,
         "thermalcal_attributes": attributes,
         "raw_signal_attributes": signal_attributes or {},
