@@ -76,19 +76,48 @@ def _scalar_text(attributes: dict[str, Any], key: str) -> str | None:
     return str(values[0])
 
 
+def _coefficient_dataset_summary(dataset: Any) -> dict[str, Any]:
+    element_count = int(np.prod(dataset.shape, dtype=np.int64))
+    numeric = np.dtype(dataset.dtype).kind in {"i", "u", "f"}
+    values = (
+        [float(value) for value in np.asarray(dataset[...]).reshape(-1)]
+        if numeric and element_count <= MAX_CALIBRATION_COEFFICIENT_COUNT
+        else None
+    )
+    return {
+        "dataset_path": str(dataset.name),
+        "dtype": str(dataset.dtype),
+        "shape": [int(size) for size in dataset.shape],
+        "element_count": element_count,
+        "numeric": numeric,
+        "values": values,
+    }
+
+
 def inspect_thermalcal(path: Path) -> dict[str, Any]:
     h5py = _h5py()
     with h5py.File(path, "r") as handle:
         calibration = handle["Calibration/ThermalCal"]
-        calibration_dtype = str(calibration.dtype)
-        calibration_shape = [int(size) for size in calibration.shape]
-        element_count = int(np.prod(calibration.shape, dtype=np.int64))
-        coefficient_values = (
-            [float(value) for value in np.asarray(calibration[...]).reshape(-1)]
-            if element_count <= MAX_CALIBRATION_COEFFICIENT_COUNT
-            else None
-        )
         attributes = {str(key): _attribute_summary(value) for key, value in calibration.attrs.items()}
+        coefficient_datasets: list[dict[str, Any]] = []
+        if isinstance(calibration, h5py.Dataset):
+            object_kind = "dataset"
+            coefficient_datasets.append(_coefficient_dataset_summary(calibration))
+        elif isinstance(calibration, h5py.Group):
+            object_kind = "group"
+
+            def calibration_visitor(name: str, item: Any) -> None:
+                if isinstance(item, h5py.Dataset):
+                    coefficient_datasets.append(_coefficient_dataset_summary(item))
+
+            calibration.visititems(calibration_visitor)
+        else:  # pragma: no cover
+            raise TypeError(f"Unsupported ThermalCal HDF5 object: {type(calibration)!r}")
+        coefficient_values = [
+            value
+            for dataset in coefficient_datasets
+            for value in (dataset["values"] or [])
+        ]
         signal_attributes: dict[str, dict[str, Any]] | None = None
 
         def visitor(name: str, item: Any) -> None:
@@ -99,9 +128,8 @@ def inspect_thermalcal(path: Path) -> dict[str, Any]:
         handle.visititems(visitor)
     return {
         "thermalcal_dataset_path": "Calibration/ThermalCal",
-        "thermalcal_dtype": calibration_dtype,
-        "thermalcal_shape": calibration_shape,
-        "thermalcal_element_count": element_count,
+        "thermalcal_object_kind": object_kind,
+        "thermalcal_coefficient_datasets": coefficient_datasets,
         "thermalcal_coefficient_values": coefficient_values,
         "thermalcal_attributes": attributes,
         "raw_signal_attributes": signal_attributes or {},
