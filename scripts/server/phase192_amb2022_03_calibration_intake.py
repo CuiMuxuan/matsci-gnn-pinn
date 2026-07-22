@@ -7,8 +7,11 @@ import argparse
 import csv
 import json
 import os
+import posixpath
 from pathlib import Path
 from typing import Any
+import zipfile
+from xml.etree import ElementTree
 
 
 DEFAULT_PHASE191 = Path(
@@ -38,6 +41,9 @@ WORKBOOK_REQUIRED_COLUMNS = {
     "Width (µm)",
 }
 INVENTORY_FIELDS = ("source", "identifier", "datasets", "signal_shape", "attributes")
+XLSX_MAIN_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+XLSX_DOCUMENT_REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+XLSX_PACKAGE_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 
 
 def _h5py() -> Any:
@@ -122,8 +128,9 @@ def inspect_xypt(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     }, inventory
 
 
-def inspect_workbook(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    load_workbook = _openpyxl()
+def _inspect_workbook_openpyxl(
+    path: Path, load_workbook: Any
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     workbook = load_workbook(path, read_only=True, data_only=True)
     inventory: list[dict[str, Any]] = []
     all_headers: dict[str, list[str]] = {}
@@ -149,6 +156,127 @@ def inspect_workbook(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         "headers": all_headers,
         "data_row_count": row_count,
     }, inventory
+
+
+def _xlsx_root(archive: zipfile.ZipFile, member: str) -> ElementTree.Element:
+    try:
+        return ElementTree.fromstring(archive.read(member))
+    except KeyError as exc:
+        raise ValueError(f"XLSX package is missing required member: {member}") from exc
+    except ElementTree.ParseError as exc:
+        raise ValueError(f"XLSX XML is malformed: {member}") from exc
+
+
+def _xlsx_shared_strings(archive: zipfile.ZipFile) -> list[str]:
+    member = "xl/sharedStrings.xml"
+    if member not in archive.namelist():
+        return []
+    root = _xlsx_root(archive, member)
+    text_tag = f"{{{XLSX_MAIN_NS}}}t"
+    string_tag = f"{{{XLSX_MAIN_NS}}}si"
+    return ["".join(node.text or "" for node in item.iter(text_tag)) for item in root.findall(string_tag)]
+
+
+def _xlsx_cell_value(cell: ElementTree.Element, shared_strings: list[str]) -> str | None:
+    cell_type = cell.get("t")
+    text_tag = f"{{{XLSX_MAIN_NS}}}t"
+    value_tag = f"{{{XLSX_MAIN_NS}}}v"
+    if cell_type == "inlineStr":
+        value = "".join(node.text or "" for node in cell.iter(text_tag))
+        return value or None
+    value_node = cell.find(value_tag)
+    if value_node is None or value_node.text is None:
+        return None
+    value = value_node.text
+    if cell_type != "s":
+        return value
+    try:
+        shared_index = int(value)
+        return shared_strings[shared_index]
+    except (IndexError, ValueError) as exc:
+        raise ValueError(f"XLSX shared-string index is invalid: {value}") from exc
+
+
+def _xlsx_sheet_rows(
+    archive: zipfile.ZipFile, member: str, shared_strings: list[str]
+) -> list[list[str | None]]:
+    root = _xlsx_root(archive, member)
+    row_tag = f"{{{XLSX_MAIN_NS}}}row"
+    cell_tag = f"{{{XLSX_MAIN_NS}}}c"
+    sheet_data = root.find(f"{{{XLSX_MAIN_NS}}}sheetData")
+    if sheet_data is None:
+        return []
+    return [
+        [_xlsx_cell_value(cell, shared_strings) for cell in row.findall(cell_tag)]
+        for row in sheet_data.findall(row_tag)
+    ]
+
+
+def _xlsx_sheet_members(archive: zipfile.ZipFile) -> list[tuple[str, str]]:
+    workbook_member = "xl/workbook.xml"
+    root = _xlsx_root(archive, workbook_member)
+    relationships = _xlsx_root(archive, "xl/_rels/workbook.xml.rels")
+    relationship_tag = f"{{{XLSX_PACKAGE_REL_NS}}}Relationship"
+    relationship_targets = {
+        relationship.get("Id"): relationship.get("Target")
+        for relationship in relationships.findall(relationship_tag)
+        if relationship.get("TargetMode") != "External"
+    }
+    sheets = root.find(f"{{{XLSX_MAIN_NS}}}sheets")
+    if sheets is None:
+        return []
+    result: list[tuple[str, str]] = []
+    for sheet in sheets.findall(f"{{{XLSX_MAIN_NS}}}sheet"):
+        relation_id = sheet.get(f"{{{XLSX_DOCUMENT_REL_NS}}}id")
+        target = relationship_targets.get(relation_id)
+        name = sheet.get("name")
+        if not relation_id or not target or not name:
+            raise ValueError("XLSX workbook sheet relationship is incomplete")
+        member = posixpath.normpath(posixpath.join("xl", target.lstrip("/")))
+        if member.startswith("../"):
+            raise ValueError("XLSX workbook sheet relationship escapes package root")
+        result.append((name, member))
+    return result
+
+
+def _inspect_workbook_stdlib(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    inventory: list[dict[str, Any]] = []
+    all_headers: dict[str, list[str]] = {}
+    row_count = 0
+    try:
+        with zipfile.ZipFile(path) as archive:
+            shared_strings = _xlsx_shared_strings(archive)
+            for sheet_name, member in _xlsx_sheet_members(archive):
+                rows = _xlsx_sheet_rows(archive, member, shared_strings)
+                header_values = rows[0] if rows else []
+                headers = [str(value).strip() for value in header_values if value is not None]
+                data_rows = sum(1 for row in rows[1:] if any(value is not None for value in row))
+                all_headers[sheet_name] = headers
+                row_count += data_rows
+                inventory.append(
+                    {
+                        "source": "cross_section_workbook",
+                        "identifier": sheet_name,
+                        "datasets": ";".join(headers),
+                        "signal_shape": str(data_rows),
+                        "attributes": "reader=stdlib_xlsx_xml",
+                    }
+                )
+    except zipfile.BadZipFile as exc:
+        raise ValueError(f"Workbook is not a valid XLSX ZIP package: {path}") from exc
+    return {
+        "sheet_names": list(all_headers),
+        "headers": all_headers,
+        "data_row_count": row_count,
+    }, inventory
+
+
+def inspect_workbook(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    try:
+        load_workbook = _openpyxl()
+    except ModuleNotFoundError:
+        return _inspect_workbook_stdlib(path)
+    return _inspect_workbook_openpyxl(path, load_workbook)
 
 
 def _phase191_ready(phase191: dict[str, Any]) -> bool:
